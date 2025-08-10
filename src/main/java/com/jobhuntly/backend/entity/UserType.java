@@ -1,4 +1,4 @@
-package com.jobhuntly.backend.modules.auth.entity;
+package com.jobhuntly.backend.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

@@ -1,4 +1,4 @@
-package com.jobhuntly.backend.modules.auth.dto;
+package com.jobhuntly.backend.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

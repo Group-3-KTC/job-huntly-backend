@@ -1,4 +1,4 @@
-package com.jobhuntly.backend.modules.auth.entity.enum
+package com.jobhuntly.backend.entity.enum
 
 public enum class UserRole {
     CANDIDATE,

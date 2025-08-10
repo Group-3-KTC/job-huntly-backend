@@ -1,6 +1,6 @@
-package com.jobhuntly.backend.modules.auth.repository;
+package com.jobhuntly.backend.repository;
 
-import com.jobhuntly.backend.modules.auth.entity.User;
+import com.jobhuntly.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
