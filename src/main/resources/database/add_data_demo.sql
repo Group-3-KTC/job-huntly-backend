@@ -9,15 +9,15 @@ VALUES (1, 'ADMIN'),
 INSERT INTO users
 (user_id, city_id, role_id, full_name, email, password_hash, phone_number, status, activation_token, google_id,
  sms_notification_active, email_notification_active, create_at)
-VALUES (1, NULL, 1, 'ADMIN', 'admin@gmail.com', 'hash_admin1234', '0909123456', 'active', NULL, NULL, 0, 1,
+VALUES (1, NULL, 1, 'ADMIN', 'admin@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0909123456', 'active', NULL, NULL, 0, 1,
         '2025-08-11 09:13:27'),
-       (2, NULL, 2, 'Nguyễn Văn A', 'candidate1@gmail.com', 'hash_pass123', '0912345678', 'active', NULL, NULL, 1, 1,
+       (2, NULL, 2, 'Nguyễn Văn A', 'candidate1@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0912345678', 'active', NULL, NULL, 1, 1,
         NOW()),
-       (3, NULL, 2, 'Trần Thị B', 'candidate2@gmail.com', 'hash_pass456', '0923456789', 'active', NULL, NULL, 1, 1,
+       (3, NULL, 2, 'Trần Thị B', 'candidate2@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0923456789', 'active', NULL, NULL, 1, 1,
         NOW()),
-       (4, NULL, 3, 'Phạm Văn C', 'recruiter1@gmail.com', 'hash_recruit123', '0934567890', 'active', NULL, NULL, 0, 1,
+       (4, NULL, 3, 'Phạm Văn C', 'recruiter1@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0934567890', 'active', NULL, NULL, 0, 1,
         NOW()),
-       (5, NULL, 3, 'Lê Thị D', 'recruiter2@gmail.com', 'hash_recruit456', '0945678901', 'active', NULL, NULL, 1, 1,
+       (5, NULL, 3, 'Lê Thị D', 'recruiter2@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0945678901', 'active', NULL, NULL, 1, 1,
         NOW());
 
 INSERT INTO companies
