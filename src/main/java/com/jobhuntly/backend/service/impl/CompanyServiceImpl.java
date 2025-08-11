@@ -1,0 +1,85 @@
+package com.jobhuntly.backend.service.impl;
+
+import com.jobhuntly.backend.dto.company.CompanyDto;
+import com.jobhuntly.backend.entity.Company;
+import com.jobhuntly.backend.entity.User;
+import com.jobhuntly.backend.exception.ResourceNotFoundException;
+import com.jobhuntly.backend.mapper.CompanyMapper;
+import com.jobhuntly.backend.repository.CompanyRepository;
+import com.jobhuntly.backend.repository.UserRepository;
+import com.jobhuntly.backend.service.company.CompanyService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class CompanyServiceImpl implements CompanyService {
+    @Autowired
+    private CompanyRepository companyRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private CompanyMapper companyMapper;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompanyDto> getAllCompanies() {
+        return companyMapper.toDtoList(companyRepository.findAll());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CompanyDto getCompanyById(Long id) {
+        return companyMapper.toDto(companyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Company ID Not found: " + id)));
+    }
+
+    @Override
+    @Transactional
+    public CompanyDto createCompany(CompanyDto companyDto) {
+        Company company = companyMapper.toEntity(companyDto);
+
+        // Xử lý mối quan hệ với User
+        if (companyDto.getUserId() != null) {
+            User user = userRepository.findById(companyDto.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + companyDto.getUserId()));
+            company.setUser(user);
+        }
+
+        return companyMapper.toDto(companyRepository.save(company));
+    }
+
+    @Override
+    @Transactional
+    public CompanyDto updateCompany(Long id, CompanyDto companyDto) {
+        return companyRepository.findById(id)
+                .map(existing -> {
+                    companyMapper.updateEntityFromDto(companyDto, existing);
+
+                    // Xử lý mối quan hệ với User nếu có thay đổi
+                    if (companyDto.getUserId() != null) {
+                        User user = userRepository.findById(companyDto.getUserId())
+                                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + companyDto.getUserId()));
+                        existing.setUser(user);
+                    }
+
+                    return companyMapper.toDto(companyRepository.save(existing));
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Company ID Not found: " + id));
+    }
+
+    @Override
+    @Transactional
+    public void deleteCompany(Long id) {
+        companyRepository.findById(id)
+                .ifPresentOrElse(
+                        companyRepository::delete,
+                        () -> {
+                            throw new ResourceNotFoundException("Not found: " + id);
+                        });
+    }
+}

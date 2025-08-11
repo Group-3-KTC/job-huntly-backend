@@ -12,17 +12,26 @@ import lombok.*;
 public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "company_id")
     private Long id;
-    private int userId;
+    
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+    
     private String description;
     private String email;
     private String address;
+    
+    @Column(name = "quantity_employee")
     private int quantityEmployees;
-    private String status; // active, inactive, suspended
+    
+    private String status;
     private String avatar;
+    
+    @Column(name = "avatar_cover")
     private String avatarCover;
+    
+    @Column(name = "company_name")
     private String companyName;
-
-    @OneToOne(mappedBy = "company")
-    private User user;
 }

@@ -1,4 +1,5 @@
-use job_huntly_local;
+use
+job_huntly_local;
 
 INSERT INTO roles(role_id, role_name)
 VALUES (1, 'ADMIN'),
@@ -6,14 +7,18 @@ VALUES (1, 'ADMIN'),
        (3, 'RECRUITER');
 
 INSERT INTO users
-(user_id, city_id, role_id, full_name, email, password, phone_number, status, google_id, is_active,
+(user_id, city_id, role_id, full_name, email, password_hash, phone_number, status, activation_token, google_id,
  sms_notification_active, email_notification_active, create_at)
-VALUES (1, NULL, 1, 'ADMIN', 'admin@gmail.com', 'admin1234', '0909123456', 'active', NULL, 1, 0, 1,
+VALUES (1, NULL, 1, 'ADMIN', 'admin@gmail.com', 'hash_admin1234', '0909123456', 'active', NULL, NULL, 0, 1,
         '2025-08-11 09:13:27'),
-       (2, NULL, 2, 'Nguyễn Văn A', 'candidate1@gmail.com', 'pass123', '0912345678', 'active', NULL, 1, 1, 1, NOW()),
-       (3, NULL, 2, 'Trần Thị B', 'candidate2@gmail.com', 'pass456', '0923456789', 'active', NULL, 1, 1, 1, NOW()),
-       (4, NULL, 3, 'Phạm Văn C', 'recruiter1@gmail.com', 'recruit123', '0934567890', 'active', NULL, 1, 0, 1, NOW()),
-       (5, NULL, 3, 'Lê Thị D', 'recruiter2@gmail.com', 'recruit456', '0945678901', 'active', NULL, 1, 1, 1, NOW());
+       (2, NULL, 2, 'Nguyễn Văn A', 'candidate1@gmail.com', 'hash_pass123', '0912345678', 'active', NULL, NULL, 1, 1,
+        NOW()),
+       (3, NULL, 2, 'Trần Thị B', 'candidate2@gmail.com', 'hash_pass456', '0923456789', 'active', NULL, NULL, 1, 1,
+        NOW()),
+       (4, NULL, 3, 'Phạm Văn C', 'recruiter1@gmail.com', 'hash_recruit123', '0934567890', 'active', NULL, NULL, 0, 1,
+        NOW()),
+       (5, NULL, 3, 'Lê Thị D', 'recruiter2@gmail.com', 'hash_recruit456', '0945678901', 'active', NULL, NULL, 1, 1,
+        NOW());
 
 INSERT INTO companies
 (company_id, user_id, description, email, address, quantity_employee, status, avatar, avatar_cover, company_name)
