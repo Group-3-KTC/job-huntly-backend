@@ -1,4 +1,4 @@
-package com.jobhuntly.backend.dto.company;
+package com.jobhuntly.backend.dto.response;
 
 import lombok.*;
 

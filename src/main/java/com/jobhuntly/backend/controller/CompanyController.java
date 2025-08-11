@@ -1,6 +1,6 @@
 package com.jobhuntly.backend.controller;
 
-import com.jobhuntly.backend.dto.company.CompanyDto;
+import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.service.company.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

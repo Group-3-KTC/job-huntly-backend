@@ -1,6 +1,6 @@
 package com.jobhuntly.backend.service.impl;
 
-import com.jobhuntly.backend.dto.company.CompanyDto;
+import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.entity.Company;
 import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.exception.ResourceNotFoundException;

@@ -1,8 +1,6 @@
 package com.jobhuntly.backend.service.company;
 
-import com.jobhuntly.backend.dto.company.CompanyDto;
-import com.jobhuntly.backend.entity.Company;
-import org.springframework.stereotype.Service;
+import com.jobhuntly.backend.dto.response.CompanyDto;
 
 import java.util.List;
 
