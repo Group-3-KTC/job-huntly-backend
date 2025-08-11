@@ -20,7 +20,7 @@ public class AppConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF cho API
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/activate").permitAll() // Cho phép public
-                        .anyRequest().authenticated() // Các request khác yêu cầu login
+                        .anyRequest().permitAll() // Các request khác yêu cầu login
                 );
 
         return http.build();
