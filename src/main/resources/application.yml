@@ -3,7 +3,6 @@ spring:
     url: jdbc:mysql://localhost:3306/job_huntly_local?useSSL=false&allowPublicKeyRetrieval=true
     username: root
     password: codegym
-
   jpa:
     hibernate:
       ddl-auto: none
@@ -13,3 +12,22 @@ spring:
           format-sql: true
     show-sql: true
     database-platform: org.hibernate.dialect.MySQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your_email
+    password: your_email_app_password
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+api:
+  prefix: api/v1
+jwt:
+  expiration: 2592000 #30 days = 30 * 24 * 60 * 60
+  secretKey: TaqlmGv1iEDMRiFp/pHuID1+T84IABfuA0xXh4GhiUI=

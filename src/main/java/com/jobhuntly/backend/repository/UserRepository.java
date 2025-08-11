@@ -7,12 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, String> {
-    boolean existsByEmail(String email);
-
-    @Query("SELECT u FROM User u WHERE u.email = :email")
-    Optional<User> findByEmail(@Param("email") String email);
-
-    @Query("SELECT u FROM User u WHERE u.email = :email AND u.isActive = true")
-    Optional<User> findActiveByEmail(@Param("email") String email);
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+    Optional<User> findByActivationToken(String token);
 }
