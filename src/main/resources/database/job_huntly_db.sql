@@ -5,31 +5,62 @@ CREATE DATABASE IF NOT EXISTS job_huntly_local
 use job_huntly_local;
 
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS companies;
+DROP TABLE IF EXISTS follows;
+DROP TABLE IF EXISTS jobs;
+DROP TABLE IF EXISTS levels;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS majors;
+DROP TABLE IF EXISTS skills;
+DROP TABLE IF EXISTS saved_job;
+DROP TABLE IF EXISTS reports;
+DROP TABLE IF EXISTS report_type;
+DROP TABLE IF EXISTS work_type;
+DROP TABLE IF EXISTS location_city;
+DROP TABLE IF EXISTS location_ward;
+DROP TABLE IF EXISTS job_skill;
+DROP TABLE IF EXISTS candidate_profile;
+DROP TABLE IF EXISTS candidate_skill;
+DROP TABLE IF EXISTS ward_job;
+DROP TABLE IF EXISTS ward_company;
+DROP TABLE IF EXISTS applications;
+DROP TABLE IF EXISTS job_level;
+DROP TABLE IF EXISTS job_work_type;
+DROP TABLE IF EXISTS job_major;
+DROP TABLE IF EXISTS certificates;
+DROP TABLE IF EXISTS candidate_certi;
+DROP TABLE IF EXISTS work_experience;
+DROP TABLE IF EXISTS candidate_exper;
+DROP TABLE IF EXISTS edu;
+DROP TABLE IF EXISTS candidate_edu;
+
+
 Create table `users` (
 	`user_id` INT NOT NULL AUTO_INCREMENT,
 	`city_id` INT NULL,
 	`role_id` INT NOT NULL,
 	`full_name` VARCHAR(200) NULL,
 	`email` VARCHAR(200) NULL UNIQUE,
-	`password` VARCHAR(200) NULL,
-	`phone_number` VARCHAR(200) NULL UNIQUE,
-	`status` VARCHAR(200) NULL,
+	`password_hash` VARCHAR(255) NOT NULL,
+	`phone_number` VARCHAR(20) NULL UNIQUE,
+	`status` ENUM('ACTIVE', 'INACTIVE', 'BANNED') DEFAULT 'INACTIVE',
+	`activation_token` VARCHAR(64) NULL,
 	`google_id` VARCHAR(100) UNIQUE,
-	`is_active` TINYINT(1) DEFAULT 0,
     `sms_notification_active` TINYINT(1) DEFAULT 0,
     `email_notification_active` TINYINT(1) DEFAULT 0,
     `create_at` DATETIME DEFAULT CURRENT_TIMESTAMP(),
 Primary Key  (`user_id`)
 ) ;
 
-DROP TABLE IF EXISTS roles;
+
 Create table `roles` (
 	`role_id` INT NOT NULL AUTO_INCREMENT,
 	`role_name` VARCHAR(200) NOT NULL,
 Primary Key  (`role_id`)
 ) ;
 
-DROP TABLE IF EXISTS companies;
+
 Create table `companies` (
 	`company_id` INT NOT NULL AUTO_INCREMENT,
 	`user_id` INT NOT NULL,
@@ -44,14 +75,14 @@ Create table `companies` (
 Primary Key  (`company_id`)
 ) ;
 
-DROP TABLE IF EXISTS follows;
+
 Create table `follows` (
 	`user_id` INT NOT NULL,
 	`company_id` INT NOT NULL,
 Primary Key  (`user_id`,`company_id`)
 ) ;
 
-DROP TABLE IF EXISTS jobs;
+
 Create table `jobs` (
 	`job_id` INT NOT NULL AUTO_INCREMENT,
 	`cate_id` INT NOT NULL,
@@ -69,42 +100,42 @@ Create table `jobs` (
 Primary Key  (`job_id`)
 ) ;
 
-DROP TABLE IF EXISTS levels;
+
 Create table `levels` (
 	`level_id` INT NOT NULL AUTO_INCREMENT,
 	`level_name` VARCHAR(200) NULL,
 Primary Key  (`level_id`)
 ) ;
 
-DROP TABLE IF EXISTS categories;
+
 Create table `categories` (
 	`cate_id` INT NOT NULL AUTO_INCREMENT,
 	`cate_name` VARCHAR(200) NULL,
 Primary Key  (`cate_id`)
 ) ;
 
-DROP TABLE IF EXISTS majors;
+
 Create table `majors` (
 	`major_id` INT NOT NULL AUTO_INCREMENT,
 	`major_name` VARCHAR(200) NULL,
 Primary Key  (`major_id`)
 ) ;
 
-DROP TABLE IF EXISTS skills;
+
 Create table `skills` (
 	`skill_id` INT NOT NULL AUTO_INCREMENT,
 	`skill_name` VARCHAR(200) NULL,
 Primary Key  (`skill_id`)
 ) ;
 
-DROP TABLE IF EXISTS saved_job;
+
 Create table `saved_job` (
 	`user_id` INT NOT NULL,
 	`job_id` INT NOT NULL,
 Primary Key  (`user_id`,`job_id`)
 ) ;
 
-DROP TABLE IF EXISTS reports;
+
 Create table `reports` (
 	`report_id` INT NOT NULL AUTO_INCREMENT,
 	`report_type_id` INT NOT NULL,
@@ -116,28 +147,28 @@ Create table `reports` (
 Primary Key  (`report_id`)
 ) ;
 
-DROP TABLE IF EXISTS report_type;
+
 Create table `report_type` (
 	`report_type_id` INT NOT NULL AUTO_INCREMENT,
 	`type_name` VARCHAR(200) NULL,
 Primary Key  (`report_type_id`)
 ) ;
 
-DROP TABLE IF EXISTS work_type;
+
 Create table `work_type` (
 	`work_type_id` INT NOT NULL AUTO_INCREMENT,
 	`work_type_name` VARCHAR(200) NULL,
 Primary Key  (`work_type_id`)
 ) ;
 
-DROP TABLE IF EXISTS location_city;
+
 Create table `location_city` (
 	`city_id` INT NOT NULL AUTO_INCREMENT,
 	`city_name` VARCHAR(200) NULL,
 Primary Key  (`city_id`)
 ) ;
 
-DROP TABLE IF EXISTS location_ward;
+
 Create table `location_ward` (
 	`ward_id` INT NOT NULL AUTO_INCREMENT,
 	`ward_name` VARCHAR(200) NULL,
@@ -145,14 +176,14 @@ Create table `location_ward` (
 Primary Key  (`ward_id`)
 ) ;
 
-DROP TABLE IF EXISTS job_skill;
+
 Create table `job_skill` (
 	`skill_id` INT NOT NULL,
 	`job_id` INT NOT NULL,
 Primary Key  (`skill_id`,`job_id`)
 ) ;
 
-DROP TABLE IF EXISTS candidate_profile;
+
 Create table `candidate_profile` (
 	`user_id` INT NOT NULL,
 	`profile_id` INT NOT NULL AUTO_INCREMENT,
@@ -166,28 +197,28 @@ Create table `candidate_profile` (
 Primary Key  (`profile_id`)
 ) ;
 
-DROP TABLE IF EXISTS candidate_skill;
+
 CREATE table `candidate_skill` (
 	`skill_id` INT NOT NULL,
 	`profile_id` INT NOT NULL,
 Primary Key (`skill_id`,`profile_id`)
 );
 
-DROP TABLE IF EXISTS ward_job;
+
 Create table `ward_job` (
 	`ward_id` INT NOT NULL,
 	`job_id` INT NOT NULL,
 Primary Key  (`ward_id`,`job_id`)
 ) ;
 
-DROP TABLE IF EXISTS ward_company;
+
 Create table `ward_company` (
 	`ward_id` INT NOT NULL,
 	`company_id` INT NOT NULL,
 Primary Key  (`ward_id`,`company_id`)
 ) ;
 
-DROP TABLE IF EXISTS applications;
+
 Create table `applications` (
 	`user_id` INT NOT NULL,
 	`job_id` INT NOT NULL,
@@ -199,28 +230,28 @@ Create table `applications` (
 Primary Key  (`user_id`,`job_id`)
 ) ;
 
-DROP TABLE IF EXISTS job_level;
+
 Create table `job_level` (
 	`level_id` INT NOT NULL,
 	`job_id` INT NOT NULL,
 Primary Key  (`level_id`,`job_id`)
 ) ;
 
-DROP TABLE IF EXISTS job_work_type;
+
 Create table `job_work_type` (
 	`job_id` INT NOT NULL,
 	`work_type_id` INT NOT NULL,
 Primary Key  (`job_id`,`work_type_id`)
 ) ;
 
-DROP TABLE IF EXISTS job_major;
+
 Create table `job_major` (
 	`job_id` INT NOT NULL,
 	`major_id` INT NOT NULL,
 Primary Key  (`job_id`,`major_id`)
 ) ;
 
-DROP TABLE IF EXISTS certificates;
+
 Create table `certificates` (
 	`cer_id` INT NOT NULL AUTO_INCREMENT,
 	`cer_name` VARCHAR(200) NULL,
@@ -230,14 +261,14 @@ Create table `certificates` (
 Primary Key  (`cer_id`)
 ) ;
 
-DROP TABLE IF EXISTS candidate_certi;
+
 Create table `candidate_certi` (
 	`cer_id` INT NOT NULL,
 	`profile_id` INT NOT NULL,
 Primary Key  (`cer_id`,`profile_id`)
 ) ;
 
-DROP TABLE IF EXISTS work_experience;
+
 Create table `work_experience` (
 	`exper_id` INT NOT NULL AUTO_INCREMENT,
 	`description` TEXT NULL,
@@ -247,14 +278,14 @@ Create table `work_experience` (
 Primary Key  (`exper_id`)
 ) ;
 
-DROP TABLE IF EXISTS candidate_exper;
+
 Create table `candidate_exper` (
 	`exper_id` INT NOT NULL,
 	`profile_id` INT NOT NULL,
 Primary Key  (`exper_id`,`profile_id`)
 ) ;
 
-DROP TABLE IF EXISTS edu;
+
 Create table `edu` (
 	`edu_id` INT NOT NULL AUTO_INCREMENT,
 	`school_name` VARCHAR(200) NULL,
@@ -264,7 +295,7 @@ Create table `edu` (
 Primary Key  (`edu_id`)
 ) ;
 
-DROP TABLE IF EXISTS candidate_edu;
+
 Create table `candidate_edu` (
 	`edu_id` INT NOT NULL,
 	`profile_id` INT NOT NULL,
@@ -350,7 +381,7 @@ INSERT INTO roles(role_id, role_name) VALUES
 (2, 'CANDIDATE'),
 (3, 'RECRUITER');
 
-INSERT INTO users(full_name, email, password, role_id) VALUES
+INSERT INTO users(full_name, email, password_hash, role_id) VALUES
 ('ADMIN', 'admin@gmail.com', 'admin1234', 1);
 
 INSERT INTO location_city (city_name) VALUES
@@ -650,7 +681,7 @@ INSERT INTO location_ward (ward_name, city_id) VALUES
 ('Vĩnh Tuy', 1),
 ('Đồng Tâm', 1),
 ('Tân Quang', 1),
-('Bằng Hành', 1);
+('Bằng Hành', 1),
 ('Liên Hiệp', 1),
 ('Hùng An', 1),
 ('Đồng Yên', 1),
@@ -1199,7 +1230,7 @@ INSERT INTO location_ward (ward_name, city_id) VALUES
 ('Vân Đồn', 11),
 ('Cô Tô', 11);
 
---Bắc Ninh
+-- Bắc Ninh
 INSERT INTO location_ward (ward_name, city_id) VALUES
 ('Bắc Giang', 10),
 ('Đa Mai', 10),
@@ -1300,7 +1331,7 @@ INSERT INTO location_ward (ward_name, city_id) VALUES
 ('Trung Chính', 10),
 ('Lâm Thao', 10);
 
---Phú Thọ
+-- Phú Thọ
 INSERT INTO location_ward (ward_name, city_id) VALUES
 ('Tân Hòa', 9),
 ('Hòa Bình', 9),
@@ -2741,3 +2772,4 @@ INSERT INTO location_ward(ward_name, city_id) VALUES
 ('Trà Côn', 32),
 ('Vĩnh Xuân', 32),
 ('Lục Sĩ Thành', 32);
+

@@ -1,7 +1,9 @@
 package com.jobhuntly.backend.service;
 
-import com.jobhuntly.backend.dto.RegisterRequest;
+import com.jobhuntly.backend.dto.request.RegisterRequest;
+import com.jobhuntly.backend.dto.response.AuthResponse;
 
 public interface AuthService {
-    void register(RegisterRequest request);
+    AuthResponse register(RegisterRequest request);
+    AuthResponse activateAccount(String token);
 }
