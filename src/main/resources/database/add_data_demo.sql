@@ -33,6 +33,25 @@ VALUES (1, 4, 'Công ty công nghệ chuyên AI', 'contact@aitech.com', '12 Lý 
        (5, 5, 'Công ty giáo dục trực tuyến', 'info@elearning.vn', '78 Cách Mạng Tháng 8, TP.HCM', 40, 'active',
         'edu_avatar.png', 'edu_cover.png', 'E-Learning VN');
 
+insert into work_type (work_type_name) values
+('On-site'),
+('Remote'),
+('Hybrid'),
+('Full-time'),
+('Part-time');
+
+insert into levels (level_name) values
+('Intern'),
+('Fresher'),
+('Junior'),
+('Associate'),
+('Mid-level'),
+('Lead'),
+('Manager'),
+('Senior'),
+('Director'),
+('Executive');
+
 INSERT INTO location_city (city_name)
 VALUES ('Tuyên Quang'),
        ('Cao Bằng'),
