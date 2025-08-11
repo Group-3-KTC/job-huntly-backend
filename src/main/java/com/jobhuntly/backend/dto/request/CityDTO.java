@@ -1,4 +1,4 @@
-package com.jobhuntly.backend.dto;
+package com.jobhuntly.backend.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
@@ -7,8 +7,6 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
 public class CityDTO {
     @JsonProperty("city_name")
     private String name;

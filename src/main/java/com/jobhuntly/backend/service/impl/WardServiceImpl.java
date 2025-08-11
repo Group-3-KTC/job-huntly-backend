@@ -19,7 +19,7 @@ public class WardServiceImpl implements WardService {
         List<WardResponse> wards = wardRepository.findByCity_NameIgnoreCase(cityName)
                 .stream()
                 .map(w -> new WardResponse(w.getName())) // record dùng constructor
-                .toList(); // Java 16+ có toList()
+                .toList();
 
         if (wards.isEmpty()) {
             throw new RuntimeException("Không tìm thấy phường/xã nào thuộc thành phố: " + cityName);

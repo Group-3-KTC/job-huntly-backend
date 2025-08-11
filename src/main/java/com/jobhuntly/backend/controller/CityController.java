@@ -1,6 +1,6 @@
 package com.jobhuntly.backend.controller;
 
-import com.jobhuntly.backend.dto.CityDTO;
+import com.jobhuntly.backend.dto.request.CityDTO;
 import com.jobhuntly.backend.service.CityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

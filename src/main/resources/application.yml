@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/job_huntly_local?useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: codegym
+#    password: codegym
   jpa:
     hibernate:
       ddl-auto: none
