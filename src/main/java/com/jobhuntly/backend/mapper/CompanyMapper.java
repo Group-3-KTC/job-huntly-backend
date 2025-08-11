@@ -1,12 +1,10 @@
 package com.jobhuntly.backend.mapper;
 
-import com.jobhuntly.backend.dto.company.CompanyDto;
+import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.entity.Company;
-import com.jobhuntly.backend.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
 
 import java.util.List;
 
