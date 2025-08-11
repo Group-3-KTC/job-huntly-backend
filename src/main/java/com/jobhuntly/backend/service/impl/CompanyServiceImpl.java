@@ -41,23 +41,40 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional
     public CompanyDto createCompany(CompanyDto companyDto) {
-        Company company = companyMapper.toEntity(companyDto);
+        // ID là null khi tạo mới vô DB nó tự động tăng
+        companyDto.setId(null);
 
-        // Xử lý mối quan hệ với User
-        if (companyDto.getUserId() != null) {
-            User user = userRepository.findById(companyDto.getUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + companyDto.getUserId()));
-            company.setUser(user);
+        Long userId = companyDto.getUserId();
+        if (userId == null) {
+            throw new IllegalArgumentException("userId là bắt buộc");
         }
+
+        // 1. Kiểm tra recruiter đã có công ty hay chưa TRƯỚC khi load User
+        if (companyRepository.existsByUser_Id(userId)) {
+            throw new IllegalArgumentException("Recruiter này đã có công ty");
+        }
+
+        // 2. Load User và kiểm tra role
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        // Chỉ cho phép RECRUITER tạo công ty
+        if (!"RECRUITER".equalsIgnoreCase(user.getRole().getRoleName())) {
+            throw new IllegalArgumentException("Chỉ RECRUITER mới được tạo công ty");
+        }
+
+        Company company = companyMapper.toEntity(companyDto);
+        company.setUser(user);
 
         return companyMapper.toDto(companyRepository.save(company));
     }
 
     @Override
     @Transactional
-    public CompanyDto updateCompany(Long id, CompanyDto companyDto) {
+    public CompanyDto updateCompanyById(Long id, CompanyDto companyDto) {
         return companyRepository.findById(id)
                 .map(existing -> {
+                    companyDto.setId(id);
                     companyMapper.updateEntityFromDto(companyDto, existing);
 
                     // Xử lý mối quan hệ với User nếu có thay đổi
@@ -66,7 +83,6 @@ public class CompanyServiceImpl implements CompanyService {
                                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + companyDto.getUserId()));
                         existing.setUser(user);
                     }
-
                     return companyMapper.toDto(companyRepository.save(existing));
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("Company ID Not found: " + id));
@@ -74,7 +90,7 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     @Transactional
-    public void deleteCompany(Long id) {
+    public void deleteCompanyById(Long id) {
         companyRepository.findById(id)
                 .ifPresentOrElse(
                         companyRepository::delete,

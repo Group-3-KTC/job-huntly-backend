@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 public class CompanyDto {
     private Long id;
-    private Integer userId;
+    private Long userId;
     private String description;
     private String email;
     private String address;
