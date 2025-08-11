@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.entity;
 
+import com.jobhuntly.backend.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,12 +16,22 @@ import lombok.NoArgsConstructor;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Integer id;
+
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
-    private Boolean isActive;
 
     @ManyToOne
-    @JoinColumn(name = "user_type_id")
-    private UserType userType;
+    @JoinColumn(name = "role_id", nullable = false) // FK tới bảng roles
+    private Role role;
+
+    @Column(name = "activation_token", length = 64)
+    private String activationToken;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
 }
