@@ -1,6 +1,6 @@
 package com.jobhuntly.backend.mapper;
 
-import com.jobhuntly.backend.dto.CityDTO;
+import com.jobhuntly.backend.dto.request.CityDTO;
 import com.jobhuntly.backend.entity.City;
 import org.mapstruct.Mapper;
 

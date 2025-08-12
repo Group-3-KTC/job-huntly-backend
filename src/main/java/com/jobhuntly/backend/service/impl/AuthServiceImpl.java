@@ -1,16 +1,21 @@
 package com.jobhuntly.backend.service.impl;
 
-import com.jobhuntly.backend.dto.request.RegisterRequest;
-import com.jobhuntly.backend.dto.response.AuthResponse;
+import com.jobhuntly.backend.dto.auth.request.LoginRequest;
+import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
+import com.jobhuntly.backend.dto.auth.response.LoginResponse;
+import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
 import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.entity.Role;
 import com.jobhuntly.backend.entity.enums.Status;
 import com.jobhuntly.backend.repository.UserRepository;
 import com.jobhuntly.backend.repository.RoleRepository;
+import com.jobhuntly.backend.security.jwt.JwtUtil;
 import com.jobhuntly.backend.service.AuthService;
 import com.jobhuntly.backend.service.email.EmailSender;
 import com.jobhuntly.backend.service.email.EmailValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,9 +30,13 @@ public class AuthServiceImpl implements AuthService {
     private final EmailSender emailSender;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final AuthenticationManager authManager;
+    private final UserRepository userRepo;
+    private final JwtUtil jwtUtil;
+
 
     @Override
-    public AuthResponse register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
         if (!emailValidator.test(request.getEmail())) {
             throw new IllegalStateException("Email không hợp lệ");
         }
@@ -36,17 +45,21 @@ public class AuthServiceImpl implements AuthService {
         if (existingUser.isPresent()) {
             throw new IllegalStateException("Email đã được sử dụng");
         }
-        Role role = roleRepository.findByRoleName(request.getRole())
+        Role role = roleRepository.findByRoleName(request.getRole().toUpperCase())
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
         String token = UUID.randomUUID().toString();
 
         User user = User.builder()
                 .email(request.getEmail())
+                .fullName(request.getFullName())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(role)
+                .isActive(false)
                 .activationToken(token)
                 .build();
+
+        user.setStatus(Status.INACTIVE);
 
         userRepository.save(user);
 
@@ -70,18 +83,43 @@ public class AuthServiceImpl implements AuthService {
                 htmlContent
         );
 
-        return new AuthResponse("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt.");
+        return new RegisterResponse("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt.");
     }
 
     @Override
-    public AuthResponse activateAccount(String token) {
+    public RegisterResponse activateAccount(String token) {
         User user = userRepository.findByActivationToken(token)
                 .orElseThrow(() -> new IllegalStateException("Token không hợp lệ"));
 
+        user.setIsActive(true);
         user.setStatus(Status.ACTIVE);
         user.setActivationToken(null);
         userRepository.save(user);
 
-        return new AuthResponse("Tài khoản đã được kích hoạt thành công!");
+        return new RegisterResponse("Tài khoản đã được kích hoạt thành công!");
+    }
+
+    @Override
+    public LoginResponse login(LoginRequest request) {
+        authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
+
+        // lấy user để build payload
+        User user = userRepo.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        String roleName = user.getRole().getRoleName(); // ví dụ: CANDIDATE
+        String token = jwtUtil.generateToken(user.getEmail(), roleName);
+
+        return LoginResponse.builder()
+                .accessToken(token)
+                .tokenType("Bearer")
+                .expiresIn( /* ví dụ 30 ngày (giây) */ 30L * 24 * 60 * 60 )
+                .userId(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .role(roleName)
+                .build();
     }
 }

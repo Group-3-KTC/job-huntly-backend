@@ -32,3 +32,8 @@ api:
 jwt:
   expiration: 2592000 #30 days = 30 * 24 * 60 * 60
   secretKey: TaqlmGv1iEDMRiFp/pHuID1+T84IABfuA0xXh4GhiUI=
+
+cloudinary:
+  cloud-name: dsm6pgezz
+  api-key: 152283123153368
+  api-secret: F_cwTasxEU6MUvxQ_pqkbTLfFYE

@@ -1,10 +1,10 @@
-package com.jobhuntly.backend.dto.response;
+package com.jobhuntly.backend.dto.auth.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class AuthResponse {
+public class RegisterResponse {
     String message;
 }
