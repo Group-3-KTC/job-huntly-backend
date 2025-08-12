@@ -23,10 +23,15 @@ public class User {
     private String email;
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
+    @Column(name = "full_name", nullable = false, length = 255)
+    private String fullName;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false) // FK tới bảng roles
     private Role role;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
 
     @Column(name = "activation_token", length = 64)
     private String activationToken;

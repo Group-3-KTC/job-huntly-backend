@@ -47,6 +47,7 @@ Create table `users` (
 	`status` ENUM('ACTIVE', 'INACTIVE', 'BANNED') DEFAULT 'INACTIVE',
 	`activation_token` VARCHAR(64) NULL,
 	`google_id` VARCHAR(100) UNIQUE,
+    `is_active` TINYINT(1) DEFAULT 0,
     `sms_notification_active` TINYINT(1) DEFAULT 0,
     `email_notification_active` TINYINT(1) DEFAULT 0,
     `create_at` DATETIME DEFAULT CURRENT_TIMESTAMP(),
@@ -372,6 +373,4 @@ Alter table `candidate_edu` add  foreign key(`edu_id`) references `edu` (`edu_id
 Alter table `candidate_skill` add foreign key(`skill_id`) references `skills` (`skill_id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ;
 Alter table `candidate_skill` add  foreign key(`profile_id`) references `candidate_profile` (`profile_id`) ON DELETE RESTRICT ON UPDATE CASCADE
-;
-;
 ;
