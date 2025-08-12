@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.config;
 
+import com.jobhuntly.backend.security.Endpoints;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,12 +24,21 @@ public class AppConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF cho API
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/activate").permitAll() // Cho phép public
-                        .anyRequest().permitAll() // Các request khác yêu cầu login
+                        // Public GET
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, Endpoints.Public.GET).permitAll()
+                        // Public POST
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, Endpoints.Public.POST).permitAll()
+                        // Public PUT
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, Endpoints.Public.PUT).permitAll()
+                        // Public DELETE
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, Endpoints.Public.DELETE).permitAll()
+                        // Admin ALL
+                        .requestMatchers(Endpoints.Admin.ALL).hasRole("ADMIN")
+                        // Các request còn lại yêu cầu login
+                        .anyRequest().authenticated()
                 );
-
         return http.build();
     }
 }

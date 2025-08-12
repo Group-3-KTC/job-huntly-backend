@@ -21,7 +21,10 @@ public class User {
 
     @Column(nullable = false, unique = true, length = 255)
     private String email;
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+    // Cho phép null để account social không cần password
+    @Column(name = "password_hash", nullable = true)
     private String passwordHash;
     @Column(name = "full_name", nullable = false, length = 255)
     private String fullName;

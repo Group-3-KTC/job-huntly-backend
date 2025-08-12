@@ -1,5 +1,11 @@
 package com.jobhuntly.backend.service.impl;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.util.Utils;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.jobhuntly.backend.dto.auth.request.GoogleLoginRequest;
 import com.jobhuntly.backend.dto.auth.request.LoginRequest;
 import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
@@ -14,11 +20,13 @@ import com.jobhuntly.backend.service.AuthService;
 import com.jobhuntly.backend.service.email.EmailSender;
 import com.jobhuntly.backend.service.email.EmailValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,6 +41,8 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authManager;
     private final UserRepository userRepo;
     private final JwtUtil jwtUtil;
+    @Value("${google.client-id}")
+    private String googleClientId;
 
 
     @Override
@@ -121,5 +131,84 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(user.getFullName())
                 .role(roleName)
                 .build();
+    }
+
+    @Override
+    public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
+        GoogleIdToken idToken = verifyGoogleIdToken(request.getIdToken(), googleClientId);
+        if (idToken == null) {
+            throw new RuntimeException("Invalid Google ID token");
+        }
+
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        String googleUserId = payload.getSubject();
+        String email = payload.getEmail();
+        boolean emailVerified = Boolean.TRUE.equals(payload.getEmailVerified());
+        String fullName = (String) payload.get("name");
+
+        if (email == null || !emailVerified) {
+            throw new RuntimeException("Google email is missing or not verified");
+        }
+
+        // find-or-create
+        Optional<User> byGoogle = userRepository.findByGoogleId(googleUserId);
+        User user = byGoogle.orElseGet(() -> userRepository.findByEmail(email).orElse(null));
+
+        if (user == null) {
+            user = new User();
+            user.setEmail(email);
+            user.setFullName(fullName);
+            user.setGoogleId(googleUserId);
+            user.setStatus(Status.ACTIVE);
+            user.setIsActive(true);
+            user.setActivationToken(null);
+            user.setPasswordHash(null);
+
+            Role role = roleRepository.findByRoleName("CANDIDATE")
+                    .orElseThrow(() -> new RuntimeException("Default role not found"));
+            user.setRole(role);
+
+            user = userRepository.save(user);
+        } else {
+            if (user.getGoogleId() == null) user.setGoogleId(googleUserId);
+            if (user.getStatus() != Status.ACTIVE) user.setStatus(Status.ACTIVE);
+            user.setIsActive(true);
+            userRepository.save(user);
+        }
+
+        String roleName = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "CANDIDATE";
+        String token = jwtUtil.generateToken(user.getEmail(), roleName);
+
+        String tokenType = "Bearer";
+        long expiresIn = jwtUtil.getExpirationSeconds();
+        Long userId = (user.getId() == null) ? null : user.getId();
+
+        return new LoginResponse(
+                token,
+                tokenType,
+                expiresIn,
+                userId,
+                roleName,
+                user.getFullName(),
+                user.getEmail()
+        );
+    }
+
+
+
+
+    private GoogleIdToken verifyGoogleIdToken(String idTokenString, String clientId) {
+        try {
+            HttpTransport transport = Utils.getDefaultTransport();
+            JsonFactory jsonFactory = Utils.getDefaultJsonFactory();
+
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
+                    .setAudience(Collections.singletonList(clientId))
+                    .build();
+
+            return verifier.verify(idTokenString);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

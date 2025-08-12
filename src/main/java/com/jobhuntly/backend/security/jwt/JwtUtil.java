@@ -3,6 +3,7 @@ package com.jobhuntly.backend.security.jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -13,6 +14,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     private final SecretKey key;
+    @Getter
     private final long expirationMillis;
 
     public JwtUtil(JwtProperties props) {
@@ -24,7 +26,7 @@ public class JwtUtil {
         Instant now = Instant.now();
         return Jwts.builder()
                 .setSubject(subject)
-                .claim("role", role) // 👈 nhúng role
+                .claim("role", role)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusMillis(expirationMillis)))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -39,5 +41,9 @@ public class JwtUtil {
     public String extractRole(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().get("role", String.class);
+    }
+
+    public long getExpirationSeconds() {
+        return expirationMillis / 1000L;
     }
 }

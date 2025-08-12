@@ -1,0 +1,44 @@
+spring:
+  config:
+    import: optional:file:.env.local.properties
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      properties:
+        hibernate:
+          format-sql: true
+    show-sql: true
+    database-platform: ${DB_DIALECT}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USER}
+    password: ${MAIL_PASS}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+api:
+  prefix: api/v1
+jwt:
+  expiration: 2592000 #30 days = 30 * 24 * 60 * 60
+  secretKey: ${JWT_SECRET}
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_NAME}
+  api-key: ${CLOUDINARY_KEY}
+  api-secret: ${CLOUDINARY_SECRET}
