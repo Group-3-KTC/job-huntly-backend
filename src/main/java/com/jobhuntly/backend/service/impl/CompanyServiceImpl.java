@@ -60,7 +60,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         // Chỉ cho phép RECRUITER tạo công ty
         if (!"RECRUITER".equalsIgnoreCase(user.getRole().getRoleName())) {
-            throw new IllegalArgumentException("Chỉ RECRUITER mới được tạo công ty");
+            throw new IllegalArgumentException("Chỉ tạo công ty mới cho RECRUITER");
         }
 
         Company company = companyMapper.toEntity(companyDto);
