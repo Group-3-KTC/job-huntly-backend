@@ -6,6 +6,7 @@ import com.jobhuntly.backend.dto.response.CategoryResponse;
 import java.util.List;
 
 public interface CategoryService {
-    void createCategory(CategoryRequest categoryRequest);
-    List<CategoryResponse> getAllCategories();
+    CategoryResponse createCategory(CategoryRequest categoryRequest);
+    List<CategoryResponse> getRootCategories();
+    List<CategoryResponse> getChildrenByParentName(String parentName);
 }

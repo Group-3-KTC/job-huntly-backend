@@ -1,10 +1,10 @@
 package com.jobhuntly.backend.service;
 
-import com.jobhuntly.backend.dto.request.CityDTO;
+import com.jobhuntly.backend.dto.request.CityRequest;
 
 import java.util.List;
 
 public interface CityService {
-    List<CityDTO> getAllCity();
-    List<CityDTO> getCityByName(String namePart);
+    List<CityRequest> getAllCity();
+    List<CityRequest> getCityByName(String namePart);
 }

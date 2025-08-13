@@ -37,7 +37,7 @@ public class AppConfig {
                         // Admin ALL
                         .requestMatchers(Endpoints.Admin.ALL).hasRole("ADMIN")
                         // Các request còn lại yêu cầu login
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 );
         return http.build();
     }
