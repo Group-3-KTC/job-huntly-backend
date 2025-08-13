@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CityDTO {
+public class CityRequest {
     @JsonProperty("city_name")
     private String name;
 }

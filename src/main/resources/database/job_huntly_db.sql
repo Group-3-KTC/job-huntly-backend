@@ -374,3 +374,40 @@ Alter table `candidate_skill` add foreign key(`skill_id`) references `skills` (`
 ;
 Alter table `candidate_skill` add  foreign key(`profile_id`) references `candidate_profile` (`profile_id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ;
+ALTER TABLE `skills`
+  ADD COLUMN `cate_id` INT NULL,
+   ADD CONSTRAINT `fk_skills_categories`
+    FOREIGN KEY (`cate_id`)
+    REFERENCES `categories`(`cate_id`)
+    ON UPDATE CASCADE
+    ON DELETE SET NULL;
+
+-- 1) Thêm parent_id để biến categories thành cây (Category -> Major)
+ALTER TABLE `categories`
+  ADD COLUMN `parent_id` INT NULL AFTER `cate_name`;
+
+ALTER TABLE `categories`
+  ADD CONSTRAINT `fk_categories_parent`
+    FOREIGN KEY (`parent_id`) REFERENCES `categories`(`cate_id`)
+    ON UPDATE CASCADE ON DELETE CASCADE;
+
+-- 2) Tạo bảng N–N giữa skills và categories
+CREATE TABLE `skill_categories` (
+  `skill_id` INT NOT NULL,
+  `cate_id` INT NOT NULL,
+  PRIMARY KEY (`skill_id`, `cate_id`),
+  CONSTRAINT `fk_skill_categories_skill`
+    FOREIGN KEY (`skill_id`) REFERENCES `skills`(`skill_id`)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT `fk_skill_categories_category`
+    FOREIGN KEY (`cate_id`) REFERENCES `categories`(`cate_id`)
+    ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- 3) Gỡ liên kết trực tiếp từ skills -> categories và bỏ cột cate_id
+ALTER TABLE `skills` DROP FOREIGN KEY `fk_skills_categories`;
+ALTER TABLE `skills` DROP COLUMN `cate_id`;
+
+-- 4) Drop các bảng không dùng nữa
+DROP TABLE IF EXISTS `job_major`;
+DROP TABLE IF EXISTS `majors`;

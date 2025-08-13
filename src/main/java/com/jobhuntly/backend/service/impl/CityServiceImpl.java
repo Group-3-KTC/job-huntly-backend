@@ -1,6 +1,6 @@
 package com.jobhuntly.backend.service.impl;
 
-import com.jobhuntly.backend.dto.request.CityDTO;
+import com.jobhuntly.backend.dto.request.CityRequest;
 import com.jobhuntly.backend.mapper.CityMapper;
 import com.jobhuntly.backend.repository.CityRepository;
 import com.jobhuntly.backend.service.CityService;
@@ -19,15 +19,15 @@ public class CityServiceImpl implements CityService {
     private final CityMapper cityMapper;
 
     @Override
-    public List<CityDTO> getAllCity() {
+    public List<CityRequest> getAllCity() {
         return cityRepository.findAll().stream()
                 .map(cityMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<CityDTO> getCityByName(String namePart) {
-        List<CityDTO> result = cityRepository.findByNameContainingIgnoreCase(namePart)
+    public List<CityRequest> getCityByName(String namePart) {
+        List<CityRequest> result = cityRepository.findByNameContainingIgnoreCase(namePart)
                 .stream()
                 .map(cityMapper::toDTO)
                 .collect(Collectors.toList());
