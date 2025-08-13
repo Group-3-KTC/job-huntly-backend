@@ -20,22 +20,59 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+
     @Override
-    public void createCategory(CategoryRequest categoryRequest) {
-        Optional.ofNullable(categoryRepository.findByNameIgnoreCase(categoryRequest.getName()))
-                .ifPresentOrElse(existing -> {
-                    throw new IllegalArgumentException("Category already exists");
-                }, () -> {
-                            Category newCategory = categoryMapper.toEntity(categoryRequest);
-                            categoryRepository.save(newCategory);
-                        }
-                        );
+    public CategoryResponse createCategory(CategoryRequest categoryRequest) {
+        String name = normalize(categoryRequest.getName());
+        String parentName = normalize(categoryRequest.getParentName());
+
+        if (name.isBlank()) {
+            throw new IllegalArgumentException("Category name is required");
+        }
+
+        // Category root
+        if (parentName.isBlank()) {
+            if (categoryRepository.existsByParentIsNullAndNameIgnoreCase(name)) {
+                throw new IllegalArgumentException("Category already exists");
+            }
+            Category root = categoryMapper.toEntity(categoryRequest);
+            root.setParent(null);
+            Category saved = categoryRepository.save(root);
+            return categoryMapper.toResponse(saved);
+        }
+        Category children = categoryRepository.findByNameIgnoreCase(parentName)
+                .orElseThrow(() -> new IllegalArgumentException("Parent Category not found " +parentName));
+
+        if (categoryRepository.existsByParentAndNameIgnoreCase(children, name)) {
+            throw new IllegalArgumentException("Category already exists ");
+        }
+        Category child = categoryMapper.toEntity(categoryRequest);
+        child.setParent(children);
+
+        Category saved = categoryRepository.save(child);
+        return categoryMapper.toResponse(saved);
     }
 
     @Override
-    public List<CategoryResponse> getAllCategories() {
-        return categoryRepository.findAll().stream()
-                .map(categoryMapper::toResponse)
-                .collect(Collectors.toList());
+    public List<CategoryResponse> getRootCategories() {
+        return categoryRepository.findAllByParentIsNullOrderByNameAsc().stream()
+                .map(categoryMapper::toResponse).toList();
+    }
+
+    @Override
+    public List<CategoryResponse> getChildrenByParentName(String parentName) {
+        String parent = normalize(parentName);
+        if (parent.isBlank()) {
+            throw new IllegalArgumentException("Parent name is required");
+        }
+        categoryRepository.findByNameIgnoreCase(parent)
+                .orElseThrow(() -> new IllegalArgumentException("Parent category not found" +parent));
+
+        return categoryRepository.findAllByParent_NameIgnoreCaseOrderByNameAsc(parent)
+                .stream().map(categoryMapper::toResponse).toList();
+    }
+
+    private String normalize(String raw) {
+        return raw == null ? "" : raw.trim().replaceAll("\\s+", " ");
     }
 }
