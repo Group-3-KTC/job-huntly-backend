@@ -411,3 +411,37 @@ ALTER TABLE `skills` DROP COLUMN `cate_id`;
 -- 4) Drop các bảng không dùng nữa
 DROP TABLE IF EXISTS `job_major`;
 DROP TABLE IF EXISTS `majors`;
+
+
+
+CREATE TABLE IF NOT EXISTS `job_category` (
+  `job_id`  INT NOT NULL,
+  `cate_id` INT NOT NULL,
+  PRIMARY KEY (`job_id`, `cate_id`),
+  CONSTRAINT `fk_job_category_job`
+    FOREIGN KEY (`job_id`)  REFERENCES `jobs`(`job_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_job_category_category`
+    FOREIGN KEY (`cate_id`) REFERENCES `categories`(`cate_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+SET @fk_name := (
+  SELECT k.CONSTRAINT_NAME
+  FROM information_schema.KEY_COLUMN_USAGE k
+  WHERE k.TABLE_SCHEMA = DATABASE()
+    AND k.TABLE_NAME   = 'jobs'
+    AND k.COLUMN_NAME  = 'cate_id'
+    AND k.REFERENCED_TABLE_NAME = 'categories'
+  LIMIT 1
+);
+SET @sql := IFNULL(CONCAT('ALTER TABLE `jobs` DROP FOREIGN KEY `', @fk_name, '`'), 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- 3) Xoá cột cate_id khỏi jobs
+ALTER TABLE `jobs` DROP COLUMN `cate_id`;
+
+ALTER TABLE `jobs`
+  MODIFY COLUMN `salary_min` BIGINT NULL,
+  MODIFY COLUMN `salary_max` BIGINT NULL,
+  ADD COLUMN `salary_type` TINYINT NOT NULL DEFAULT 0 AFTER `salary_max`;

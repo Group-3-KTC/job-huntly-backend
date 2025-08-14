@@ -1,14 +1,15 @@
 package com.jobhuntly.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "levels")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -20,4 +21,7 @@ public class Level {
 
     @Column(name = "level_name")
     private String name;
+
+    @ManyToMany(mappedBy = "levels")
+    private Set<Job> jobs = new HashSet<>();
 }
