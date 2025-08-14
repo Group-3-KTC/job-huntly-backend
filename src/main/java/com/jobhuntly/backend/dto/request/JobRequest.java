@@ -17,7 +17,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JobRequest {
-    // --- bắt buộc ---
     @NotNull
     @JsonProperty("company_id")
     private Long companyId;
@@ -25,7 +24,6 @@ public class JobRequest {
     @NotBlank
     private String title;
 
-    // --- ngày tháng ---
     @JsonProperty("date_post")
     @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate datePost;
@@ -34,7 +32,6 @@ public class JobRequest {
     @JsonFormat(pattern = "dd-MM-yyyy")
     private LocalDate expiredDate;
 
-    // --- mô tả ---
     private String description;
     private String requirements;
     private String benefits;
@@ -43,15 +40,14 @@ public class JobRequest {
 
     // --- lương (VND) ---
     @JsonProperty("salary_min")
-    private Long salaryMin;           // BIGINT
+    private Long salaryMin;
 
     @JsonProperty("salary_max")
-    private Long salaryMax;           // BIGINT
+    private Long salaryMax;
 
     @JsonProperty("salary_type")
     private Integer salaryType;       // 0=RANGE, 1=NEGOTIABLE, 2=HIDDEN
 
-    // --- liên kết M:N theo tên ---
     @JsonProperty("category_names")
     private List<String> categoryNames;
 
@@ -64,7 +60,6 @@ public class JobRequest {
     @JsonProperty("work_type_names")
     private List<String> workTypeNames;
 
-    // Ward dễ trùng tên theo city → dùng id cho chắc
     @JsonProperty("ward_ids")
     private List<Long> wardIds;
 }

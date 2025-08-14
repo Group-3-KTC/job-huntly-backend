@@ -34,10 +34,10 @@ public class JobResponse {
     private String status;
 
     @JsonProperty("salary_min")
-    private Long salaryMin;            // BIGINT
+    private Long salaryMin;
 
     @JsonProperty("salary_max")
-    private Long salaryMax;            // BIGINT
+    private Long salaryMax;
 
     @JsonProperty("salary_type")
     private Integer salaryType;        // 0=RANGE, 1=NEGOTIABLE, 2=HIDDEN
