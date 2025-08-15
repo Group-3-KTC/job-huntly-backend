@@ -34,4 +34,7 @@ public class Category {
     // M:N với Skill qua skill_categories
     @ManyToMany(mappedBy = "categories")
     private Set<Skill> skills = new HashSet<>();
+
+    @ManyToMany(mappedBy = "categories")
+    private Set<Company> companies = new HashSet<>();
 }

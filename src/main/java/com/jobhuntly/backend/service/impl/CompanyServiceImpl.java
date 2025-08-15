@@ -1,29 +1,34 @@
 package com.jobhuntly.backend.service.impl;
 
 import com.jobhuntly.backend.dto.response.CompanyDto;
+import com.jobhuntly.backend.entity.Category;
 import com.jobhuntly.backend.entity.Company;
 import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.exception.ResourceNotFoundException;
 import com.jobhuntly.backend.mapper.CompanyMapper;
+import com.jobhuntly.backend.repository.CategoryRepository;
 import com.jobhuntly.backend.repository.CompanyRepository;
+import com.jobhuntly.backend.repository.JobRepository;
 import com.jobhuntly.backend.repository.UserRepository;
 import com.jobhuntly.backend.service.company.CompanyService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
-    @Autowired
-    private CompanyRepository companyRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CompanyMapper companyMapper;
+    private final CompanyRepository companyRepository;
+    private final UserRepository userRepository;
+    private final CompanyMapper companyMapper;
+    private final CategoryRepository categoryRepository;
+    private final JobRepository jobRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -34,14 +39,24 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional(readOnly = true)
     public CompanyDto getCompanyById(Long id) {
-        return companyMapper.toDto(companyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Company ID Not found: " + id)));
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Company ID Not found: " + id));
+        CompanyDto dto = companyMapper.toDto(company);
+        dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
+
+        // Trả về categoryIds cho tiện cập nhật phía client:
+        if (company.getCategories() != null) {
+            dto.setCategoryIds(company.getCategories().stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toSet()));
+        }
+        return dto;
     }
 
     @Override
     @Transactional
     public CompanyDto createCompany(CompanyDto companyDto) {
-        // ID là null khi tạo mới vô DB nó tự động tăng
+        // ID null để DB tự tăng
         companyDto.setId(null);
 
         Long userId = companyDto.getUserId();
@@ -49,7 +64,7 @@ public class CompanyServiceImpl implements CompanyService {
             throw new IllegalArgumentException("userId là bắt buộc");
         }
 
-        // 1. Kiểm tra recruiter đã có công ty hay chưa TRƯỚC khi load User
+        // 1) Kiểm tra recruiter đã có công ty chưa
         if (companyRepository.existsByUser_Id(userId)) {
             throw new IllegalArgumentException("Recruiter này đã có công ty");
         }
@@ -63,29 +78,67 @@ public class CompanyServiceImpl implements CompanyService {
             throw new IllegalArgumentException("Chỉ tạo công ty mới cho RECRUITER");
         }
 
-        Company company = companyMapper.toEntity(companyDto);
-        company.setUser(user);
+        // 3) Map DTO -> Entity (không set user/categories trong mapper)
+        Company entity = companyMapper.toEntity(companyDto);
+        entity.setUser(user);
 
-        return companyMapper.toDto(companyRepository.save(company));
+        // 4) Xử lý N–N: set categories từ categoryIds (nếu có)
+        if (companyDto.getCategoryIds() != null && !companyDto.getCategoryIds().isEmpty()) {
+            Set<Category> cats = new HashSet<>(categoryRepository.findAllById(companyDto.getCategoryIds()));
+            entity.setCategories(cats);
+        }
+
+        Company saved = companyRepository.save(entity);
+        CompanyDto out = companyMapper.toDto(saved);
+        if (saved.getCategories() != null) {
+            out.setCategoryIds(saved.getCategories().stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toSet()));
+        }
+        return out;
     }
 
     @Override
     @Transactional
     public CompanyDto updateCompanyById(Long id, CompanyDto companyDto) {
-        return companyRepository.findById(id)
-                .map(existing -> {
-                    companyDto.setId(id);
-                    companyMapper.updateEntityFromDto(companyDto, existing);
-
-                    // Xử lý mối quan hệ với User nếu có thay đổi
-                    if (companyDto.getUserId() != null) {
-                        User user = userRepository.findById(companyDto.getUserId())
-                                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + companyDto.getUserId()));
-                        existing.setUser(user);
-                    }
-                    return companyMapper.toDto(companyRepository.save(existing));
-                })
+        Company existing = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company ID Not found: " + id));
+
+        // 1) Patch field non-null (mapper IGNORE nulls)
+        companyDto.setId(id);
+        companyMapper.updateEntityFromDto(companyDto, existing);
+
+        // 2) Đổi user nếu gửi userId (optional)
+        if (companyDto.getUserId() != null
+                && !companyDto.getUserId().equals(existing.getUser().getId())) {
+
+            User user = userRepository.findById(companyDto.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + companyDto.getUserId()));
+            if (!"RECRUITER".equalsIgnoreCase(user.getRole().getRoleName())) {
+                throw new IllegalArgumentException("Chỉ gán công ty cho RECRUITER");
+            }
+            // Nếu đã có công ty khác thì chặn (nếu business yêu cầu)
+            if (companyRepository.existsByUser_Id(user.getId())
+                    && !existing.getUser().getId().equals(user.getId())) {
+                throw new IllegalArgumentException("Recruiter này đã sở hữu công ty khác");
+            }
+            existing.setUser(user);
+        }
+
+        // 3) Cập nhật N–N nếu client gửi categoryIds
+        if (companyDto.getCategoryIds() != null) {
+            Set<Category> cats = new java.util.HashSet<>(categoryRepository.findAllById(companyDto.getCategoryIds()));
+            existing.setCategories(cats); // replace toàn bộ set
+        }
+
+        Company saved = companyRepository.save(existing);
+        CompanyDto out = companyMapper.toDto(saved);
+        if (saved.getCategories() != null) {
+            out.setCategoryIds(saved.getCategories().stream()
+                    .map(Category::getId)
+                    .collect(java.util.stream.Collectors.toSet()));
+        }
+        return out;
     }
 
     @Override
