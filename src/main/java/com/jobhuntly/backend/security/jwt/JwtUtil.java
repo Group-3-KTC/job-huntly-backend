@@ -1,7 +1,6 @@
 package com.jobhuntly.backend.security.jwt;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
@@ -14,6 +13,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     private final SecretKey key;
+
     @Getter
     private final long expirationMillis;
 
@@ -34,13 +34,44 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody().getSubject();
+        return extractAllClaims(token).getSubject();
     }
 
     public String extractRole(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody().get("role", String.class);
+        return extractAllClaims(token).get("role", String.class);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractAllClaims(token).getExpiration();
+    }
+
+    private Claims extractAllClaims(String token) throws JwtException {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public boolean isTokenValid(String token, String expectedUsername) {
+        try {
+            Claims claims = extractAllClaims(token);
+
+            String subject = claims.getSubject();
+            if (subject == null || !subject.equals(expectedUsername)) {
+                return false;
+            }
+
+            return !isTokenExpired(claims.getExpiration());
+        } catch (ExpiredJwtException ex) {
+            return false;
+        } catch (JwtException ex) {
+            return false;
+        }
+    }
+
+    private boolean isTokenExpired(Date expiration) {
+        return expiration == null || expiration.before(new Date());
     }
 
     public long getExpirationSeconds() {

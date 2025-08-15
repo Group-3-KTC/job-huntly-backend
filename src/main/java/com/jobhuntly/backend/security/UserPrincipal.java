@@ -1,4 +1,4 @@
-package com.jobhuntly.backend.security.jwt;
+package com.jobhuntly.backend.security;
 
 import com.jobhuntly.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CustomUserDetailsService implements UserDetailsService {
+public class UserPrincipal implements UserDetailsService {
     private final UserRepository userRepo;
 
     @Override

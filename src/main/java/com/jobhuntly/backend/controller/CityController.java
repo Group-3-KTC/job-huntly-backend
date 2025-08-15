@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api.prefix}/city")
+@RequestMapping("${backend.prefix}/city")
 public class CityController {
     private final CityService cityService;
 

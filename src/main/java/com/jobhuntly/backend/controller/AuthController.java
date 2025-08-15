@@ -12,18 +12,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@RequestMapping("${backend.prefix}/auth")
 public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
 
     @GetMapping("/activate")
-    public RegisterResponse activate(@RequestParam("token") String token) {
+    public ResponseEntity<RegisterResponse> activate(@RequestParam("token") String token) {
         return authService.activateAccount(token);
     }
 

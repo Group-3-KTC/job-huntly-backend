@@ -11,7 +11,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("${api.prefix}/worktypes")
+@RequestMapping("${backend.prefix}/worktypes")
 public class WorkTypeController {
     private final WorkTypeService workTypeService;
 
