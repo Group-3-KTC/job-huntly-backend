@@ -47,4 +47,6 @@ public interface JobRepository extends JpaRepository<Job, Long> {
         return findByCompany_Id(companyId, pageable);
     }
 
+    @Query("SELECT COUNT(j) FROM Job j WHERE j.company.id = :companyId")
+    long countJobsByCompanyId(@Param("companyId") Long companyId);
 }

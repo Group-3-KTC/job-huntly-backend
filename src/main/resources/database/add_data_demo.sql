@@ -9,48 +9,199 @@ VALUES (1, 'ADMIN'),
 INSERT INTO users
 (user_id, city_id, role_id, full_name, email, password_hash, phone_number, status, activation_token, google_id,
  sms_notification_active, email_notification_active, create_at)
-VALUES (1, NULL, 1, 'ADMIN', 'admin@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0909123456', 'active', NULL, NULL, 0, 1,
+VALUES (1, NULL, 1, 'ADMIN', 'admin@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly',
+        '0909123456', 'active', NULL, NULL, 0, 1,
         '2025-08-11 09:13:27'),
-       (2, NULL, 2, 'Nguyễn Văn A', 'candidate1@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0912345678', 'active', NULL, NULL, 1, 1,
+       (2, NULL, 2, 'Nguyễn Văn A', 'candidate1@gmail.com',
+        '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0912345678', 'active', NULL, NULL, 1, 1,
         NOW()),
-       (3, NULL, 2, 'Trần Thị B', 'candidate2@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0923456789', 'active', NULL, NULL, 1, 1,
+       (3, NULL, 2, 'Trần Thị B', 'candidate2@gmail.com',
+        '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0923456789', 'active', NULL, NULL, 1, 1,
         NOW()),
-       (4, NULL, 3, 'Phạm Văn C', 'recruiter1@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0934567890', 'active', NULL, NULL, 0, 1,
+       (4, NULL, 3, 'Phạm Văn C', 'recruiter1@gmail.com',
+        '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0934567890', 'active', NULL, NULL, 0, 1,
         NOW()),
-       (5, NULL, 3, 'Lê Thị D', 'recruiter2@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0945678901', 'active', NULL, NULL, 1, 1,
+       (5, NULL, 3, 'Lê Thị D', 'recruiter2@gmail.com', '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly',
+        '0945678901', 'active', NULL, NULL, 1, 1,
+        NOW()),
+       (6, NULL, 2, 'Ngô Văn E', 'candidate3@gmail.com',
+        '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0956789012', 'active', NULL, NULL, 1, 1,
+        NOW()),
+       (7, NULL, 2, 'Đặng Thị F', 'candidate4@gmail.com',
+        '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0967890123', 'active', NULL, NULL, 1, 1,
+        NOW()),
+       (8, NULL, 3, 'Vũ Văn G', 'recruiter3@gmail.com',
+        '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0978901234', 'active', NULL, NULL, 0, 1,
+        NOW()),
+       (9, NULL, 3, 'Bùi Thị H', 'recruiter4@gmail.com',
+        '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0989012345', 'active', NULL, NULL, 1, 1,
+        NOW()),
+       (10, NULL, 2, 'Phan Văn I', 'candidate5@gmail.com',
+        '$2a$12$eCoyVZC81XhJNz.pab6Qy.mhOxROxzzi6Y3V9m2d4.ZyPJn9mLsly', '0990123456', 'active', NULL, NULL, 1, 1,
         NOW());
 
+INSERT INTO categories (cate_id, cate_name, parent_id)
+VALUES
+-- Danh mục cha
+(1, 'Công nghệ thông tin', NULL),
+(2, 'Kế toán - Kiểm toán', NULL),
+(3, 'Nhân sự', NULL),
+(4, 'Marketing', NULL),
+(5, 'Kinh doanh - Bán hàng', NULL),
+(6, 'Giáo dục - Đào tạo', NULL),
+(7, 'Logistics - Xuất nhập khẩu', NULL),
+(8, 'Thiết kế - Sáng tạo', NULL),
+(9, 'Y tế - Chăm sóc sức khỏe', NULL),
+(10, 'Sản xuất - Vận hành', NULL),
+
+-- Con của Công nghệ thông tin
+(11, 'Lập trình phần mềm', 1),
+(12, 'Quản trị hệ thống', 1),
+(13, 'An ninh mạng', 1),
+(14, 'Phân tích dữ liệu', 1),
+
+-- Con của Kế toán - Kiểm toán
+(15, 'Kế toán tổng hợp', 2),
+(16, 'Kế toán thuế', 2),
+(17, 'Kiểm toán nội bộ', 2),
+
+-- Con của Nhân sự
+(18, 'Tuyển dụng', 3),
+(19, 'Đào tạo & Phát triển', 3),
+(20, 'Chính sách & Lương thưởng', 3),
+
+-- Con của Marketing
+(21, 'Digital Marketing', 4),
+(22, 'Content Marketing', 4),
+(23, 'Nghiên cứu thị trường', 4),
+
+-- Con của Kinh doanh - Bán hàng
+(24, 'Bán hàng trực tiếp', 5),
+(25, 'Kinh doanh B2B', 5),
+(26, 'Chăm sóc khách hàng', 5),
+
+-- Con của Giáo dục - Đào tạo
+(27, 'Giảng dạy', 6),
+(28, 'Tư vấn giáo dục', 6),
+(29, 'Quản lý đào tạo', 6),
+
+-- Con của Logistics - Xuất nhập khẩu
+(30, 'Quản lý kho', 7),
+(31, 'Vận tải quốc tế', 7),
+(32, 'Khai báo hải quan', 7),
+
+-- Con của Thiết kế - Sáng tạo
+(33, 'Thiết kế đồ họa', 8),
+(34, 'Thiết kế UI/UX', 8),
+(35, 'Thiết kế nội thất', 8),
+
+-- Con của Y tế - Chăm sóc sức khỏe
+(36, 'Điều dưỡng', 9),
+(37, 'Bác sĩ', 9),
+(38, 'Dược sĩ', 9),
+
+-- Con của Sản xuất - Vận hành
+(39, 'Quản lý sản xuất', 10),
+(40, 'Kỹ thuật vận hành máy', 10),
+(41, 'Bảo trì thiết bị', 10);
+
 INSERT INTO companies
-(company_id, user_id, description, email, address, quantity_employee, status, avatar, avatar_cover, company_name)
-VALUES (1, 4, 'Công ty công nghệ chuyên AI', 'contact@aitech.com', '12 Lý Thường Kiệt, Hà Nội', 80, 'active',
-        'ai_avatar.png', 'ai_cover.png', 'AI Tech'),
-       (2, 4, 'Công ty phần mềm ERP', 'info@erpvn.com', '45 Nguyễn Huệ, TP.HCM', 150, 'active', 'erp_avatar.png',
-        'erp_cover.png', 'ERP Việt Nam'),
-       (3, 5, 'Công ty thiết kế thời trang', 'contact@fashionhub.com', '89 Hai Bà Trưng, Đà Nẵng', 60, 'active',
-        'fashion_avatar.png', 'fashion_cover.png', 'Fashion Hub'),
-       (4, 5, 'Công ty logistics quốc tế', 'support@globallogistics.com', '123 Trần Hưng Đạo, Hải Phòng', 300, 'active',
-        'log_avatar.png', 'log_cover.png', 'Global Logistics'),
-       (5, 5, 'Công ty giáo dục trực tuyến', 'info@elearning.vn', '78 Cách Mạng Tháng 8, TP.HCM', 40, 'active',
-        'edu_avatar.png', 'edu_cover.png', 'E-Learning VN');
+(user_id, company_name, description, email, phone_number, website, address, location_city, location_country,
+ founded_year, quantity_employee, status, is_pro_company, followers_count, jobs_count,
+ facebook_url, twitter_url, linkedin_url, map_embed_url, avatar, avatar_cover)
+VALUES (4, 'AI Tech', 'Công ty công nghệ chuyên AI', 'contact@aitech.com', '0123456789', 'https://aitech.com',
+        '12 Lý Thường Kiệt', 'Hà Nội', 'Việt Nam', 2018, 80, 'active', 1, 1200, 5,
+        'https://facebook.com/aitech', NULL, 'https://linkedin.com/company/aitech', NULL,
+        'ai_avatar.png', 'ai_cover.png'),
 
-insert into work_type (work_type_name) values
-('On-site'),
-('Remote'),
-('Hybrid'),
-('Full-time'),
-('Part-time');
+       (4, 'ERP Việt Nam', 'Công ty phần mềm ERP', 'info@erpvn.com', '0909888777', 'https://erpvn.com',
+        '45 Nguyễn Huệ', 'TP.HCM', 'Việt Nam', 2015, 150, 'active', 0, 800, 8,
+        NULL, NULL, NULL, NULL,
+        'erp_avatar.png', 'erp_cover.png'),
 
-insert into levels (level_name) values
-('Intern'),
-('Fresher'),
-('Junior'),
-('Associate'),
-('Mid-level'),
-('Lead'),
-('Manager'),
-('Senior'),
-('Director'),
-('Executive');
+       (5, 'Fashion Hub', 'Công ty thiết kế thời trang', 'contact@fashionhub.com', '0988111222',
+        'https://fashionhub.com',
+        '89 Hai Bà Trưng', 'Đà Nẵng', 'Việt Nam', 2020, 60, 'active', 1, 500, 3,
+        NULL, NULL, NULL, NULL,
+        'fashion_avatar.png', 'fashion_cover.png'),
+
+       (5, 'Global Logistics', 'Công ty logistics quốc tế', 'support@globallogistics.com', '0933444555',
+        'https://globallogistics.com',
+        '123 Trần Hưng Đạo', 'Hải Phòng', 'Việt Nam', 2010, 300, 'active', 0, 1500, 12,
+        NULL, NULL, NULL, NULL,
+        'log_avatar.png', 'log_cover.png'),
+
+       (5, 'E-Learning VN', 'Công ty giáo dục trực tuyến', 'info@elearning.vn', '0944666777', 'https://elearning.vn',
+        '78 Cách Mạng Tháng 8', 'TP.HCM', 'Việt Nam', 2017, 40, 'active', 0, 600, 4,
+        NULL, NULL, NULL, NULL,
+        'edu_avatar.png', 'edu_cover.png');
+
+INSERT INTO company_categories (company_id, cate_id)
+VALUES
+-- AI Tech: Lập trình phần mềm + An ninh mạng
+(1, 11),
+(1, 13),
+
+-- ERP Việt Nam: Lập trình phần mềm + Quản trị hệ thống
+(2, 11),
+(2, 12),
+
+-- Fashion Hub: Thiết kế đồ họa + Thiết kế nội thất
+(3, 33),
+(3, 35),
+
+-- Global Logistics: Quản lý kho + Vận tải quốc tế
+(4, 30),
+(4, 31),
+
+-- E-Learning VN: Giảng dạy + Tư vấn giáo dục
+(5, 27),
+(5, 28);
+
+INSERT INTO jobs (job_id, company_id, title, date_post, description, expired_date, salary_min, salary_max,
+                  requirements, benefits, location, status)
+VALUES (1, 1, 'Lập trình viên Java', '2025-08-01', 'Phát triển phần mềm Java', '2025-09-01', 15000000, 25000000,
+        'Có kinh nghiệm 2 năm Java', 'Bảo hiểm, thưởng dự án', 'Hà Nội', 'active'),
+       (2, 2, 'Chuyên viên Marketing', '2025-08-02', 'Triển khai chiến dịch marketing', '2025-09-05', 12000000,
+        20000000,
+        'Hiểu biết về Digital Marketing', 'Lương tháng 13', 'TP.HCM', 'active'),
+       (3, 2, 'Kế toán tổng hợp', '2025-08-03', 'Hạch toán và lập báo cáo tài chính', '2025-09-10', 10000000, 15000000,
+        'Tốt nghiệp chuyên ngành kế toán', 'Bảo hiểm đầy đủ', 'TP.HCM', 'active'),
+       (4, 3, 'Frontend Developer', '2025-08-04', 'Xây dựng giao diện web', '2025-09-15', 14000000, 22000000,
+        'Thành thạo ReactJS', 'Làm việc hybrid', 'Đà Nẵng', 'active'),
+       (5, 3, 'Nhân viên kinh doanh thời trang', '2025-08-05', 'Bán hàng và chăm sóc khách', '2025-09-20', 8000000,
+        15000000,
+        'Kỹ năng giao tiếp tốt', 'Hoa hồng hấp dẫn', 'Đà Nẵng', 'active'),
+       (6, 4, 'Nhân viên xuất nhập khẩu', '2025-08-06', 'Làm chứng từ hải quan', '2025-09-25', 12000000, 18000000,
+        'Có kinh nghiệm logistics', 'Bảo hiểm sức khỏe', 'Hải Phòng', 'active'),
+       (7, 5, 'Giáo viên tiếng Anh online', '2025-08-07', 'Dạy tiếng Anh cho học viên trực tuyến', '2025-09-30',
+        10000000, 16000000,
+        'IELTS 7.0 trở lên', 'Linh hoạt thời gian', 'TP.HCM', 'active'),
+       (8, 5, 'Điều dưỡng viên', '2025-08-08', 'Chăm sóc bệnh nhân', '2025-09-30', 9000000, 13000000,
+        'Tốt nghiệp điều dưỡng', 'Phụ cấp ca đêm', 'TP.HCM', 'active'),
+       (9, 3, 'Nhà thiết kế đồ họa', '2025-08-09', 'Thiết kế ấn phẩm truyền thông', '2025-10-01', 11000000, 17000000,
+        'Thành thạo Photoshop', 'Môi trường sáng tạo', 'Đà Nẵng', 'active'),
+       (10, 4, 'Kỹ sư sản xuất', '2025-08-10', 'Quản lý dây chuyền sản xuất', '2025-10-05', 15000000, 22000000,
+        'Kinh nghiệm 3 năm sản xuất', 'Thưởng KPI', 'Hải Phòng', 'active');
+
+insert into work_type (work_type_name)
+values ('On-site'),
+       ('Remote'),
+       ('Hybrid'),
+       ('Full-time'),
+       ('Part-time');
+
+insert into levels (level_name)
+values ('Intern'),
+       ('Fresher'),
+       ('Junior'),
+       ('Associate'),
+       ('Mid-level'),
+       ('Lead'),
+       ('Manager'),
+       ('Senior'),
+       ('Director'),
+       ('Executive');
 
 INSERT INTO location_city (city_name)
 VALUES ('Tuyên Quang'),
