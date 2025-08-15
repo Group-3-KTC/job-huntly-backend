@@ -10,17 +10,19 @@ import com.jobhuntly.backend.dto.auth.request.LoginRequest;
 import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
 import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
-import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.entity.Role;
+import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.entity.enums.Status;
-import com.jobhuntly.backend.repository.UserRepository;
 import com.jobhuntly.backend.repository.RoleRepository;
+import com.jobhuntly.backend.repository.UserRepository;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import com.jobhuntly.backend.service.AuthService;
 import com.jobhuntly.backend.service.email.EmailSender;
 import com.jobhuntly.backend.service.email.EmailValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,11 +44,15 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepo;
     private final JwtUtil jwtUtil;
     @Value("${google.client-id}")
-    private String googleClientId;
+    private String GOOGLE_CLIENT_ID;
+    @Value("${backend.host}")
+    private String BACKEND_HOST;
+    @Value("${backend.prefix}")
+    private String BACKEND_PREFIX;
 
 
     @Override
-    public RegisterResponse register(RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(RegisterRequest request) {
         if (!emailValidator.test(request.getEmail())) {
             throw new IllegalStateException("Email không hợp lệ");
         }
@@ -73,31 +79,32 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        String activationLink = "http://localhost:8080/api/auth/activate?token=" + token;
+        String activationLink = BACKEND_HOST + BACKEND_PREFIX + "/auth/activate?token=" + token;
 
         String htmlContent = String.format("""
-            <html>
-              <body style="font-family: Arial, sans-serif;">
-                <h2 style="color:#0a66c2;">Chào mừng bạn đến với JobHuntly!</h2>
-                <p>Nhấn vào nút bên dưới để kích hoạt tài khoản:</p>
-                <a href="%s"
-                   style="display:inline-block;padding:10px 20px;background-color:#0a66c2;color:white;text-decoration:none;border-radius:5px;">
-                   Kích hoạt
-                </a>
-              </body>
-            </html>
-            """, activationLink);
+                <html>
+                  <body style="font-family: Arial, sans-serif;">
+                    <h2 style="color:#0a66c2;">Chào mừng bạn đến với JobHuntly!</h2>
+                    <p>Nhấn vào nút bên dưới để kích hoạt tài khoản:</p>
+                    <a href="%s"
+                       style="display:inline-block;padding:10px 20px;background-color:#0a66c2;color:white;text-decoration:none;border-radius:5px;">
+                       Kích hoạt
+                    </a>
+                  </body>
+                </html>
+                """, activationLink);
         emailSender.send(
                 request.getEmail(),
                 "Kích hoạt tài khoản của bạn",
                 htmlContent
         );
 
-        return new RegisterResponse("Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt.");
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new RegisterResponse("success", "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt."));
     }
 
     @Override
-    public RegisterResponse activateAccount(String token) {
+    public ResponseEntity<RegisterResponse> activateAccount(String token) {
         User user = userRepository.findByActivationToken(token)
                 .orElseThrow(() -> new IllegalStateException("Token không hợp lệ"));
 
@@ -106,7 +113,8 @@ public class AuthServiceImpl implements AuthService {
         user.setActivationToken(null);
         userRepository.save(user);
 
-        return new RegisterResponse("Tài khoản đã được kích hoạt thành công!");
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(new RegisterResponse("success", "Tài khoản đã được kích hoạt thành công!"));
     }
 
     @Override
@@ -120,12 +128,13 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String roleName = user.getRole().getRoleName(); // ví dụ: CANDIDATE
+
         String token = jwtUtil.generateToken(user.getEmail(), roleName);
 
         return LoginResponse.builder()
                 .accessToken(token)
                 .tokenType("Bearer")
-                .expiresIn( /* ví dụ 30 ngày (giây) */ 30L * 24 * 60 * 60 )
+                .expiresIn( /* ví dụ 30 ngày (giây) */ 30L * 24 * 60 * 60)
                 .userId(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
@@ -135,7 +144,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
-        GoogleIdToken idToken = verifyGoogleIdToken(request.getIdToken(), googleClientId);
+        GoogleIdToken idToken = verifyGoogleIdToken(request.getIdToken(), GOOGLE_CLIENT_ID);
         if (idToken == null) {
             throw new RuntimeException("Invalid Google ID token");
         }
@@ -193,8 +202,6 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail()
         );
     }
-
-
 
 
     private GoogleIdToken verifyGoogleIdToken(String idTokenString, String clientId) {

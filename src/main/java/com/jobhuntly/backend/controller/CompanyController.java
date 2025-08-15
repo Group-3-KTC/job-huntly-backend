@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("${api.prefix}/companies")
+@RequestMapping("${backend.prefix}/companies")
 public class CompanyController {
     @Autowired
     private CompanyService companyService;

@@ -15,3 +15,4 @@ public class JwtProperties {
     private String secretKey;
     private Duration expiration;
 }
+

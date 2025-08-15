@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api.prefix}/category")
+@RequestMapping("${backend.prefix}/category")
 public class CategoryController {
     private final CategoryService categoryService;
 
