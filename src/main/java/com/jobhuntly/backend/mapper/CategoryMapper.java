@@ -11,6 +11,5 @@ import java.util.List;
 public interface CategoryMapper {
     CategoryResponse toResponse(Category category);
     Category toEntity(CategoryRequest categoryRequest);
-    List<CategoryResponse> toListCategory (List<CategoryResponse> categoryResponseList);
 
 }

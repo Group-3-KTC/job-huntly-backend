@@ -1,6 +1,6 @@
 package com.jobhuntly.backend.controller;
 
-import com.jobhuntly.backend.dto.request.CityDTO;
+import com.jobhuntly.backend.dto.request.CityRequest;
 import com.jobhuntly.backend.service.CityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,14 +19,14 @@ public class CityController {
     private final CityService cityService;
 
     @GetMapping
-    public List<CityDTO> getAllCity() {
+    public List<CityRequest> getAllCity() {
         return cityService.getAllCity();
     }
 
     @GetMapping("/search")
     public ResponseEntity<?> searchCities(@RequestParam String keyword) {
         try {
-            List<CityDTO> cities = cityService.getCityByName(keyword);
+            List<CityRequest> cities = cityService.getCityByName(keyword);
             return ResponseEntity.ok(cities);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
