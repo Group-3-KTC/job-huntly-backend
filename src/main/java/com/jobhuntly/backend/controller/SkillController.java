@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api.prefix}/skill")
+@RequestMapping("${backend.prefix}/skill")
 public class SkillController {
     private final SkillService skillService;
 
