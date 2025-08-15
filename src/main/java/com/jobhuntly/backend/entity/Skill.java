@@ -32,4 +32,7 @@ public class Skill {
     )
     private Set<Category> categories = new HashSet<>();
 
+    @ManyToMany(mappedBy = "skills")
+    private Set<Job> jobs = new HashSet<>();
+
 }
