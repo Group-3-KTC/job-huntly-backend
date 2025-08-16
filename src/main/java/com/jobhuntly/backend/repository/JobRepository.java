@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -12,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface JobRepository extends JpaRepository<Job, Long> {
+public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificationExecutor<Job> {
     @EntityGraph(attributePaths = {
             "company", "categories", "skills", "levels", "workTypes",
             "wards", "wards.city"
@@ -49,4 +50,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     @Query("SELECT COUNT(j) FROM Job j WHERE j.company.id = :companyId")
     long countJobsByCompanyId(@Param("companyId") Long companyId);
+
+    @EntityGraph(attributePaths = {"company", "skills"})
+    List<Job> findByIdIn(List<Long> ids);
 }

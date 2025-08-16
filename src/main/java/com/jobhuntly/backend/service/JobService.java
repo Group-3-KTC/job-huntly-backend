@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.service;
 
+import com.jobhuntly.backend.dto.request.JobFilterRequest;
 import com.jobhuntly.backend.dto.request.JobRequest;
 import com.jobhuntly.backend.dto.response.JobResponse;
 import org.springframework.data.domain.Page;
@@ -17,4 +18,6 @@ public interface JobService {
     Page<JobResponse> list(Pageable pageable);
 
     Page<JobResponse> listByCompany(Long companyId, Pageable pageable);
+
+    Page<JobResponse> searchLite(JobFilterRequest request, Pageable pageable);
 }
