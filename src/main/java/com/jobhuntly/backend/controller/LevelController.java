@@ -11,7 +11,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("${api.prefix}/levels")
+@RequestMapping("${backend.prefix}/levels")
 public class LevelController {
     private final LevelService levelService;
 

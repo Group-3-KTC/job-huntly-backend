@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.controller;
 
+import com.jobhuntly.backend.dto.request.JobFilterRequest;
 import com.jobhuntly.backend.dto.request.JobRequest;
 import com.jobhuntly.backend.dto.response.JobResponse;
 import com.jobhuntly.backend.service.JobService;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin("*")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api.prefix}/job")
+@RequestMapping("${backend.prefix}/job")
 public class JobController {
     private final JobService jobService;
 
@@ -41,5 +42,13 @@ public class JobController {
                                                            @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC)
                                                            Pageable pageable) {
         return ResponseEntity.ok(jobService.listByCompany(companyId, pageable));
+    }
+
+    @PostMapping("/search-lite")
+    public Page<JobResponse> searchLite(
+            @RequestBody JobFilterRequest request,
+            @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
+    ) {
+        return jobService.searchLite(request, pageable);
     }
 }

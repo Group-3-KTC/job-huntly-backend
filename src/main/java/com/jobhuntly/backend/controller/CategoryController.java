@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${api.prefix}/category")
+@RequestMapping("${backend.prefix}/category")
 public class CategoryController {
     private final CategoryService categoryService;
 
@@ -47,6 +47,11 @@ public class CategoryController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/test-illegal")
+    public void testIllegal() {
+        throw new IllegalStateException("Boom!");
     }
 
 }

@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("${api.prefix}/wards")
+@RequestMapping("${backend.prefix}/wards")
 @RequiredArgsConstructor
 public class WardController {
     private final WardService wardService;

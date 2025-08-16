@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.service.impl;
 
+import com.jobhuntly.backend.dto.request.JobFilterRequest;
 import com.jobhuntly.backend.dto.request.JobRequest;
 import com.jobhuntly.backend.dto.response.JobResponse;
 import com.jobhuntly.backend.entity.*;
@@ -8,7 +9,9 @@ import com.jobhuntly.backend.repository.*;
 import com.jobhuntly.backend.service.JobService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +34,19 @@ public class JobServiceImpl implements JobService {
     @Override
     public JobResponse create(JobRequest request) {
         validateDatesAndSalary(request);
-        Company company = companyRepository.findById(request.getCompanyId())
-                .orElseThrow(() -> new IllegalArgumentException("Company not found with id=" + request.getCompanyId()));
+        Long companyId = request.getCompanyId();
+        if (companyId == null) {
+            throw new IllegalArgumentException("companyId is required");
+        }
+        if (!companyRepository.existsById(companyId)) {
+            throw new IllegalArgumentException("Company not found with id=" + companyId);
+        }
+
+        // 2) dùng reference để không SELECT toàn bộ company
+        Company companyRef = companyRepository.getReferenceById(companyId);
 
         Job job = jobMapper.toEntity(request);
-        job.setCompany(company);
+        job.setCompany(companyRef);
 
         // Nếu list null: bỏ qua
         if (request.getCategoryNames() != null) {
@@ -117,6 +128,25 @@ public class JobServiceImpl implements JobService {
     @Override
     public Page<JobResponse> listByCompany(Long companyId, Pageable pageable) {
         return jobRepository.findByCompanyIdWithAssociations(companyId, pageable).map(jobMapper::toResponse);
+    }
+
+    @Override
+    public Page<JobResponse> searchLite(JobFilterRequest request, Pageable pageable) {
+        Specification<Job> spec = JobSpecifications.build(request);
+        Page<Job> page = jobRepository.findAll(spec, pageable);
+        List<Long> ids = page.getContent().stream().map(Job::getId).toList();
+        if (ids.isEmpty()) return Page.empty(pageable);
+
+        List<Job> rich = jobRepository.findByIdIn(ids);
+        Map<Long, Job> byId = rich.stream().collect(Collectors.toMap(Job::getId, j -> j));
+
+        List<JobResponse> data = ids.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .map(jobMapper::toResponseLite)
+                .toList();
+
+        return new PageImpl<>(data, pageable, page.getTotalElements());
     }
 
     private void validateDatesAndSalary(JobRequest req) {

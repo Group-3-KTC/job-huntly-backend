@@ -5,10 +5,11 @@ import com.jobhuntly.backend.dto.auth.request.LoginRequest;
 import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
 import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
+import org.springframework.http.ResponseEntity;
 
 public interface AuthService {
-    RegisterResponse register(RegisterRequest request);
-    RegisterResponse activateAccount(String token);
+    ResponseEntity<RegisterResponse> register(RegisterRequest request);
+    ResponseEntity<RegisterResponse> activateAccount(String token);
     LoginResponse login(LoginRequest request);
     LoginResponse loginWithGoogle(GoogleLoginRequest request);
 }
