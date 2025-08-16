@@ -49,4 +49,9 @@ public class CategoryController {
         }
     }
 
+    @GetMapping("/test-illegal")
+    public void testIllegal() {
+        throw new IllegalStateException("Boom!");
+    }
+
 }
