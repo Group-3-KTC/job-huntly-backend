@@ -556,3 +556,23 @@ ALTER TABLE `jobs`
     MODIFY COLUMN `salary_min` BIGINT NULL,
     MODIFY COLUMN `salary_max` BIGINT NULL,
     ADD COLUMN `salary_type` TINYINT NOT NULL DEFAULT 0 AFTER `salary_max`;
+
+
+-- 0) Dọn bảng backup nếu đã tồn tại từ lần chạy trước
+DROP TABLE IF EXISTS `saved_job`;
+
+-- 1) Tạo bảng mới với cấu trúc mong muốn
+CREATE TABLE `saved_job` (
+  `save_job_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id`     INT NOT NULL,
+  `job_id`      INT NOT NULL,
+  `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`save_job_id`),
+
+  CONSTRAINT `fk_saved_job_user`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_saved_job_job`
+    FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+)
