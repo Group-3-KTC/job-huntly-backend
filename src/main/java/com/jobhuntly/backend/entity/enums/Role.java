@@ -1,7 +1,7 @@
 package com.jobhuntly.backend.entity.enums;
 
 public enum Role {
-    CANIDATE,
+    CANDIDATE,
     RECRUITER,
     ADMIN
 }
