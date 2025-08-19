@@ -72,6 +72,27 @@ public class CategoryServiceImpl implements CategoryService {
                 .stream().map(categoryMapper::toResponse).toList();
     }
 
+    @Override
+    public List<CategoryResponse> getAllCategories() {
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CategoryResponse> getChildrenByParentId(Long parentId) {
+        if (parentId == null) {
+            throw new IllegalArgumentException("Parent ID is required");
+        }
+
+        Category parent = categoryRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent category not found with ID: " + parentId));
+
+        return parent.getChildren().stream()
+                .map(categoryMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private String normalize(String raw) {
         return raw == null ? "" : raw.trim().replaceAll("\\s+", " ");
     }
