@@ -3,19 +3,21 @@ package com.jobhuntly.backend.security.handlers;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NoArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
 import java.io.IOException;
 
+@NoArgsConstructor
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         response.getWriter().write("""
-      {"type":"about:blank","title":"Unauthorized","status":401,"detail":"Authentication required","instance":"%s"}
-      """.formatted(request.getRequestURI()));
+                {"type":"about:blank","title":"Unauthorized","status":401,"detail":"Authentication required","instance":"%s"}
+                """.formatted(request.getRequestURI()));
     }
 }
