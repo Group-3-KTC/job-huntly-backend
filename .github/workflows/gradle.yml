@@ -79,6 +79,9 @@ jobs:
             mkdir -p ${{ env.DEPLOY_DIR }}
             cd ${{ env.DEPLOY_DIR }}
 
+            echo "📄  Bảo đảm có file env rỗng..."
+            touch .env.local.properties
+
             echo "🔗  Tạo network (nếu chưa có)..."
             docker network create customer-network || true
 
