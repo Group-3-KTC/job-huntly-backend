@@ -2,16 +2,19 @@
 FROM eclipse-temurin:17-jdk-jammy AS builder
 WORKDIR /app
 
-# Copy trước các file cấu hình để tối ưu cache
+# 1. Copy file cấu hình + wrapper trước để tận dụng cache
 COPY gradlew settings.gradle* build.gradle* gradle/ ./
-RUN chmod +x gradlew
 
 # Kéo dependencies trước (tận dụng cache giữa các lần build)
 # Không fail build nếu một số cấu hình không có (|| true)
-RUN ./gradlew --no-daemon dependencies || true
+RUN chmod +x gradlew \
+    && ./gradlew --no-daemon dependencies || true
 
 # Copy toàn bộ source
 COPY . .
+
+# *** Quan trọng: cấp lại quyền thực thi cho gradlew ***
+RUN chmod +x gradlew
 
 # Build bootJar (bỏ test để build nhanh; bỏ -x test nếu bạn muốn chạy test)
 RUN ./gradlew --no-daemon clean bootJar -x test
