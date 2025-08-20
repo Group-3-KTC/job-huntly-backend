@@ -13,7 +13,7 @@ services:
       - customer-network
     # Nếu bạn chạy Docker trên Linux, bỏ comment 2 dòng dưới:
     extra_hosts:
-      - "host.docker.internal:172.17.0.1"
+      - "host.docker.internal:host-gateway"
 
 networks:
   customer-network:
