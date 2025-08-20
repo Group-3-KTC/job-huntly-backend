@@ -5,7 +5,6 @@ on:
     branches: [ main, "dev/**", "feature/**"]
 
 env:
-  IMAGE_REPO: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/job-huntly-backend
   SERVICE_NAME: jobhuntly-backend
   DEPLOY_DIR: ~/jobhuntly-service
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -13,6 +12,8 @@ env:
   VPS_HOST: ${{ secrets.VPS_HOST }}
   VPS_USER: ${{ secrets.VPS_USER }}
   VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+  DOCKER_IMAGE: job-huntly-backend
+  DOCKER_TAG: latest
 
 jobs:
   build:
@@ -38,19 +39,12 @@ jobs:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
 
-      - name: Build & Push image (sha + latest)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ${{ env.IMAGE_REPO }}:sha-${{ github.sha }}
-            ${{ env.IMAGE_REPO }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Build and Push Docker Image
+        run: |
+          docker build --no-cache -t $DOCKER_IMAGE:$DOCKER_TAG .
+          docker push $DOCKER_IMAGE:$DOCKER_TAG
 
-      # copy compose và env file lên VPS
+      # Copy necessary files to server
       - name: Copy docker-compose & env file to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
