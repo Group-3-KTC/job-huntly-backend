@@ -2,7 +2,7 @@ name: CI/CD pipeline for Backend Service
 
 on:
   push:
-    branches: [ main, "dev/**" ]
+    branches: [ main, "dev/**", "feature/**"]
 
 env:
   IMAGE_REPO: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/job-huntly-backend
