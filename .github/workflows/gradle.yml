@@ -54,9 +54,9 @@ jobs:
       - name: Copy docker-compose & env file to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USER }}
+          key: ${{ env.VPS_SSH_KEY }}
           source: "docker-compose.yml"
           target: ${{ env.DEPLOY_DIR }}
 
