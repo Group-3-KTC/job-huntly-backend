@@ -1,6 +1,7 @@
 package com.jobhuntly.backend.service.impl;
 
 import com.jobhuntly.backend.dto.response.CompanyDto;
+import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
 import com.jobhuntly.backend.entity.Category;
 import com.jobhuntly.backend.entity.Company;
 import com.jobhuntly.backend.entity.User;
@@ -150,5 +151,69 @@ public class CompanyServiceImpl implements CompanyService {
                         () -> {
                             throw new ResourceNotFoundException("Not found: " + id);
                         });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompanyDto> getCompaniesByCategories(List<Long> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return getAllCompanies(); // Trả về tất cả nếu không có filter
+        }
+        // Tìm công ty theo cả category cha và con
+        List<Company> companies = companyRepository.findByCategoryIdsIncludingParents(categoryIds);
+        List<CompanyDto> dtos = companyMapper.toDtoList(companies);
+
+        // Bổ sung thông tin thêm nếu cần
+        for (int i = 0; i < companies.size(); i++) {
+            Company company = companies.get(i);
+            CompanyDto dto = dtos.get(i);
+
+            // Thêm số lượng job
+            dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
+
+            // Thêm categoryIds
+            if (company.getCategories() != null) {
+                dto.setCategoryIds(company.getCategories().stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toSet()));
+            }
+        }
+
+        return dtos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocationCompanyResponse> getAllDistinctLocations() {
+        return companyRepository.findAllDistinctLocations();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompanyDto> getCompaniesByLocation(String location) {
+        if (location == null || location.trim().isEmpty()) {
+            return getAllCompanies();
+        }
+
+        List<Company> companies = companyRepository.findByLocation(location);
+        List<CompanyDto> dtos = companyMapper.toDtoList(companies);
+
+        // Bổ sung thông tin thêm
+        for (int i = 0; i < companies.size(); i++) {
+            Company company = companies.get(i);
+            CompanyDto dto = dtos.get(i);
+
+            // Thêm số lượng job
+            dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
+
+            // Thêm categoryIds
+            if (company.getCategories() != null) {
+                dto.setCategoryIds(company.getCategories().stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toSet()));
+            }
+        }
+
+        return dtos;
     }
 }

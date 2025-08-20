@@ -84,7 +84,6 @@ CREATE TABLE companies
     address           VARCHAR(255) NULL,
     location_city     VARCHAR(100) NULL,
     location_country  VARCHAR(100) NULL,
-    industry_id       INT NULL,
     founded_year YEAR NULL,
     quantity_employee INT NULL,
     status            ENUM('active','inactive','pending') DEFAULT 'inactive',

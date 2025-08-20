@@ -111,8 +111,8 @@ INSERT INTO companies
  facebook_url, twitter_url, linkedin_url, map_embed_url, avatar, avatar_cover)
 VALUES (4, 'AI Tech', 'Công ty công nghệ chuyên AI', 'contact@aitech.com', '0123456789', 'https://aitech.com',
         '12 Lý Thường Kiệt', 'Hà Nội', 'Việt Nam', 2018, 80, 'active', 1, 1200, 5,
-        'https://facebook.com/aitech', NULL, 'https://linkedin.com/company/aitech', NULL,
-        'ai_avatar.png', 'ai_cover.png'),
+        'https://facebook.com/aitech', NULL, 'https://linkedin.com/company/aitech', 'https://www.google.com/maps/embed/v1/place?key=AIzaSyCVgO8KzHQ8iKcfqXgrMnUIGlD-piWiPpo&q=123%20Silicon%20Valley%2C%20California%2C%20USA&zoom=15&language=vi',
+        'https://mir-s3-cdn-cf.behance.net/user/276/d87edf482640497.5e306b1f7af1c.jpg', 'https://www.shutterstock.com/image-vector/synthwave-vaporwave-retrowave-cyber-background-600nw-1457569313.jpg'),
 
        (4, 'ERP Việt Nam', 'Công ty phần mềm ERP', 'info@erpvn.com', '0909888777', 'https://erpvn.com',
         '45 Nguyễn Huệ', 'TP.HCM', 'Việt Nam', 2015, 150, 'active', 0, 800, 8,
