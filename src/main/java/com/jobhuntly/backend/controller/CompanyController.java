@@ -1,6 +1,7 @@
 package com.jobhuntly.backend.controller;
 
 import com.jobhuntly.backend.dto.response.CompanyDto;
+import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
 import com.jobhuntly.backend.service.company.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("${backend.prefix}/companies")
 public class CompanyController {
@@ -60,5 +62,37 @@ public class CompanyController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(createdCompany, HttpStatus.CREATED);
+    }
+
+    // Lấy công ty theo danh sách category (by-categories?categoryIds=1,2,3)
+    @GetMapping("/by-categories")
+    public ResponseEntity<List<CompanyDto>> getCompaniesByCategories(
+            @RequestParam(required = false) List<Long> categoryIds) {
+        List<CompanyDto> companies = companyService.getCompaniesByCategories(categoryIds);
+        if (companies.isEmpty()) {
+            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companies, HttpStatus.OK);
+    }
+
+    // Lấy danh sách các địa điểm không trùng lặp
+    @GetMapping("/locations")
+    public ResponseEntity<List<LocationCompanyResponse>> getAllDistinctLocations() {
+        List<LocationCompanyResponse> locations = companyService.getAllDistinctLocations();
+        if (locations.isEmpty()) {
+            return new ResponseEntity<>(locations, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(locations, HttpStatus.OK);
+    }
+
+    // Tìm công ty theo địa điểm ( by-location?location=Ho Chi Minh )
+    @GetMapping("/by-location")
+    public ResponseEntity<List<CompanyDto>> getCompaniesByLocation(
+            @RequestParam String location) {
+        List<CompanyDto> companies = companyService.getCompaniesByLocation(location);
+        if (companies.isEmpty()) {
+            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companies, HttpStatus.OK);
     }
 }

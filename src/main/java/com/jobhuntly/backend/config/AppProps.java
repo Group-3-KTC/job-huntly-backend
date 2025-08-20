@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.util.List;
 
 @Data
@@ -22,7 +23,7 @@ public class AppProps {
     @Data
     public static class Jwt {
         private String secret;
-        private long expirySeconds;
+        private Duration expirySeconds;
         private String issuer;
         private String cookieName = "session";
         private String roleCookieName = "role";

@@ -4,6 +4,8 @@ import com.jobhuntly.backend.config.AppProps;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+
 @Component
 @RequiredArgsConstructor
 public class JwtProperties {
@@ -13,7 +15,7 @@ public class JwtProperties {
         return props.getJwt().getSecret();
     }
 
-    public long getExpirySeconds() {
+    public Duration getExpirySeconds() {
         return props.getJwt().getExpirySeconds();
     }
 

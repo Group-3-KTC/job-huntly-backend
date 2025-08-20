@@ -84,7 +84,7 @@ public class AuthController {
                 .build();
     }
 
-    @GetMapping("/auth/me")
+    @GetMapping("/me")
     public ResponseEntity<UserMeDto> me(Principal principal) {
         if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 

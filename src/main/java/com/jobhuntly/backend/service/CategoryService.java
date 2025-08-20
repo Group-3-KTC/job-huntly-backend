@@ -7,6 +7,12 @@ import java.util.List;
 
 public interface CategoryService {
     CategoryResponse createCategory(CategoryRequest categoryRequest);
+
     List<CategoryResponse> getRootCategories();
+
     List<CategoryResponse> getChildrenByParentName(String parentName);
+
+    List<CategoryResponse> getAllCategories();
+
+    List<CategoryResponse> getChildrenByParentId(Long parentId);
 }

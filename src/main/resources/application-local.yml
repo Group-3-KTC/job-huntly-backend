@@ -3,25 +3,24 @@ spring:
     import: optional:file:.env.local.properties
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASS}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
-    open-in-view: false
     hibernate:
       ddl-auto: none
     properties:
       hibernate:
         format-sql: true
     show-sql: true
-    database-platform: ${DB_DIALECT}
+    database-platform: ${SPRING_JPA_DATABASE_PLATFORM}
 
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USER}
-    password: ${MAIL_PASS}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
     protocol: smtp
     properties:
       mail:
@@ -37,8 +36,8 @@ security:
     allowed-origins: [ "http://localhost:3000" ]  # thêm domain FE khác nếu cần
     allow-credentials: true
   jwt:
-    secret: ${JWT_SECRET}          # >= 32 ký tự
-    expiry-seconds: 2592000        # 30 ngày
+    secret: ${JWT_SECRET_KEY}
+    expiry-seconds: ${JWT_EXPIRATION:PT2H}
     issuer: "jobhuntly"
     cookie-name: "session"         # httpOnly cookie do BE set
     role-cookie-name: "role"
@@ -47,13 +46,13 @@ google:
   client-id: ${GOOGLE_CLIENT_ID}
 
 cloudinary:
-  cloud-name: ${CLOUDINARY_NAME}
-  api-key: ${CLOUDINARY_KEY}
-  api-secret: ${CLOUDINARY_SECRET}
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:${CLOUDINARY_NAME:}}
+  api-key: ${CLOUDINARY_API_KEY:${CLOUDINARY_KEY:}}
+  api-secret: ${CLOUDINARY_API_SECRET:${CLOUDINARY_SECRET:}}
 
 frontend:
   host: http://localhost:3000
 
 backend:
-  host: http://localhost:8080
-  prefix: /api/v1
+  host: ${BACKEND_HOST:http://localhost:8080}
+  prefix: ${BACKEND_PREFIX:api/v1}

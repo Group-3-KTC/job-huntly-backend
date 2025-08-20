@@ -26,7 +26,7 @@ public class JwtUtil {
 
     public JwtUtil(JwtProperties props) {
         this.key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
-        this.expirationMillis = props.getExpirySeconds() * 1000L;
+        this.expirationMillis = props.getExpirySeconds().getSeconds() * 1000L;
         this.issuer = props.getIssuer();
     }
 

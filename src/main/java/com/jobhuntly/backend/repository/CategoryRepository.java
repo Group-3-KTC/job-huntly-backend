@@ -18,4 +18,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByParent_NameIgnoreCaseOrderByNameAsc(String parentName);
 
     List<Category> findAllByParent_NameIgnoreCase(String parentName);
+
+    List<Category> findAllByParent_Id(Long parentId);
 }

@@ -22,20 +22,20 @@ DROP TABLE IF EXISTS work_type;
 DROP TABLE IF EXISTS location_city;
 DROP TABLE IF EXISTS location_ward;
 DROP TABLE IF EXISTS job_skill;
-DROP TABLE IF EXISTS candidate_profile;
-DROP TABLE IF EXISTS candidate_skill;
 DROP TABLE IF EXISTS ward_job;
 DROP TABLE IF EXISTS ward_company;
 DROP TABLE IF EXISTS applications;
 DROP TABLE IF EXISTS job_level;
 DROP TABLE IF EXISTS job_work_type;
 DROP TABLE IF EXISTS job_major;
-DROP TABLE IF EXISTS certificates;
 DROP TABLE IF EXISTS candidate_certi;
-DROP TABLE IF EXISTS work_experience;
+DROP TABLE IF EXISTS certificates;
+DROP TABLE IF EXISTS candidate_profile;
+DROP TABLE IF EXISTS candidate_skill;
 DROP TABLE IF EXISTS candidate_exper;
-DROP TABLE IF EXISTS edu;
+DROP TABLE IF EXISTS work_experience;
 DROP TABLE IF EXISTS candidate_edu;
+DROP TABLE IF EXISTS edu;
 
 
 Create table `users`
@@ -84,7 +84,6 @@ CREATE TABLE companies
     address           VARCHAR(255) NULL,
     location_city     VARCHAR(100) NULL,
     location_country  VARCHAR(100) NULL,
-    industry_id       INT NULL,
     founded_year YEAR NULL,
     quantity_employee INT NULL,
     status            ENUM('active','inactive','pending') DEFAULT 'inactive',
@@ -556,3 +555,83 @@ ALTER TABLE `jobs`
     MODIFY COLUMN `salary_min` BIGINT NULL,
     MODIFY COLUMN `salary_max` BIGINT NULL,
     ADD COLUMN `salary_type` TINYINT NOT NULL DEFAULT 0 AFTER `salary_max`;
+
+
+-- 0) Dọn bảng backup nếu đã tồn tại từ lần chạy trước
+DROP TABLE IF EXISTS `saved_job`;
+
+-- 1) Tạo bảng mới với cấu trúc mong muốn
+CREATE TABLE `saved_job` (
+  `save_job_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id`     INT NOT NULL,
+  `job_id`      INT NOT NULL,
+  `created_at`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`save_job_id`),
+
+  CONSTRAINT `fk_saved_job_user`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_saved_job_job`
+    FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+)
+
+-- edit database by VHP --
+DROP TABLE IF EXISTS candidate_edu;
+ALTER TABLE edu
+    ADD COLUMN profile_id INT NOT NULL,
+    ADD FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD INDEX idx_profile_id (profile_id);  -- Index cho query nhanh
+
+
+-- Cho work_experience
+DROP TABLE IF EXISTS candidate_exper;
+ALTER TABLE work_experience
+    ADD COLUMN profile_id INT NOT NULL,
+    ADD FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD INDEX idx_profile_id (profile_id);
+
+
+-- Cho certificates
+DROP TABLE IF EXISTS candidate_certi;
+ALTER TABLE certificates
+    ADD COLUMN profile_id INT NOT NULL,
+    ADD FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD INDEX idx_profile_id (profile_id);
+
+-- Thêm awards nếu cần (5 sections: edu, experience, cert, awards, skills)
+CREATE TABLE IF NOT EXISTS awards (
+    award_id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(200) NULL,
+    issuer VARCHAR(200) NULL,
+    date DATE NULL,
+    description VARCHAR(200) NULL,
+    profile_id INT NOT NULL,
+    PRIMARY KEY (award_id),
+    FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_profile_id (profile_id)
+);
+-- sẽ có 2 skill là core skill và soft skill cho candidate
+-- skill hiện tại sẽ là core skill, soft skill sẽ là bảng riêng cho phép nhập từ phía người dùng
+DROP TABLE IF EXISTS candidate_skill;
+-- core skill 
+CREATE TABLE candidate_skill (
+    skill_id   INT NOT NULL,
+    profile_id INT NOT NULL,
+    level_id   INT NULL,
+    PRIMARY KEY (skill_id, profile_id),
+    FOREIGN KEY (skill_id) REFERENCES skills(skill_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (level_id) REFERENCES levels(level_id) ON DELETE SET NULL ON UPDATE CASCADE
+);
+-- soft skill
+CREATE TABLE soft_skills (
+    soft_skill_id INT NOT NULL AUTO_INCREMENT,
+    profile_id INT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    description VARCHAR(255) NULL,
+    level ENUM('Low','Medium','High') NULL, -- tuỳ bạn có cần đánh mức không
+    PRIMARY KEY (soft_skill_id),
+    FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    INDEX idx_profile_id (profile_id)
+);
