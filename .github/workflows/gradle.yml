@@ -12,6 +12,7 @@ env:
   VPS_HOST: ${{ secrets.VPS_HOST }}
   VPS_USER: ${{ secrets.VPS_USER }}
   VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+  DOCKER_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/job-huntly-backend
   DOCKER_IMAGE: job-huntly-backend
   DOCKER_TAG: latest
 
@@ -41,8 +42,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build --no-cache -t $DOCKER_IMAGE:$DOCKER_TAG .
-          docker push $DOCKER_IMAGE:$DOCKER_TAG
+          docker build --no-cache -t $DOCKER_REPO:$DOCKER_TAG .
+          docker push $DOCKER_REPO:$DOCKER_TAG
 
       # Copy necessary files to server
       - name: Copy docker-compose & env file to VPS
