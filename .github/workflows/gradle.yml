@@ -82,21 +82,18 @@ jobs:
             echo "🔗  Tạo network (nếu chưa có)..."
             docker network create customer-network || true
 
-            echo "🔄  Thay image trong compose thành image đầy đủ namespace..."
-            sed -i -E "s|^([[:space:]]*image:[[:space:]]*).*|\1${{ env.IMAGE_REPO }}:latest|g" docker-compose.yml
-
             echo "🔑  Docker login (nếu image private)..."
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin || true
 
             echo "🛑  Dừng container cũ (nếu tồn tại)..."
-            docker compose -f docker-compose.yml stop ${{ env.SERVICE_NAME }} || true
-            docker compose -f docker-compose.yml rm -f ${{ env.SERVICE_NAME }} || true
+            docker-compose -f docker-compose.yml stop ${{ env.SERVICE_NAME }} || true
+            docker-compose -f docker-compose.yml rm -f ${{ env.SERVICE_NAME }} || true
 
             echo "⬇️  Kéo image mới nhất..."
-            docker compose -f docker-compose.yml pull ${{ env.SERVICE_NAME }} || true
+            docker-compose -f docker-compose.yml pull ${{ env.SERVICE_NAME }} || true
 
             echo "🚀  Khởi chạy container mới..."
-            docker compose -f docker-compose.yml up -d --remove-orphans
+            docker-compose -f docker-compose.yml up -d --remove-orphans
 
             echo "🧹  Dọn rác image cũ..."
             docker image prune -f
