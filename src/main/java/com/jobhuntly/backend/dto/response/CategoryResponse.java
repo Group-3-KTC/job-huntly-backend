@@ -1,4 +1,6 @@
 package com.jobhuntly.backend.dto.response;
 
-public record CategoryResponse(String name) {
+public record CategoryResponse(
+        int id,
+        String name) {
 }

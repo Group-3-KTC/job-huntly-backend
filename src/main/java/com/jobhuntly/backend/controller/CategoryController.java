@@ -54,4 +54,31 @@ public class CategoryController {
         throw new IllegalStateException("Boom!");
     }
 
+    @GetMapping("")
+    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
+        try {
+            List<CategoryResponse> categories = categoryService.getAllCategories();
+            if (categories.isEmpty()) {
+                return new ResponseEntity<>(categories, HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(categories, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/children-by-id/{parentId}")
+    public ResponseEntity<?> getChildrenByParentId(@PathVariable Long parentId) {
+        try {
+            List<CategoryResponse> children = categoryService.getChildrenByParentId(parentId);
+            if (children.isEmpty()) {
+                return new ResponseEntity<>(children, HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(children, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
 }
