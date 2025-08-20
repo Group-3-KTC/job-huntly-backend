@@ -1,18 +1,19 @@
 spring:
   config:
     import: optional:file:.env.local.properties
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}
-#    password: ${DB_PASS}
+    password: ${DB_PASS}
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: none
     properties:
-      properties:
-        hibernate:
-          format-sql: true
+      hibernate:
+        format-sql: true
     show-sql: true
     database-platform: ${DB_DIALECT}
 
@@ -30,9 +31,17 @@ spring:
             enable: true
             required: true
 
-jwt:
-  expiration: 2592000 #30 days = 30 * 24 * 60 * 60
-  secretKey: ${JWT_SECRET}
+
+security:
+  cors:
+    allowed-origins: [ "http://localhost:3000" ]  # thêm domain FE khác nếu cần
+    allow-credentials: true
+  jwt:
+    secret: ${JWT_SECRET}          # >= 32 ký tự
+    expiry-seconds: 2592000        # 30 ngày
+    issuer: "jobhuntly"
+    cookie-name: "session"         # httpOnly cookie do BE set
+    role-cookie-name: "role"
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}
@@ -47,20 +56,4 @@ frontend:
 
 backend:
   host: http://localhost:8080
-  prefix: api/v1
-
-web:
-  cors:
-    allowed-origins:
-      - "http://localhost:3000"
-    allowed-methods:
-      - GET
-      - POST
-      - PUT
-      - DELETE
-      - OPTIONS
-    allowed-headers: "*"
-    exposed-headers:
-      - "Authorization"
-    allow-credentials: true
-    max-age: 3600
+  prefix: /api/v1
