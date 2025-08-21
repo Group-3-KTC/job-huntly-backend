@@ -121,13 +121,13 @@ jobs:
             docker network create job-huntly-network || true
 
             echo "Pulling latest image..."
-            docker-compose -f compose.yml pull
+            docker compose -f compose.yml pull
 
             echo "Stopping old container if exists..."
-            docker-compose -f compose.yml stop job-huntly-backend || true
-            docker-compose -f compose.yml rm -f job-huntly-backend || true
+            docker compose -f compose.yml stop job-huntly-backend || true
+            docker compose -f compose.yml rm -f job-huntly-backend || true
 
             echo "Starting new container with correct name..."
-            docker-compose -f compose.yml up -d --remove-orphans
+            docker compose -f compose.yml up -d --remove-orphans
 
             echo "Deployment completed!"
