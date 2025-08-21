@@ -10,4 +10,5 @@ services:
 
 networks:
   job-huntly-network:
+    external: true
     name: job-huntly-network

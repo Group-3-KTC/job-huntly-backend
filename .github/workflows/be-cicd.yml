@@ -115,10 +115,9 @@ jobs:
           script: |
             echo "Navigating to project directory..."
             cd ~/job-huntly-backend
-
-            echo "Creating network (if not exists)..."
-            echo "Currently, we re-use job-huntly-network..."
-            docker network create job-huntly-network || true
+            
+            echo "Ensuring external network exists..."
+            docker network inspect job-huntly-network >/dev/null 2>&1 || docker network create job-huntly-network
 
             echo "Pulling latest image..."
             docker compose -f compose.yml pull
