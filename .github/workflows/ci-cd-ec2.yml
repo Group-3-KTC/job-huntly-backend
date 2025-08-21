@@ -120,6 +120,12 @@ jobs:
             set -e
             cd ~/jobhuntly
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+                  # tạo network nếu chưa có
+            docker network inspect customer-network >/dev/null 2>&1 || docker network create customer-network
+            
+            # dọn container cũ (nếu có) để tránh chiếm port/tên
+            docker rm -f job-huntly-backend >/dev/null 2>&1 || true
+            
             docker compose pull
-            docker compose up -d --remove-orphans
+            docker compose up -d --remove-orphans || true
             docker image prune -f

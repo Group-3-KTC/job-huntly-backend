@@ -1,7 +1,6 @@
 services:
   jobhuntly-backend:
     image: ${DOCKERHUB_USERNAME}/job-huntly-backend:${IMAGE_TAG:-dev-latest}
-    container_name: job-huntly-backend
     env_file:
       - .env
     # Nếu app listen trong container ở 8088 (thường Spring server.port=8088):
