@@ -1,14 +1,13 @@
 services:
-  jobhuntly-backend:
-    image: ${DOCKERHUB_USERNAME}/job-huntly-backend:${IMAGE_TAG:-dev-latest}
+  job-huntly-backend:
+    image: huynguyen1911/job-huntly-backend:${IMAGE_TAG:dev-latest}
     env_file:
       - .env
     ports:
-      - "80:8080"
-    restart: unless-stopped
+      - "8080:8080"
     networks:
-      - customer-network
+      - job-huntly-network
 
 networks:
-  customer-network:
-    name: customer-network
+  job-huntly-network:
+    name: job-huntly-network
