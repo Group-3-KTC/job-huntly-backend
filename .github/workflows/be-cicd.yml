@@ -61,9 +61,7 @@ jobs:
           host: 54.169.69.20
           username: ec2-user
           password: AwsEc2Password25
-          source: |
-            docker-compose.yml
-            .env
+          source: "docker-compose.yml,.env"
           target: "~/job-huntly-backend/"
 
       # Ghi file .env trên EC2 từ GitHub Secrets
