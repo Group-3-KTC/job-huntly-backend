@@ -58,9 +58,9 @@ jobs:
       - name: Upload docker-compose to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: 54.169.69.20
+          username: ec2-user
+          password: AwsEc2Password25
           source: |
             docker-compose.yml
             .env
@@ -119,9 +119,9 @@ jobs:
       - name: Deploy (pull & restart via docker compose)
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: 54.169.69.20
+          username: ec2-user
+          password: AwsEc2Password25
           script_stop: true
           script: |
             echo "Navigating to project directory..."
