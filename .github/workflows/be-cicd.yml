@@ -60,7 +60,7 @@ jobs:
         with:
           host: 54.169.69.20
           username: ec2-user
-          password: AwsEc2Password25
+          key: ${{ secrets.EC2_SSH_KEY }}
           source: "docker-compose.yml,.env"
           target: "~/job-huntly-backend/"
 
@@ -119,7 +119,7 @@ jobs:
         with:
           host: 54.169.69.20
           username: ec2-user
-          password: AwsEc2Password25
+          key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
             echo "Navigating to project directory..."
