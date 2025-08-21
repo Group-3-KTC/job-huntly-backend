@@ -102,7 +102,7 @@ jobs:
             SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
 
             BACKEND_HOST=${{ secrets.BACKEND_HOST }}
-            BACKEND_PREFIX=${{ secrets.BACKEND_PREFIX }}
+            BACKEND_PREFIX=/api/v1
 
             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
 
@@ -120,16 +120,15 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
           script: |
             set -e
             cd ~/jobhuntly
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
                   # tạo network nếu chưa có
             docker network inspect customer-network >/dev/null 2>&1 || docker network create customer-network
-            
-            # dọn container cũ (nếu có) để tránh chiếm port/tên
-            docker rm -f job-huntly-backend >/dev/null 2>&1 || true
-            
-            docker compose pull
-            docker compose up -d --remove-orphans || true
+            # kéo image (kèm retry)
+            for i in 1 2 3; do docker compose pull && break || { echo "pull retry $i"; sleep 10; }; done
+            docker compose down --remove-orphans
+            docker compose up -d --force-recreate
             docker image prune -f
