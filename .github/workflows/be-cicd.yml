@@ -54,71 +54,62 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Upload docker-compose.yml lên EC2 (để ~/job-huntly-backend/docker-compose.yml)
+      # Upload compose.yml lên EC2 (để ~/job-huntly-backend/compose.yml)
       - name: Upload docker-compose to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: 54.169.69.20
-          username: ec2-user
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "docker-compose.yml,.env"
+          source: "compose.yml,.env"
           target: "~/job-huntly-backend/"
 
       # Ghi file .env trên EC2 từ GitHub Secrets
-#      - name: Write .env on EC2
-#        uses: appleboy/ssh-action@v1.1.0
-#        with:
-#          host: ${{ secrets.EC2_HOST }}
-#          username: ${{ secrets.EC2_USER }}
-#          key: ${{ secrets.EC2_SSH_KEY }}
-#          script: |
-#            set -e
-#            mkdir -p ~/jobhuntly
-#            cat > ~/jobhuntly/.env << 'EOF'
-#            SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
-#            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
-#            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-#            SPRING_JPA_DATABASE_PLATFORM=${{ secrets.SPRING_JPA_DATABASE_PLATFORM }}
-#
-#            SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
-#
-#            JWT_SECRET=${{ secrets.JWT_SECRET }}
-#            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-#            JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
-#
-#            APP_JWT_SECRET=${{ secrets.JWT_SECRET }}
-#            APP_JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
-#
-#            SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}
-#            SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
-#
-#            BACKEND_HOST=${{ secrets.BACKEND_HOST }}
-#            BACKEND_PREFIX=/api/v1
-#
-#            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-#
-#            CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
-#            CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
-#            CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
-#            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
-#            IMAGE_TAG=dev-latest
-#            EOF
-#              # làm sạch: bỏ CRLF, cắt khoảng trắng đầu dòng
-#              sed -i 's/\r$//' ~/jobhuntly/.env
-#              sed -i 's/^[[:space:]]\+//' ~/jobhuntly/.env
-#
-#              echo "== Keys in .env (masked) =="
-#              awk -F= '/^[A-Z0-9_]+=/{printf "%-32s=***\n",$1}' ~/jobhuntly/.env
-#
-#              echo "== Empty values (nếu có) =="
-#              awk -F= '($1 ~ /^[A-Z0-9_]+$/ && length($2)==0){print "EMPTY:",$1}' ~/jobhuntly/.env || true
+      - name: Write .env on EC2
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            mkdir -p ~/job-huntly-backend
+            cat > ~/job-huntly-backend/.env << 'EOF'
+            SPRING_DATASOURCE_URL=${{ secrets.SPRING_DATASOURCE_URL }}
+            SPRING_DATASOURCE_USERNAME=${{ secrets.SPRING_DATASOURCE_USERNAME }}
+            SPRING_DATASOURCE_PASSWORD=${{ secrets.SPRING_DATASOURCE_PASSWORD }}
+            SPRING_JPA_DATABASE_PLATFORM=${{ secrets.SPRING_JPA_DATABASE_PLATFORM }}
+
+            SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
+
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+            JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+
+            APP_JWT_SECRET=${{ secrets.JWT_SECRET }}
+            APP_JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+
+            SPRING_MAIL_USERNAME=${{ secrets.SPRING_MAIL_USERNAME }}
+            SPRING_MAIL_PASSWORD=${{ secrets.SPRING_MAIL_PASSWORD }}
+
+            BACKEND_HOST=${{ secrets.BACKEND_HOST }}
+            BACKEND_PREFIX=/api/v1
+
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+
+            CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+            CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+            CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+            DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+            IMAGE_TAG=dev-latest
+            EOF
+            chmod 600 ~/job-huntly-backend/.env
 
       # Đăng nhập Docker Hub + Pull + Up -d
       - name: Deploy (pull & restart via docker compose)
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: 54.169.69.20
-          username: ec2-user
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
@@ -126,15 +117,15 @@ jobs:
             cd ~/job-huntly-backend
 
             echo "Creating network (if not exists)..."
-            echo "Currently, we re-use customer-network..."
-            docker network create customer-network || true
+            echo "Currently, we re-use job-huntly-network..."
+            docker network create job-huntly-network || true
 
             echo "Pulling latest image..."
             docker-compose -f compose.yml pull
 
             echo "Stopping old container if exists..."
-            docker-compose -f compose.yml stop customer-app || true
-            docker-compose -f compose.yml rm -f customer-app || true
+            docker-compose -f compose.yml stop job-huntly-backend || true
+            docker-compose -f compose.yml rm -f job-huntly-backend || true
 
             echo "Starting new container with correct name..."
             docker-compose -f compose.yml up -d --remove-orphans
