@@ -2,12 +2,14 @@ package com.jobhuntly.backend.security.jwt;
 
 import com.jobhuntly.backend.config.AppProps;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
 @Component
 @RequiredArgsConstructor
+@ConfigurationProperties(prefix = "security.jwt")
 public class JwtProperties {
     private final AppProps props;
 
