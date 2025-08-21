@@ -1,6 +1,6 @@
 services:
   job-huntly-backend:
-    image: huynguyen1911/job-huntly-backend:${IMAGE_TAG:dev-latest}
+    image: huynguyen1911/job-huntly-backend:dev-latest
     env_file:
       - .env
     ports:
