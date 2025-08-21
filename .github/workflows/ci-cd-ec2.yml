@@ -91,6 +91,7 @@ jobs:
 
             SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
 
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
             JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
 
