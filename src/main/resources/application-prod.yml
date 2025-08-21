@@ -37,7 +37,7 @@ security:
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}
-    expiry-seconds: ${JWT_EXPIRATION:7200000}
+    expiry-seconds: ${JWT_EXPIRATION:7200s}
     issuer: "jobhuntly"
     cookie-name: "session"         # httpOnly cookie do BE set
     role-cookie-name: "role"
@@ -56,3 +56,15 @@ frontend:
 backend:
   host: ${BACKEND_HOST:http://localhost:8080}
   prefix: ${BACKEND_PREFIX:api/v1}
+
+debug: true  # Bật ConditionEvaluationReport & auto-config hints
+
+logging:
+  level:
+    root: INFO
+    org.springframework: DEBUG
+    org.springframework.boot.autoconfigure: DEBUG   # xem điều kiện auto-config
+    org.springframework.security: DEBUG            # xem chain/security filter
+    org.springframework.web: DEBUG
+    com.zaxxer.hikari: DEBUG                       # log kết nối Hikari/DB
+    com.jobhuntly.backend: DEBUG                   # package của bạn
