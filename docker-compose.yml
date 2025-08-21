@@ -14,4 +14,4 @@ services:
 
 networks:
   customer-network:
-    external: true
+    name: customer-network
