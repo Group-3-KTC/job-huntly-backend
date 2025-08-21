@@ -1,19 +1,16 @@
-version: "3.9"
-
 services:
   jobhuntly-backend:
-    image: job-huntly-backend:latest
+    image: ${DOCKERHUB_USERNAME}/job-huntly-backend:${IMAGE_TAG:-dev-latest}
     container_name: job-huntly-backend
-    ports:
-      - "8080:8080"
     env_file:
-      - ./.env.local.properties
-#    restart: unless-stopped
+      - .env
+    # Nếu app listen trong container ở 8088 (thường Spring server.port=8088):
+    ports:
+      - "80:8088"
+    # Nếu app của bạn thực tế là 8080, đổi dòng trên thành: "80:8080"
+    restart: unless-stopped
     networks:
       - customer-network
-    # Nếu bạn chạy Docker trên Linux, bỏ comment 2 dòng dưới:
-    # extra_hosts:
-    #   - "host.docker.internal:host-gateway"
 
 networks:
   customer-network:
