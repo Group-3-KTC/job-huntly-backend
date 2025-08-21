@@ -37,7 +37,7 @@ security:
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}
-    expiry-seconds: ${JWT_EXPIRATION:PT2H}
+    expiry-seconds: ${JWT_EXPIRATION:7200000}
     issuer: "jobhuntly"
     cookie-name: "session"         # httpOnly cookie do BE set
     role-cookie-name: "role"
