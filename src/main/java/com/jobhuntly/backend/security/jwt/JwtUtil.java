@@ -48,12 +48,13 @@ public class JwtUtil {
         this.expirationMillis = expiry.getSeconds() * 1000L;
     }
 
-    public String generateToken(String subject, String role) {
+    public String generateToken(String subject, String role, Long userId) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .setSubject(subject)
                 .setIssuer(issuer)
                 .claim("role", role)
+                .claim("userId", userId)
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusMillis(expirationMillis)))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -109,5 +110,22 @@ public class JwtUtil {
             throw new IllegalStateException(message);
         }
         return v.trim();
+    }
+
+    public Long extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object userIdClaim = claims.get("userId");
+        if (userIdClaim == null) {
+            return null;
+        }
+
+        // Handle different number types
+        if (userIdClaim instanceof Number) {
+            return ((Number) userIdClaim).longValue();
+        } else if (userIdClaim instanceof String) {
+            return Long.parseLong((String) userIdClaim);
+        }
+
+        throw new IllegalArgumentException("Invalid userId claim type: " + userIdClaim.getClass());
     }
 }

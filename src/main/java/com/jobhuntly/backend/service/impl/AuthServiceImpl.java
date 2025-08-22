@@ -82,7 +82,8 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        String activationLink = BACKEND_HOST + BACKEND_PREFIX + "/auth/activate?token=" + token;
+        // String activationLink = BACKEND_HOST + BACKEND_PREFIX + "/auth/activate?token=" + token;
+        String activationLink = "http://18.142.226.139:8080" + BACKEND_PREFIX + "/auth/activate?token=" + token;
 
         String htmlContent = String.format("""
                 <html>
@@ -139,7 +140,7 @@ public class AuthServiceImpl implements AuthService {
             throw new org.springframework.security.authentication.BadCredentialsException("Role không phù hợp");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), actualRole);
+        String token = jwtUtil.generateToken(user.getEmail(), actualRole, user.getId());
 
         return LoginResponse.builder()
                 .accessToken(token)
@@ -196,7 +197,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String roleName = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "CANDIDATE";
-        String token = jwtUtil.generateToken(user.getEmail(), roleName);
+        String token = jwtUtil.generateToken(user.getEmail(), roleName, user.getId());
 
         String tokenType = "Bearer";
         long expiresIn = jwtUtil.getExpirationSeconds();
