@@ -10,16 +10,14 @@ import java.util.Optional;
 
 public interface CandidateSkillRepository extends JpaRepository<CandidateSkill, Long> {
 
-    // Tìm theo userId (thông qua profile.user.id)
+
     List<CandidateSkill> findByProfileUserId(Long userId);
 
-    // Tìm theo profileId và skillId - sử dụng tên đúng của field
+
     Optional<CandidateSkill> findByProfileProfileIdAndSkillId(Long profileId, Long skillId);
 
-    // Kiểm tra tồn tại theo profileId và skillId
     boolean existsByProfileProfileIdAndSkillId(Long profileId, Long skillId);
 
-    // Hoặc sử dụng @Query để rõ ràng hơn
     @Query("SELECT cs FROM CandidateSkill cs WHERE cs.profile.profileId = :profileId AND cs.skill.id = :skillId")
     Optional<CandidateSkill> findByProfileIdAndSkillId(@Param("profileId") Long profileId,
             @Param("skillId") Long skillId);

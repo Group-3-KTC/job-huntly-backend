@@ -13,7 +13,6 @@ public interface WorkExperienceMapper {
     @Mapping(target = "id", source = "experId")
     WorkExperienceResponse toResponseDTO(WorkExperience exper);
 
-    // ✅ Fix: Đúng tên field trong Entity
     @Mapping(target = "experId", ignore = true)
     @Mapping(target = "profile", ignore = true)
     WorkExperience toEntity(WorkExperienceRequest dto);

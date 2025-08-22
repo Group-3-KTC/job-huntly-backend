@@ -17,10 +17,6 @@ public class ProfileDomainService {
     private final CandidateProfileRepository candidateProfileRepository;
     private final UserRepository userRepository;
 
-    /**
-     * Lấy profile của user, nếu chưa có thì tạo mới
-     * -> Dùng trong CandidateProfileServiceImpl, ProfileServiceImpl
-     */
     public CandidateProfile getOrCreateProfile(Long userId) {
         return candidateProfileRepository.findByUser_Id(userId)
                 .orElseGet(() -> {
@@ -31,18 +27,12 @@ public class ProfileDomainService {
                 });
     }
 
-    /**
-     * Lấy profile, nếu không có thì báo lỗi
-     * -> Dùng trong Award/Certificate/Edu/WorkExperience service
-     */
     public CandidateProfile getProfileOrThrow(Long userId) {
         return candidateProfileRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
     }
 
-    /**
-     * Tạo CandidateProfile mặc định
-     */
+
     private CandidateProfile createDefaultProfile(User user) {
         CandidateProfile profile = new CandidateProfile();
         profile.setUser(user);
@@ -53,7 +43,7 @@ public class ProfileDomainService {
         profile.setTitle("");
         profile.setAvatar("");
 
-        // Khởi tạo set rỗng
+
         profile.setAwards(new HashSet<>());
         profile.setWorkExperiences(new HashSet<>());
         profile.setCertificates(new HashSet<>());
@@ -66,8 +56,8 @@ public class ProfileDomainService {
     /**
      * Kiểm tra user có quyền sở hữu profile hay không
      * 
-     * @param ownerId userId thực sự của profile (lấy từ entity)
-     * @param userId  userId đang thao tác (từ token / controller)
+     * @param ownerId
+     * @param userId  
      */
     public void checkOwnership(Long ownerId, Long userId) {
         if (!ownerId.equals(userId)) {

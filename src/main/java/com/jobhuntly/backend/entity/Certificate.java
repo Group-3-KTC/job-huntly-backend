@@ -9,7 +9,7 @@ import java.util.Date;
 @Entity
 @Table(name = "certificates")
 @Getter
-@Setter // KHÔNG dùng @Data
+@Setter 
 public class Certificate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +29,6 @@ public class Certificate {
     @JoinColumn(name = "profile_id", nullable = false)
     private CandidateProfile profile;
 
-    // equals và hashCode chỉ dựa vào ID
     @Override
     public boolean equals(Object o) {
         if (this == o)

@@ -20,7 +20,6 @@ public class ProfileCombinedResponse {
     private String fullName;
     private String avatar;
     
-    // Collections
     private List<EduResponse> education;
     private List<WorkExperienceResponse> workExperience;
     private List<CertificateResponse> certificates;

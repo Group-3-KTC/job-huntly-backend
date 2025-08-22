@@ -13,7 +13,6 @@ public interface AwardMapper {
     @Mapping(target = "id", source = "awardId")
     AwardResponse toResponseDTO(Award award);
 
-    // ✅ Fix: Đúng tên field trong Entity
     @Mapping(target = "awardId", ignore = true)
     @Mapping(target = "profile", ignore = true)
     Award toEntity(AwardRequest dto);

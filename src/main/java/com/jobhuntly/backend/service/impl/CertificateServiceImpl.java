@@ -6,7 +6,7 @@ import com.jobhuntly.backend.entity.Certificate;
 import com.jobhuntly.backend.entity.CandidateProfile;
 import com.jobhuntly.backend.mapper.CertificateMapper;
 import com.jobhuntly.backend.repository.CertificateRepository;
-import com.jobhuntly.backend.service.CertificateService; // ✅ Added missing import
+import com.jobhuntly.backend.service.CertificateService; 
 import com.jobhuntly.backend.service.ProfileDomainService;
 
 import lombok.RequiredArgsConstructor;

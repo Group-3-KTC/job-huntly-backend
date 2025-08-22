@@ -7,7 +7,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "edu")
 @Getter
-@Setter // KHÔNG dùng @Data
+@Setter 
 public class Edu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

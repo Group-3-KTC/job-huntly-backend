@@ -50,7 +50,7 @@ public class SoftSkillServiceImpl implements SoftSkillService {
         if (dto.getDescription() != null)
             softSkill.setDescription(dto.getDescription());
         if (dto.getLevel() != null)
-            softSkill.setLevel(Level.valueOf(dto.getLevel())); // Assuming Level enum
+            softSkill.setLevel(Level.valueOf(dto.getLevel()));
         return mapper.toResponseDTO(repository.save(softSkill));
     }
 

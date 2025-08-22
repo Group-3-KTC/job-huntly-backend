@@ -38,7 +38,6 @@ public class CandidateProfileServiceImpl implements CandidateProfileService {
     public CandidateProfileResponse updateCandidateProfile(Long userId, CandidateProfileRequest request) {
         CandidateProfile profile = profileDomainService.getOrCreateProfile(userId);
         
-        // update các field trong CandidateProfile (trừ user)
         mapper.updateEntity(profile, request);
 
         User user = profile.getUser();

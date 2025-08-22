@@ -21,7 +21,7 @@ public class SoftSkill {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    private Level level; // Assuming Level is an enum: public enum Level { Low, Medium, High }
+    private Level level; 
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id", nullable = false)

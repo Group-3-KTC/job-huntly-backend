@@ -21,12 +21,12 @@ public class AwardServiceImpl implements AwardService {
 
     private final AwardRepository repository;
     private final AwardMapper mapper;
-    private final ProfileDomainService profileDomainService; // ✅ gom chỗ này
+    private final ProfileDomainService profileDomainService; 
 
     @Override
     @Transactional
     public AwardResponse create(Long userId, AwardRequest dto) {
-        CandidateProfile profile = profileDomainService.getProfileOrThrow(userId); // ✅ dùng service chung
+        CandidateProfile profile = profileDomainService.getProfileOrThrow(userId); 
         Award award = mapper.toEntity(dto);
         award.setProfile(profile);
         profile.getAwards().add(award);

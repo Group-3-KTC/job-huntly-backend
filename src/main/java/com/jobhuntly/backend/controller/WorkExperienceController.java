@@ -1,4 +1,3 @@
-// WorkExperienceController.java (updated to inject interface)
 package com.jobhuntly.backend.controller;
 
 import com.jobhuntly.backend.dto.request.WorkExperienceRequest;

@@ -32,7 +32,7 @@ public class CandidateSkillController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CandidateSkillResponse> update(@PathVariable Long id, // Changed from skillId to id
+    public ResponseEntity<CandidateSkillResponse> update(@PathVariable Long id, 
             @Valid @RequestBody CandidateSkillRequest dto,
             @RequestHeader("Authorization") String authHeader) {
         Long userId = extractUserId(authHeader);
@@ -40,7 +40,7 @@ public class CandidateSkillController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id, // Changed from skillId to id
+    public ResponseEntity<Void> delete(@PathVariable Long id, 
             @RequestHeader("Authorization") String authHeader) {
         Long userId = extractUserId(authHeader);
         service.delete(userId, id);

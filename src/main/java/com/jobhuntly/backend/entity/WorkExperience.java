@@ -7,7 +7,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "work_experience")
 @Getter
-@Setter // KHÔNG dùng @Data
+@Setter
 public class WorkExperience {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +24,6 @@ public class WorkExperience {
     @JoinColumn(name = "profile_id", nullable = false)
     private CandidateProfile profile;
 
-    // equals và hashCode chỉ dựa vào ID
     @Override
     public boolean equals(Object o) {
         if (this == o)

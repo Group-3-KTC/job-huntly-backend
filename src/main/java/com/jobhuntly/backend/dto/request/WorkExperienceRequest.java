@@ -1,4 +1,3 @@
-// WorkExperienceRequestDTO.java
 package com.jobhuntly.backend.dto.request;
 
 import lombok.Data;

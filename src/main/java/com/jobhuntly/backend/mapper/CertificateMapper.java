@@ -13,7 +13,6 @@ public interface CertificateMapper {
     @Mapping(target = "id", source = "cerId")
     CertificateResponse toResponseDTO(Certificate cer);
 
-    // ✅ Ignore the auto-generated fields
     @Mapping(target = "cerId", ignore = true)
     @Mapping(target = "profile", ignore = true)
     Certificate toEntity(CertificateRequest dto);

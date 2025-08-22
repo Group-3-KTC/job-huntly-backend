@@ -9,7 +9,7 @@ import java.util.Date;
 @Entity
 @Table(name = "awards")
 @Getter
-@Setter // KHÔNG dùng @Data
+@Setter 
 public class Award {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +28,6 @@ public class Award {
     @JoinColumn(name = "profile_id", nullable = false)
     private CandidateProfile profile;
 
-    // equals và hashCode chỉ dựa vào ID
     @Override
     public boolean equals(Object o) {
         if (this == o)

@@ -13,7 +13,6 @@ public interface EduMapper {
     @Mapping(target = "id", source = "eduId")
     EduResponse toResponseDTO(Edu edu);
 
-    // ✅ Ignore the auto-generated fields
     @Mapping(target = "eduId", ignore = true)
     @Mapping(target = "profile", ignore = true)
     Edu toEntity(EduRequest dto);

@@ -27,7 +27,6 @@ public class ProfileServiceImpl implements ProfileService {
         return candidateProfileRepository.findByUserIdWithAllRelations(userId)
                 .map(profile -> {
                     ProfileCombinedResponse response = profileMapper.toCombinedResponse(profile);
-                    // Fix category info cho candidateSkills
                     setCategoryInfoForCandidateSkills(response, profile);
                     return response;
                 })
@@ -39,19 +38,14 @@ public class ProfileServiceImpl implements ProfileService {
                 });
     }
 
-    /**
-     * Set category info cho list candidateSkills trong combined response
-     * Tái sử dụng logic từ CandidateSkillServiceImpl.setCategoryInfo()
-     */
+
     private void setCategoryInfoForCandidateSkills(ProfileCombinedResponse response, CandidateProfile profile) {
         if (response.getCandidateSkills() != null && profile.getCandidateSkills() != null) {
-            // Tạo map để match DTO với entity dựa trên id
             var skillMap = profile.getCandidateSkills().stream()
                     .collect(java.util.stream.Collectors.toMap(
                             skill -> skill.getId(),
                             skill -> skill));
 
-            // Set category info cho từng skill response
             response.getCandidateSkills().forEach(skillResponse -> {
                 CandidateSkill skill = skillMap.get(skillResponse.getId());
                 if (skill != null) {
@@ -61,9 +55,6 @@ public class ProfileServiceImpl implements ProfileService {
         }
     }
 
-    /**
-     * Copy logic từ CandidateSkillServiceImpl.setCategoryInfo()
-     */
     private void setCategoryInfo(CandidateSkillResponse response, CandidateSkill candidateSkill) {
         if (candidateSkill.getSkill() != null && candidateSkill.getSkill().getCategories() != null) {
             candidateSkill.getSkill().getCategories().stream()
@@ -76,9 +67,6 @@ public class ProfileServiceImpl implements ProfileService {
         }
     }
 
-    /**
-     * Copy logic từ CandidateSkillServiceImpl.findTopLevelCategory()
-     */
     private Category findTopLevelCategory(Category category) {
         Category current = category;
         while (current.getParent() != null) {

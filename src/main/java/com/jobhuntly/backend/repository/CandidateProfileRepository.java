@@ -9,10 +9,8 @@ import java.util.Optional;
 
 public interface CandidateProfileRepository extends JpaRepository<CandidateProfile, Long> {
     
-    // ✅ Method name đúng - chỉ tìm theo userId
     Optional<CandidateProfile> findByUser_Id(Long userId);
     
-    // ✅ Nếu muốn fetch relations, dùng @Query với JOIN FETCH
     @Query("SELECT cp FROM CandidateProfile cp " +
             "LEFT JOIN FETCH cp.user " +
             "LEFT JOIN FETCH cp.workExperiences " +
