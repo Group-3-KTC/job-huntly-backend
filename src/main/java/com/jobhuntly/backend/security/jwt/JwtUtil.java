@@ -4,14 +4,17 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 
 @Component
 public class JwtUtil {
@@ -25,9 +28,24 @@ public class JwtUtil {
     private final String issuer;
 
     public JwtUtil(JwtProperties props) {
-        this.key = Keys.hmacShaKeyFor(props.getSecret().getBytes(StandardCharsets.UTF_8));
-        this.expirationMillis = props.getExpirySeconds().getSeconds() * 1000L;
-        this.issuer = props.getIssuer();
+        // Validate cấu hình
+        String secretB64 = requireNonBlank(props.getSecret(), "Missing security.jwt.secret (JWT_SECRET_KEY)").trim();
+        Duration expiry  = Objects.requireNonNull(props.getExpirySeconds(), "Missing security.jwt.expiry-seconds");
+        this.issuer      = requireNonBlank(props.getIssuer(), "Missing security.jwt.issuer").trim();
+
+        // BẮT BUỘC giải mã Base64
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secretB64);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("JWT secret must be Base64 (cannot decode).", e);
+        }
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT secret too short for HS256 (>= 32 bytes after Base64 decoding).");
+        }
+
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.expirationMillis = expiry.getSeconds() * 1000L;
     }
 
     public String generateToken(String subject, String role) {
@@ -84,5 +102,12 @@ public class JwtUtil {
 
     private boolean isTokenExpired(Date expiration) {
         return expiration == null || expiration.before(new Date());
+    }
+
+    private static String requireNonBlank(String v, String message) {
+        if (v == null || v.trim().isEmpty()) {
+            throw new IllegalStateException(message);
+        }
+        return v.trim();
     }
 }
