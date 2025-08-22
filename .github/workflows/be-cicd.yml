@@ -44,9 +44,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build --no-cache -t huynguyen1911/job-huntly-backend:latest .
-          docker push huynguyen1911/job-huntly-backend:latest
-
+          docker build --no-cache -t huynguyen1911/job-huntly-backend:prod-v1 .
+          docker push huynguyen1911/job-huntly-backend:prod-v1
   deploy_to_ec2:
     runs-on: ubuntu-latest
     needs: build_and_push_image
