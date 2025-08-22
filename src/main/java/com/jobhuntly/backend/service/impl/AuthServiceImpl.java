@@ -82,7 +82,8 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        String activationLink = BACKEND_HOST + BACKEND_PREFIX + "/auth/activate?token=" + token;
+        // String activationLink = BACKEND_HOST + BACKEND_PREFIX + "/auth/activate?token=" + token;
+        String activationLink = "http://18.142.226.139:8080" + BACKEND_PREFIX + "/auth/activate?token=" + token;
 
         String htmlContent = String.format("""
                 <html>
