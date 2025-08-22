@@ -635,3 +635,17 @@ CREATE TABLE soft_skills (
     FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_profile_id (profile_id)
 );
+
+DROP TABLE IF EXISTS candidate_skill;
+
+CREATE TABLE candidate_skill (
+    candidate_skill_id INT NOT NULL AUTO_INCREMENT,
+    skill_id   INT NOT NULL,
+    profile_id INT NOT NULL,
+    level_id   INT NULL,
+    PRIMARY KEY (candidate_skill_id),
+    UNIQUE KEY unique_profile_skill (skill_id, profile_id),
+    FOREIGN KEY (skill_id) REFERENCES skills(skill_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (level_id) REFERENCES levels(level_id) ON DELETE SET NULL ON UPDATE CASCADE
+);

@@ -2591,3 +2591,93 @@ VALUES ('Phú Khương', 32),
        ('Trà Côn', 32),
        ('Vĩnh Xuân', 32),
        ('Lục Sĩ Thành', 32);
+
+-- Insert skills into the skills table
+INSERT INTO skills (skill_name)
+VALUES
+-- Skills for Công nghệ thông tin (11: Lập trình phần mềm, 12: Quản trị hệ thống, 13: An ninh mạng, 14: Phân tích dữ liệu)
+('Java Programming'),
+('Python Programming'),
+('JavaScript Development'),
+('DevOps Engineering'),
+('System Administration'),
+('Network Security'),
+('Cybersecurity Analysis'),
+('Data Analysis'),
+('Machine Learning'),
+('Database Management'),
+-- Skills for Kế toán - Kiểm toán (15: Kế toán tổng hợp, 16: Kế toán thuế, 17: Kiểm toán nội bộ)
+('General Accounting'),
+('Tax Accounting'),
+('Internal Auditing'),
+('Financial Reporting'),
+('Cost Accounting'),
+-- Skills for Nhân sự (18: Tuyển dụng, 19: Đào tạo & Phát triển, 20: Chính sách & Lương thưởng)
+('Recruitment'),
+('Training and Development'),
+('Compensation and Benefits'),
+('HR Policy Management'),
+('Employee Relations'),
+-- Skills for Marketing (21: Digital Marketing, 22: Content Marketing, 23: Nghiên cứu thị trường)
+('SEO Optimization'),
+('Social Media Marketing'),
+('Content Creation'),
+('Market Research'),
+('Brand Management'),
+-- Skills for Kinh doanh - Bán hàng (24: Bán hàng trực tiếp, 25: Kinh doanh B2B, 26: Chăm sóc khách hàng)
+('Direct Sales'),
+('B2B Sales'),
+('Customer Service'),
+('Account Management'),
+('Sales Negotiation'),
+-- Skills for Giáo dục - Đào tạo (27: Giảng dạy, 28: Tư vấn giáo dục, 29: Quản lý đào tạo)
+('Teaching'),
+('Educational Consulting'),
+('Training Program Management'),
+('Curriculum Development'),
+('Instructional Design'),
+-- Skills for Logistics - Xuất nhập khẩu (30: Quản lý kho, 31: Vận tải quốc tế, 32: Khai báo hải quan)
+('Warehouse Management'),
+('International Shipping'),
+('Customs Declaration'),
+('Supply Chain Management'),
+('Inventory Control'),
+-- Skills for Thiết kế - Sáng tạo (33: Thiết kế đồ họa, 34: Thiết kế UI/UX, 35: Thiết kế nội thất)
+('Graphic Design'),
+('UI/UX Design'),
+('Interior Design'),
+('Motion Graphics'),
+('3D Modeling'),
+-- Skills for Y tế - Chăm sóc sức khỏe (36: Điều dưỡng, 37: Bác sĩ, 38: Dược sĩ)
+('Nursing'),
+('Medical Diagnosis'),
+('Pharmacy'),
+('Patient Care'),
+('Clinical Research'),
+-- Skills for Sản xuất - Vận hành (39: Quản lý sản xuất, 40: Kỹ thuật vận hành máy, 41: Bảo trì thiết bị)
+('Production Management'),
+('Machine Operation'),
+('Equipment Maintenance'),
+('Quality Control'),
+('Process Engineering');
+
+INSERT INTO skill_categories (skill_id, cate_id)
+SELECT skill_id, 1 FROM skills WHERE skill_name IN ('Java Programming', 'Python Programming', 'JavaScript Development', 'DevOps Engineering', 'System Administration', 'Network Security', 'Cybersecurity Analysis', 'Data Analysis', 'Machine Learning', 'Database Management') -- Công nghệ thông tin
+UNION
+SELECT skill_id, 2 FROM skills WHERE skill_name IN ('General Accounting', 'Tax Accounting', 'Internal Auditing', 'Financial Reporting', 'Cost Accounting') -- Kế toán - Kiểm toán
+UNION
+SELECT skill_id, 3 FROM skills WHERE skill_name IN ('Recruitment', 'Training and Development', 'Compensation and Benefits', 'HR Policy Management', 'Employee Relations') -- Nhân sự
+UNION
+SELECT skill_id, 4 FROM skills WHERE skill_name IN ('SEO Optimization', 'Social Media Marketing', 'Content Creation', 'Market Research', 'Brand Management') -- Marketing
+UNION
+SELECT skill_id, 5 FROM skills WHERE skill_name IN ('Direct Sales', 'B2B Sales', 'Customer Service', 'Account Management', 'Sales Negotiation') -- Kinh doanh - Bán hàng
+UNION
+SELECT skill_id, 6 FROM skills WHERE skill_name IN ('Teaching', 'Educational Consulting', 'Training Program Management', 'Curriculum Development', 'Instructional Design') -- Giáo dục - Đào tạo
+UNION
+SELECT skill_id, 7 FROM skills WHERE skill_name IN ('Warehouse Management', 'International Shipping', 'Customs Declaration', 'Supply Chain Management', 'Inventory Control') -- Logistics - Xuất nhập khẩu
+UNION
+SELECT skill_id, 8 FROM skills WHERE skill_name IN ('Graphic Design', 'UI/UX Design', 'Interior Design', 'Motion Graphics', '3D Modeling') -- Thiết kế - Sáng tạo
+UNION
+SELECT skill_id, 9 FROM skills WHERE skill_name IN ('Nursing', 'Medical Diagnosis', 'Pharmacy', 'Patient Care', 'Clinical Research') -- Y tế - Chăm sóc sức khỏe
+UNION
+SELECT skill_id, 10 FROM skills WHERE skill_name IN ('Production Management', 'Machine Operation', 'Equipment Maintenance', 'Quality Control', 'Process Engineering');

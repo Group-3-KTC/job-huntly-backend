@@ -27,7 +27,7 @@ public class CandidateProfileServiceImpl implements CandidateProfileService {
     private final ProfileDomainService profileDomainService;
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional()
     public CandidateProfileResponse getCandidateProfile(Long userId) {
         CandidateProfile profile = profileDomainService.getOrCreateProfile(userId);
         return mapper.toResponseDTO(profile);
