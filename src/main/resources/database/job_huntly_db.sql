@@ -574,7 +574,7 @@ CREATE TABLE `saved_job` (
   CONSTRAINT `fk_saved_job_job`
     FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`)
     ON DELETE RESTRICT ON UPDATE CASCADE
-)
+);
 
 -- edit database by VHP --
 DROP TABLE IF EXISTS candidate_edu;
@@ -630,7 +630,7 @@ CREATE TABLE soft_skills (
     profile_id INT NOT NULL,
     name VARCHAR(200) NOT NULL,
     description VARCHAR(255) NULL,
-    level ENUM('Low','Medium','High') NULL, -- tuỳ bạn có cần đánh mức không
+    level ENUM('Low','Medium','High') NULL,
     PRIMARY KEY (soft_skill_id),
     FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
     INDEX idx_profile_id (profile_id)

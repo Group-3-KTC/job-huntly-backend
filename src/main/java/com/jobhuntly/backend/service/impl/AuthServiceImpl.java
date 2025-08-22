@@ -129,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
 
         String roleName = user.getRole().getRoleName(); // ví dụ: CANDIDATE
 
-        String token = jwtUtil.generateToken(user.getEmail(), roleName);
+        String token = jwtUtil.generateToken(user.getEmail(), roleName, user.getId());
 
         return LoginResponse.builder()
                 .accessToken(token)
@@ -186,7 +186,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String roleName = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "CANDIDATE";
-        String token = jwtUtil.generateToken(user.getEmail(), roleName);
+        String token = jwtUtil.generateToken(user.getEmail(), roleName, user.getId());
 
         String tokenType = "Bearer";
         long expiresIn = jwtUtil.getExpirationSeconds();
