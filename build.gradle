@@ -54,6 +54,9 @@ dependencies {
     // verify Google ID Token
     implementation 'com.google.api-client:google-api-client:2.6.0'
     implementation 'com.google.http-client:google-http-client-jackson2:1.44.2'
+
+	// explicit
+	implementation 'org.springframework:spring-context-support'
 }
 
 tasks.named('test') {
