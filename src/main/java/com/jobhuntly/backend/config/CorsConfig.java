@@ -22,7 +22,7 @@ public class CorsConfig {
         List<String> allowedOrigins = new ArrayList<>(props.getCors().getAllowedOrigins());
 
         // Thêm origin mới vào
-        allowedOrigins.add("http://18.142.226.139:3000");
+        allowedOrigins.add("http://13.213.40.130:3000");
 
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
