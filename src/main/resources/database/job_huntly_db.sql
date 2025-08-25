@@ -3,8 +3,7 @@ DATABASE IF NOT EXISTS job_huntly_local
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-use
-job_huntly_local;
+use job_huntly_local;
 
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
