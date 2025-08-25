@@ -3,8 +3,8 @@ package com.jobhuntly.backend.controller;
 import com.jobhuntly.backend.dto.auth.request.GoogleLoginRequest;
 import com.jobhuntly.backend.dto.auth.request.LoginRequest;
 import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
-import com.jobhuntly.backend.dto.auth.request.UserMeDto;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
+import com.jobhuntly.backend.dto.auth.response.MeResponse;
 import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
 import com.jobhuntly.backend.repository.UserRepository;
 import com.jobhuntly.backend.service.AuthService;
@@ -85,10 +85,10 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserMeDto> me(Principal principal) {
+    public ResponseEntity<MeResponse> me(Principal principal) {
         if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        UserMeDto dto = authService.getUserMe(principal.getName());
+        MeResponse dto = authService.getUserMe(principal.getName());
         return ResponseEntity.ok(dto);
     }
 }

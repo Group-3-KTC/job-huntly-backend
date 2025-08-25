@@ -8,8 +8,8 @@ import com.google.api.client.json.JsonFactory;
 import com.jobhuntly.backend.dto.auth.request.GoogleLoginRequest;
 import com.jobhuntly.backend.dto.auth.request.LoginRequest;
 import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
-import com.jobhuntly.backend.dto.auth.request.UserMeDto;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
+import com.jobhuntly.backend.dto.auth.response.MeResponse;
 import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
 import com.jobhuntly.backend.entity.Role;
 import com.jobhuntly.backend.entity.User;
@@ -207,20 +207,20 @@ public class AuthServiceImpl implements AuthService {
                 tokenType,
                 expiresIn,
                 userId,
-                roleName,
+                user.getEmail(),
                 user.getFullName(),
-                user.getEmail()
+                roleName
         );
     }
 
     @Override
-    public UserMeDto getUserMe(String email) {
+    public MeResponse getUserMe(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
-        return new UserMeDto(
+        return new MeResponse(
                 user.getId(), user.getEmail(), user.getFullName(),
-                user.getRole().getRoleName().toUpperCase(), user.getPhone()
+                user.getRole().getRoleName().toUpperCase()
         );
     }
 
