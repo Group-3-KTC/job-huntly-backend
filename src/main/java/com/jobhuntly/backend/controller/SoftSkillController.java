@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${backend.prefix}/profile/soft-skills")
+@RequestMapping("${backend.prefix}candidate/profile/soft-skills")
 public class SoftSkillController {
     private final SoftSkillService service;
     private final JwtUtil jwtUtil;

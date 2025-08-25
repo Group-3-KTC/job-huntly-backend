@@ -135,11 +135,11 @@ public class CandidateSkillServiceImpl implements CandidateSkillService {
         Set<Category> categories = skill.getCategories();
         if (!categories.isEmpty()) {
             Category category = categories.iterator().next();
-            while (category.getParent() != null) {
-                category = category.getParent();
-            }
-            response.setCategoryId(category.getId());
-            response.setCategoryName(category.getName());
+            if (category.getParent() != null) {
+                response.setCategoryId(category.getId());
+                response.setCategoryName(category.getName());
+            } 
         }
     }
+
 }
