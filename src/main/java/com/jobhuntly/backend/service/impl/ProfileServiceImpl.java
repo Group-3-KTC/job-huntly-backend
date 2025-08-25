@@ -5,11 +5,15 @@ import com.jobhuntly.backend.dto.response.CandidateSkillResponse;
 import com.jobhuntly.backend.entity.CandidateProfile;
 import com.jobhuntly.backend.entity.CandidateSkill;
 import com.jobhuntly.backend.entity.Category;
+import com.jobhuntly.backend.entity.Skill;
 import com.jobhuntly.backend.mapper.ProfileMapper;
 import com.jobhuntly.backend.repository.CandidateProfileRepository;
 import com.jobhuntly.backend.service.ProfileDomainService;
 import com.jobhuntly.backend.service.ProfileService;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Set;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +42,6 @@ public class ProfileServiceImpl implements ProfileService {
                 });
     }
 
-
     private void setCategoryInfoForCandidateSkills(ProfileCombinedResponse response, CandidateProfile profile) {
         if (response.getCandidateSkills() != null && profile.getCandidateSkills() != null) {
             var skillMap = profile.getCandidateSkills().stream()
@@ -56,22 +59,26 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     private void setCategoryInfo(CandidateSkillResponse response, CandidateSkill candidateSkill) {
-        if (candidateSkill.getSkill() != null && candidateSkill.getSkill().getCategories() != null) {
-            candidateSkill.getSkill().getCategories().stream()
-                    .findFirst()
-                    .ifPresent(category -> {
-                        Category parentCategory = findTopLevelCategory(category);
-                        response.setCategoryId(parentCategory.getId());
-                        response.setCategoryName(parentCategory.getName());
-                    });
+        if (candidateSkill.getSkill() != null) {
+            Set<Category> categories = candidateSkill.getSkill().getCategories();
+            if (!categories.isEmpty()) {
+                categories.stream()
+                        .filter(c -> c.getParent() != null)
+                        .findFirst()
+                        .ifPresent(category -> {
+                            response.setCategoryId(category.getId());
+                            response.setCategoryName(category.getName());
+                        });
+            }
         }
     }
 
-    private Category findTopLevelCategory(Category category) {
-        Category current = category;
-        while (current.getParent() != null) {
-            current = current.getParent();
-        }
-        return current;
-    }
+    // backlog
+    // private Category findTopLevelCategory(Category category) {
+    //     Category current = category;
+    //     while (current.getParent() != null) {
+    //         current = current.getParent();
+    //     }
+    //     return current;
+    // }
 }
