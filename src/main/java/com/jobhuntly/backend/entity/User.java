@@ -28,7 +28,8 @@ public class User {
     private String passwordHash;
     @Column(name = "full_name", nullable = false, length = 255)
     private String fullName;
-
+    @Column(name = "phone_number", length = 20, unique = true)
+    private String phone;
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false) // FK tới bảng roles
     private Role role;

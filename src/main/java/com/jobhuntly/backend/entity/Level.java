@@ -24,4 +24,22 @@ public class Level {
 
     @ManyToMany(mappedBy = "levels")
     private Set<Job> jobs = new HashSet<>();
+
+    @OneToMany(mappedBy = "level", fetch = FetchType.LAZY) // Added
+    private Set<CandidateSkill> candidateSkills = new HashSet<>();
+
+    @Override // Added
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof Level))
+            return false;
+        Level that = (Level) o;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override // Added
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

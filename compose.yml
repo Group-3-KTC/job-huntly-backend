@@ -1,0 +1,14 @@
+services:
+  job-huntly-backend:
+    image: huynguyen1911/job-huntly-backend:prod-v1
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    networks:
+      - job-huntly-network
+
+networks:
+  job-huntly-network:
+    external: true
+    name: job-huntly-network

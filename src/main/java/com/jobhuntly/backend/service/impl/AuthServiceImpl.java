@@ -8,6 +8,7 @@ import com.google.api.client.json.JsonFactory;
 import com.jobhuntly.backend.dto.auth.request.GoogleLoginRequest;
 import com.jobhuntly.backend.dto.auth.request.LoginRequest;
 import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
+import com.jobhuntly.backend.dto.auth.request.UserMeDto;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
 import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
 import com.jobhuntly.backend.entity.Role;
@@ -27,6 +28,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -70,6 +72,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.getEmail())
                 .fullName(request.getFullName())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .phone(request.getPhone())
                 .role(role)
                 .isActive(false)
                 .activationToken(token)
@@ -79,7 +82,8 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        String activationLink = BACKEND_HOST + BACKEND_PREFIX + "/auth/activate?token=" + token;
+        // String activationLink = BACKEND_HOST + BACKEND_PREFIX + "/auth/activate?token=" + token;
+        String activationLink = "http://18.142.226.139:8080" + BACKEND_PREFIX + "/auth/activate?token=" + token;
 
         String htmlContent = String.format("""
                 <html>
@@ -127,9 +131,16 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepo.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        String roleName = user.getRole().getRoleName(); // ví dụ: CANDIDATE
+        String actualRole = user.getRole().getRoleName().toUpperCase();
+        String requestedRole = Optional.ofNullable(request.getRole())
+                .map(String::toUpperCase)
+                .orElse(null);
 
-        String token = jwtUtil.generateToken(user.getEmail(), roleName);
+        if (requestedRole != null && !requestedRole.equals(actualRole)) {
+            throw new org.springframework.security.authentication.BadCredentialsException("Role không phù hợp");
+        }
+
+        String token = jwtUtil.generateToken(user.getEmail(), actualRole, user.getId());
 
         return LoginResponse.builder()
                 .accessToken(token)
@@ -138,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
                 .userId(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
-                .role(roleName)
+                .role(actualRole)
                 .build();
     }
 
@@ -186,7 +197,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String roleName = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "CANDIDATE";
-        String token = jwtUtil.generateToken(user.getEmail(), roleName);
+        String token = jwtUtil.generateToken(user.getEmail(), roleName, user.getId());
 
         String tokenType = "Bearer";
         long expiresIn = jwtUtil.getExpirationSeconds();
@@ -200,6 +211,17 @@ public class AuthServiceImpl implements AuthService {
                 roleName,
                 user.getFullName(),
                 user.getEmail()
+        );
+    }
+
+    @Override
+    public UserMeDto getUserMe(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+        return new UserMeDto(
+                user.getId(), user.getEmail(), user.getFullName(),
+                user.getRole().getRoleName().toUpperCase(), user.getPhone()
         );
     }
 

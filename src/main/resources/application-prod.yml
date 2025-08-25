@@ -1,0 +1,70 @@
+spring:
+  config:
+    import: optional:file:.env.local.properties
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format-sql: true
+    show-sql: true
+    database-platform: ${SPRING_JPA_DATABASE_PLATFORM}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+
+security:
+  cors:
+    allowed-origins: [ "http://localhost:3000" ]  # thêm domain FE khác nếu cần
+    allow-credentials: true
+  jwt:
+    secret: ${JWT_SECRET_KEY}
+    expiry-seconds: ${JWT_EXPIRATION:7200s}
+    issuer: "jobhuntly"
+    cookie-name: "session"         # httpOnly cookie do BE set
+    role-cookie-name: "role"
+
+google:
+  client-id: ${GOOGLE_CLIENT_ID}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:${CLOUDINARY_NAME:}}
+  api-key: ${CLOUDINARY_API_KEY:${CLOUDINARY_KEY:}}
+  api-secret: ${CLOUDINARY_API_SECRET:${CLOUDINARY_SECRET:}}
+
+frontend:
+  host: http://localhost:3000
+
+backend:
+  host: ${BACKEND_HOST:http://localhost:8080}
+  prefix: ${BACKEND_PREFIX:api/v1}
+
+debug: true  # Bật ConditionEvaluationReport & auto-config hints
+
+logging:
+  level:
+    root: INFO
+    org.springframework: DEBUG
+    org.springframework.boot.autoconfigure: DEBUG   # xem điều kiện auto-config
+    org.springframework.security: DEBUG            # xem chain/security filter
+    org.springframework.web: DEBUG
+    com.zaxxer.hikari: DEBUG                       # log kết nối Hikari/DB
+    com.jobhuntly.backend: DEBUG                   # package của bạn

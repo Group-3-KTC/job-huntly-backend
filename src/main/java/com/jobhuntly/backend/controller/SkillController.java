@@ -26,7 +26,6 @@ public class SkillController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Constraint violated (duplicate or FK).");
         } catch (IllegalArgumentException e) {
-            // Lỗi validate từ service
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
