@@ -1,4 +1,4 @@
 package com.jobhuntly.backend.dto.response;
 
-public record LevelResponse(String name) {
+public record LevelResponse(Long id, String name) {
 }
