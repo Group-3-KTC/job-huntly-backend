@@ -2,6 +2,7 @@ package com.jobhuntly.backend.service;
 
 import com.jobhuntly.backend.dto.request.CategoryRequest;
 import com.jobhuntly.backend.dto.response.CategoryResponse;
+import com.jobhuntly.backend.entity.Category;
 
 import java.util.List;
 
