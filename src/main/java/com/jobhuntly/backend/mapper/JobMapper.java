@@ -47,6 +47,7 @@ public interface JobMapper {
     @Mapping(source = "title",  target = "title")
     @Mapping(source = "company", target = "company")
     @Mapping(source = "skills",  target = "skillNames", qualifiedByName = "toSkillNames")
+    @Mapping(source = "categories", target = "categoryNames", qualifiedByName = "toCategoryNames")
     JobResponse toResponseLite(Job job);
 
     @AfterMapping
