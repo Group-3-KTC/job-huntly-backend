@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${backend.prefix}/candidate/profile/work-experience")
+@RequestMapping("${backend.prefix}/candidate/profile/workExperience")
 public class WorkExperienceController {
     private final WorkExperienceService service;
     private final JwtUtil jwtUtil;

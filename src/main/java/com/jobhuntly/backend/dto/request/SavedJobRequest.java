@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SavedJobRequest {
-    @NotNull
-    @JsonProperty("user_id")
-    private Long userId;
+//    @NotNull
+//    @JsonProperty("user_id")
+//    private Long userId;
 
     @NotNull
     @JsonProperty("job_id")

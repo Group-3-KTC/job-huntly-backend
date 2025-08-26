@@ -648,3 +648,6 @@ CREATE TABLE candidate_skill (
     FOREIGN KEY (profile_id) REFERENCES candidate_profile(profile_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (level_id) REFERENCES levels(level_id) ON DELETE SET NULL ON UPDATE CASCADE
 );
+
+ALTER TABLE `candidate_profile`
+    DROP COLUMN `fullname`;

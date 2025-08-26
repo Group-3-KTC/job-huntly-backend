@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.jobhuntly.backend.entity.enums.Gender;
+
 
 @Entity
 @Table(name = "candidate_profile")
@@ -20,8 +22,9 @@ public class CandidateProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long profileId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "gender")
-    private String gender;
+    private Gender gender;
 
     private String avatar;
 
