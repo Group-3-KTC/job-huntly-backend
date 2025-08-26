@@ -15,13 +15,6 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ApplicationMapper {
     ApplicationResponse toResponse (Application application);
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "job", ignore = true)
-    @Mapping(target = "cv", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
     Application toEntity (ApplicationRequest applicationRequest);
     List<ApplicationResponse> toListApplication (List<Application> applicationList);
 

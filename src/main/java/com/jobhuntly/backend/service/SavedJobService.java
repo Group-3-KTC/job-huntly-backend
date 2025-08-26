@@ -6,7 +6,7 @@ import com.jobhuntly.backend.dto.response.SavedJobResponse;
 import java.util.List;
 
 public interface SavedJobService {
-    SavedJobResponse create(SavedJobRequest request);
+    SavedJobResponse create(Long userId, SavedJobRequest request);
     boolean delete(Long userId, Long jobId);
     List<SavedJobResponse> getByUserId(Long userId);
 }

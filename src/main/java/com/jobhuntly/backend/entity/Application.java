@@ -40,6 +40,9 @@ public class Application {
     @Column(name = "candidate_name", length = 200)
     private String candidateName;
 
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 

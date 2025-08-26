@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ApplicationService {
-    ApplicationResponse create(ApplicationRequest req);
+    ApplicationResponse create(Long userId, ApplicationRequest req);
 
     Page<ApplicationByUserResponse> getByUser(Long userId, Pageable pageable);
     Page<ApplicationResponse> getByJob(Integer jobId, Pageable pageable);
