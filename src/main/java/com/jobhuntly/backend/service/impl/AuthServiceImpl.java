@@ -8,18 +8,23 @@ import com.google.api.client.json.JsonFactory;
 import com.jobhuntly.backend.dto.auth.request.GoogleLoginRequest;
 import com.jobhuntly.backend.dto.auth.request.LoginRequest;
 import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
-import com.jobhuntly.backend.dto.auth.request.UserMeDto;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
+import com.jobhuntly.backend.dto.auth.response.MeResponse;
 import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
+import com.jobhuntly.backend.entity.CandidateProfile;
 import com.jobhuntly.backend.entity.Role;
 import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.entity.enums.Status;
+import com.jobhuntly.backend.repository.CandidateProfileRepository;
 import com.jobhuntly.backend.repository.RoleRepository;
 import com.jobhuntly.backend.repository.UserRepository;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import com.jobhuntly.backend.service.AuthService;
+import com.jobhuntly.backend.service.auth.AuthCookieService;
 import com.jobhuntly.backend.service.email.EmailSender;
 import com.jobhuntly.backend.service.email.EmailValidator;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -30,6 +35,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,6 +51,8 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authManager;
     private final UserRepository userRepo;
     private final JwtUtil jwtUtil;
+    private final CandidateProfileRepository candidateProfileRepo;
+    private final AuthCookieService authCookieService;
     @Value("${google.client-id}")
     private String GOOGLE_CLIENT_ID;
     @Value("${backend.host}")
@@ -122,7 +130,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request, HttpServletRequest req, HttpServletResponse res) {
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -140,21 +148,27 @@ public class AuthServiceImpl implements AuthService {
             throw new org.springframework.security.authentication.BadCredentialsException("Role không phù hợp");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), actualRole, user.getId());
+        String avatar = candidateProfileRepo.findByUser_Id(user.getId())
+                .map(CandidateProfile::getAvatar)
+                .orElse(null);
+
+        long accessTtlSeconds = Duration.ofDays(30).toSeconds();
+        String token = jwtUtil.generateToken(user.getEmail(), actualRole.toUpperCase(), user.getId());
+
+        authCookieService.setAuthCookie(req, res, token, accessTtlSeconds);
 
         return LoginResponse.builder()
-                .accessToken(token)
-                .tokenType("Bearer")
-                .expiresIn( /* ví dụ 30 ngày (giây) */ 30L * 24 * 60 * 60)
-                .userId(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
-                .role(actualRole)
+                .role(actualRole.toUpperCase())
+                .avatarUrl(avatar)
                 .build();
     }
 
     @Override
-    public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
+    public LoginResponse loginWithGoogle(GoogleLoginRequest request,
+                                         HttpServletRequest req,
+                                         HttpServletResponse res) {
         GoogleIdToken idToken = verifyGoogleIdToken(request.getIdToken(), GOOGLE_CLIENT_ID);
         if (idToken == null) {
             throw new RuntimeException("Invalid Google ID token");
@@ -197,31 +211,41 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String roleName = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "CANDIDATE";
+
+        long accessTtlSeconds = jwtUtil.getExpirationSeconds() > 0
+                ? jwtUtil.getExpirationSeconds()
+                : java.time.Duration.ofDays(30).toSeconds();
+
         String token = jwtUtil.generateToken(user.getEmail(), roleName, user.getId());
 
-        String tokenType = "Bearer";
-        long expiresIn = jwtUtil.getExpirationSeconds();
+        authCookieService.setAuthCookie(req, res, token, accessTtlSeconds);
+
+        String avatar = candidateProfileRepo.findByUser_Id(user.getId())
+                .map(CandidateProfile::getAvatar)
+                .orElse(null);
         Long userId = (user.getId() == null) ? null : user.getId();
 
         return new LoginResponse(
-                token,
-                tokenType,
-                expiresIn,
-                userId,
-                roleName,
+                user.getEmail(),
                 user.getFullName(),
-                user.getEmail()
+                roleName,
+                avatar
+
         );
     }
 
     @Override
-    public UserMeDto getUserMe(String email) {
+    public MeResponse getUserMe(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
 
-        return new UserMeDto(
+        String avatar = candidateProfileRepo.findByUser_Id(user.getId())
+                .map(CandidateProfile::getAvatar)
+                .orElse(null);
+
+        return new MeResponse(
                 user.getId(), user.getEmail(), user.getFullName(),
-                user.getRole().getRoleName().toUpperCase(), user.getPhone()
+                user.getRole().getRoleName().toUpperCase(), avatar
         );
     }
 
