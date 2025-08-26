@@ -28,8 +28,7 @@ public class SavedJobServiceImpl implements SavedJobService {
     private final SkillRepository skillRepository;
     private final SavedJobMapper savedJobMapper;
     @Override
-    public SavedJobResponse create(SavedJobRequest request) {
-        final Long userId = request.getUserId();
+    public SavedJobResponse create(Long userId, SavedJobRequest request) {
         final Long jobId  = request.getJobId();
 
         SavedJob existing = savedJobRepository.findByUserIdAndJobId(userId, jobId).orElse(null);

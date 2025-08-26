@@ -29,15 +29,19 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationMapper applicationMapper;
     private final CloudinaryService cloudinaryService;
     @Override
-    public ApplicationResponse create(ApplicationRequest req) {
+    public ApplicationResponse create(Long userId, ApplicationRequest req) {
+
+        if (req.getJobId() == null) {
+            throw new IllegalArgumentException("jobId là bắt buộc.");
+        }
         // Chặn nộp trùng
-        if (applicationRepository.existsByUser_IdAndJob_Id(req.getUserId(), req.getJobId())) {
+        if (applicationRepository.existsByUser_IdAndJob_Id(userId, req.getJobId())) {
             throw new IllegalStateException("Bạn đã ứng tuyển job này rồi.");
         }
 
         Application app = applicationMapper.toEntity(req);
 
-        User user = userRepository.findById(req.getUserId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User không tồn tại"));
         Job job = jobRepository.findById(req.getJobId())
                 .orElseThrow(() -> new EntityNotFoundException("Job không tồn tại"));
