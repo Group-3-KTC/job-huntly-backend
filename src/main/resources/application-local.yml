@@ -39,8 +39,7 @@ security:
     secret: ${JWT_SECRET_KEY}
     expiry-seconds: ${JWT_EXPIRATION:7200000}
     issuer: "jobhuntly"
-    cookie-name: "session"         # httpOnly cookie do BE set
-    role-cookie-name: "role"
+    cookie-name: "access_token"         # httpOnly cookie do BE set
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}
