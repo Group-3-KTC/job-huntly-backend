@@ -1,7 +1,7 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.5.4'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.5.4'
+    id 'io.spring.dependency-management' version '1.1.7'
     id 'org.jetbrains.kotlin.jvm'
 }
 
@@ -9,42 +9,42 @@ group = 'com.jobhuntly'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'com.cloudinary:cloudinary-http44:1.38.0'
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'com.cloudinary:cloudinary-http44:1.38.0'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
     // mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 
-	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     // jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -55,10 +55,13 @@ dependencies {
     implementation 'com.google.api-client:google-api-client:2.6.0'
     implementation 'com.google.http-client:google-http-client-jackson2:1.44.2'
 
-	// explicit
-	implementation 'org.springframework:spring-context-support'
+    // explicit
+    implementation 'org.springframework:spring-context-support'
+
+    // swagger
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0"
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }

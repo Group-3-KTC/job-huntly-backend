@@ -32,6 +32,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse res,
                                     FilterChain chain) throws ServletException, IOException {
 
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
+            chain.doFilter(req, res);
+            return;
+        }
+
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             chain.doFilter(req, res);
             return;

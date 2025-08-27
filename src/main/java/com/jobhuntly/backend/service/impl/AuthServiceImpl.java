@@ -223,7 +223,6 @@ public class AuthServiceImpl implements AuthService {
         String avatar = candidateProfileRepo.findByUser_Id(user.getId())
                 .map(CandidateProfile::getAvatar)
                 .orElse(null);
-        Long userId = (user.getId() == null) ? null : user.getId();
 
         return new LoginResponse(
                 user.getEmail(),
@@ -244,7 +243,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElse(null);
 
         return new MeResponse(
-                user.getId(), user.getEmail(), user.getFullName(),
+                user.getEmail(), user.getFullName(),
                 user.getRole().getRoleName().toUpperCase(), avatar
         );
     }
