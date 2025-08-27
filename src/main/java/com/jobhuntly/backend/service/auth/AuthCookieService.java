@@ -54,21 +54,6 @@ public class AuthCookieService {
         res.addHeader(HttpHeaders.SET_COOKIE, b.build().toString());
     }
 
-    public void clearCookie(HttpServletRequest req, HttpServletResponse res, String name, boolean httpOnly) {
-        boolean secure = isSecure(req);
-        String sameSite = secure ? "None" : "Lax";
-
-        ResponseCookie.ResponseCookieBuilder b = ResponseCookie.from(name, "")
-                .httpOnly(httpOnly)
-                .secure(secure)
-                .sameSite(sameSite)
-                .path("/")
-                .maxAge(0);
-
-        if (cookieDomain != null && !cookieDomain.isBlank()) b.domain(cookieDomain);
-        res.addHeader(HttpHeaders.SET_COOKIE, b.build().toString());
-    }
-
     // check http or https
     private boolean isSecure(HttpServletRequest req) {
         if (req == null) return false;

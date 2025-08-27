@@ -74,16 +74,16 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**", "/actuator/health").permitAll()
-                        .requestMatchers(HttpMethod.GET, WebEndpoints.PUBLIC_GET).permitAll()
-                        .requestMatchers(HttpMethod.POST, WebEndpoints.PUBLIC_POST).permitAll()
-                        .requestMatchers(HttpMethod.PUT, WebEndpoints.PUBLIC_PUT).permitAll()
-                        .requestMatchers(HttpMethod.DELETE, WebEndpoints.PUBLIC_DELETE).permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers("/api/v1/auth/**", "/actuator/health").permitAll()
+                                .requestMatchers(HttpMethod.GET, WebEndpoints.PUBLIC_GET).permitAll()
+                                .requestMatchers(HttpMethod.POST, WebEndpoints.PUBLIC_POST).permitAll()
+                                .requestMatchers(HttpMethod.PUT, WebEndpoints.PUBLIC_PUT).permitAll()
+                                .requestMatchers(HttpMethod.DELETE, WebEndpoints.PUBLIC_DELETE).permitAll()
 
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        //.anyRequest().authenticated()
-                        .anyRequest().permitAll()
+                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                                .anyRequest().authenticated()
+                        //.anyRequest().permitAll()
                 )
 
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
