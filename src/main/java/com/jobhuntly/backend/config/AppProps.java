@@ -25,7 +25,6 @@ public class AppProps {
         private String secret;
         private Duration expirySeconds;
         private String issuer;
-        private String cookieName = "session";
-        private String roleCookieName = "role";
+        private String cookieName = "access_token";
     }
 }
