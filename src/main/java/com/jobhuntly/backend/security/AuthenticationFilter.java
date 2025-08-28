@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.security;
 
+import com.jobhuntly.backend.dto.auth.AppPrincipal;
 import com.jobhuntly.backend.security.jwt.JwtProperties;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import jakarta.servlet.FilterChain;
@@ -56,10 +57,14 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         try {
             final String email = jwtUtil.extractUsername(token);
             final String role = Optional.ofNullable(jwtUtil.extractRole(token)).orElse("CANDIDATE");
+            final Long userId = jwtUtil.extractUserId(token);
 
             if (jwtUtil.isTokenValid(token, null) && email != null) {
                 var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-                var auth = new UsernamePasswordAuthenticationToken(email, null, authorities);
+
+                AppPrincipal principal = new AppPrincipal(userId, email);
+
+                var auth = new UsernamePasswordAuthenticationToken(principal, null, authorities);
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
