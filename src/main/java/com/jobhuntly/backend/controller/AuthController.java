@@ -56,7 +56,6 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest req, HttpServletResponse res) {
         authCookieService.clearAuthCookie(req, res);
-        authCookieService.clearCookie(req, res, "role", false);
         return ResponseEntity.noContent().build();
     }
 
