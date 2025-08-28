@@ -83,6 +83,9 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
             JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
+            
+            SECURITY_JWT_COOKIE_NAME=${{ secrets.SECURITY_JWT_COOKIE_NAME }}
+            SECURITY_JWT_ISSUER=${{ secrets.SECURITY_JWT_ISSUER }}
 
             APP_JWT_SECRET=${{ secrets.JWT_SECRET }}
             APP_JWT_EXPIRATION=${{ secrets.JWT_EXPIRATION }}
@@ -100,6 +103,9 @@ jobs:
             CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             IMAGE_TAG=dev-latest
+            
+            
+            
             EOF
             chmod 600 ~/job-huntly-backend/.env
 
