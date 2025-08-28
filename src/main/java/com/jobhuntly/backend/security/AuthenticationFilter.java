@@ -70,6 +70,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception ex) {
             log.debug("JWT filter error: {}", ex.getMessage());
+            log.error("JWT filter error", ex);
             SecurityContextHolder.clearContext();
         }
 
