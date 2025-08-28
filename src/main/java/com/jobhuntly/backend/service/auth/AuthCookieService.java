@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthCookieService {
 
-    @Value("${security.auth.cookie-name:access_token}")
+    @Value("${security.jwt.cookie-name:access_token}")
     private String cookieName;
 
-    @Value("${security.auth.cookie-domain:}") // thêm nếu có domain
+    @Value("${security.jwt.cookie-domain:}") // thêm nếu có domain
     private String cookieDomain;
 
     public void setAuthCookie(HttpServletRequest req, HttpServletResponse res, String token, long ttlSeconds) {
