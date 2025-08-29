@@ -33,7 +33,7 @@ spring:
 
 security:
   cors:
-    allowed-origins: [ "http://localhost:3000", "http://18.142.226.139:3000" ]  # thêm domain FE khác nếu cần
+    allowed-origins: [ "http://localhost:3000", "http://13.213.40.130:3000" ]  # thêm domain FE khác nếu cần
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}

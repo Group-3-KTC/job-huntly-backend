@@ -179,6 +179,8 @@ public class AuthServiceImpl implements AuthService {
         String email = payload.getEmail();
         boolean emailVerified = Boolean.TRUE.equals(payload.getEmailVerified());
         String fullName = (String) payload.get("name");
+        String avatarUrl = (String) payload.get("picture");
+
 
         if (email == null || !emailVerified) {
             throw new RuntimeException("Google email is missing or not verified");
@@ -201,8 +203,13 @@ public class AuthServiceImpl implements AuthService {
             Role role = roleRepository.findByRoleName("CANDIDATE")
                     .orElseThrow(() -> new RuntimeException("Default role not found"));
             user.setRole(role);
-
+            
             user = userRepository.save(user);
+
+            CandidateProfile profile = new CandidateProfile();
+            profile.setUser(user);
+            profile.setAvatar(avatarUrl);
+            candidateProfileRepo.save(profile);
         } else {
             if (user.getGoogleId() == null) user.setGoogleId(googleUserId);
             if (user.getStatus() != Status.ACTIVE) user.setStatus(Status.ACTIVE);
