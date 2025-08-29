@@ -7,8 +7,6 @@ services:
         "--appendonly","yes",
         "--requirepass","JobHuntly123"
       ]
-    volumes:
-      - redis-data:/data
     networks:
       - job-huntly-network
   job-huntly-backend:
