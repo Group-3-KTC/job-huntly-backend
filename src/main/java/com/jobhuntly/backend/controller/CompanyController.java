@@ -95,4 +95,26 @@ public class CompanyController {
         }
         return new ResponseEntity<>(companies, HttpStatus.OK);
     }
+
+    // Tìm kiếm công ty theo tên
+    @GetMapping("/by-name")
+    public ResponseEntity<List<CompanyDto>> searchCompaniesByName(@RequestParam String name) {
+        List<CompanyDto> companies = companyService.getCompaniesByName(name);
+        if (companies.isEmpty()) {
+            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companies, HttpStatus.OK);
+    }
+
+    // Tìm kiếm công ty theo tên hoặc ngành nghề
+    @GetMapping("/search")
+    public ResponseEntity<List<CompanyDto>> searchCompanies(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) List<Long> categoryIds) {
+        List<CompanyDto> companies = companyService.getCompaniesByNameOrCategory(name, categoryIds);
+        if (companies.isEmpty()) {
+            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companies, HttpStatus.OK);
+    }
 }

@@ -216,4 +216,63 @@ public class CompanyServiceImpl implements CompanyService {
 
         return dtos;
     }
+
+    @Override
+    public List<CompanyDto> getCompaniesByName(String name) {
+        List<Company> companies = companyRepository.findAllByCompanyNameIgnoreCase(name);
+        List<CompanyDto> dtos = companyMapper.toDtoList(companies);
+
+        // Bổ sung thông tin thêm
+        for (int i = 0; i < companies.size(); i++) {
+            Company company = companies.get(i);
+            CompanyDto dto = dtos.get(i);
+
+            // Thêm số lượng job
+            dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
+
+            // Thêm categoryIds
+            if (company.getCategories() != null) {
+                dto.setCategoryIds(company.getCategories().stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toSet()));
+            }
+        }
+        return dtos;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompanyDto> getCompaniesByNameOrCategory(String name, List<Long> categoryIds) {
+        // Kiểm tra danh sách rỗng
+        boolean isCategoryIdsEmpty = categoryIds == null || categoryIds.isEmpty();
+
+        // Đảm bảo categoryIds không null cho tham số truy vấn
+        List<Long> safeList = categoryIds == null ? java.util.Collections.emptyList() : categoryIds;
+
+        // Tìm kiếm theo tên và/hoặc ngành nghề
+        List<Company> companies = companyRepository.searchCompanies(
+                name == null || name.trim().isEmpty() ? null : name.trim(),
+                safeList,
+                isCategoryIdsEmpty);
+
+        List<CompanyDto> dtos = companyMapper.toDtoList(companies);
+
+        // Bổ sung thông tin thêm
+        for (int i = 0; i < companies.size(); i++) {
+            Company company = companies.get(i);
+            CompanyDto dto = dtos.get(i);
+
+            // Thêm số lượng job
+            dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
+
+            // Thêm categoryIds
+            if (company.getCategories() != null) {
+                dto.setCategoryIds(company.getCategories().stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toSet()));
+            }
+        }
+
+        return dtos;
+    }
 }
