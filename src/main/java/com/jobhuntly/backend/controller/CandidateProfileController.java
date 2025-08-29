@@ -9,6 +9,7 @@ import com.jobhuntly.backend.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
 
 @RestController
 @RequestMapping("${backend.prefix}/candidate/profile")
@@ -24,8 +25,9 @@ public class CandidateProfileController {
         return ResponseEntity.ok(candidateProfileService.getCandidateProfile(userId));
     }
 
-    @PutMapping
-    public ResponseEntity<CandidateProfileResponse> updateProfile(@RequestBody CandidateProfileRequest request) {
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CandidateProfileResponse> updateProfile(
+            @ModelAttribute CandidateProfileRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(candidateProfileService.updateCandidateProfile(userId, request));
     }

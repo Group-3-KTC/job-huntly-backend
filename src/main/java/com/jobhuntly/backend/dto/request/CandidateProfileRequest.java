@@ -4,6 +4,10 @@ package com.jobhuntly.backend.dto.request;
 import lombok.Data;
 
 import java.sql.Date;
+import java.time.LocalDate;
+
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class CandidateProfileRequest {
@@ -11,8 +15,9 @@ public class CandidateProfileRequest {
     private String aboutMe;
     private String personalLink;
     private String gender;
-    private Date dateOfBirth;
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate dateOfBirth; 
     private String phone;
     private String title;
-    private String avatar;
+    private MultipartFile avatar;
 }
