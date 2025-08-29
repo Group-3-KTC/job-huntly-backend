@@ -45,7 +45,7 @@ public class CompanyServiceImpl implements CompanyService {
         CompanyDto dto = companyMapper.toDto(company);
         dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
 
-        // Trả về categoryIds cho tiện cập nhật phía client:
+        // Trả về categoryIds
         if (company.getCategories() != null) {
             dto.setCategoryIds(company.getCategories().stream()
                     .map(Category::getId)
@@ -57,7 +57,6 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional
     public CompanyDto createCompany(CompanyDto companyDto) {
-        // ID null để DB tự tăng
         companyDto.setId(null);
 
         Long userId = companyDto.getUserId();
@@ -74,16 +73,14 @@ public class CompanyServiceImpl implements CompanyService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
 
-        // Chỉ cho phép RECRUITER tạo công ty
         if (!"RECRUITER".equalsIgnoreCase(user.getRole().getRoleName())) {
             throw new IllegalArgumentException("Chỉ tạo công ty mới cho RECRUITER");
         }
 
-        // 3) Map DTO -> Entity (không set user/categories trong mapper)
         Company entity = companyMapper.toEntity(companyDto);
         entity.setUser(user);
 
-        // 4) Xử lý N–N: set categories từ categoryIds (nếu có)
+        // set categories từ categoryIds
         if (companyDto.getCategoryIds() != null && !companyDto.getCategoryIds().isEmpty()) {
             Set<Category> cats = new HashSet<>(categoryRepository.findAllById(companyDto.getCategoryIds()));
             entity.setCategories(cats);
@@ -105,11 +102,9 @@ public class CompanyServiceImpl implements CompanyService {
         Company existing = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company ID Not found: " + id));
 
-        // 1) Patch field non-null (mapper IGNORE nulls)
         companyDto.setId(id);
         companyMapper.updateEntityFromDto(companyDto, existing);
 
-        // 2) Đổi user nếu gửi userId (optional)
         if (companyDto.getUserId() != null
                 && !companyDto.getUserId().equals(existing.getUser().getId())) {
 
@@ -126,7 +121,6 @@ public class CompanyServiceImpl implements CompanyService {
             existing.setUser(user);
         }
 
-        // 3) Cập nhật N–N nếu client gửi categoryIds
         if (companyDto.getCategoryIds() != null) {
             Set<Category> cats = new java.util.HashSet<>(categoryRepository.findAllById(companyDto.getCategoryIds()));
             existing.setCategories(cats); // replace toàn bộ set
@@ -157,29 +151,11 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional(readOnly = true)
     public List<CompanyDto> getCompaniesByCategories(List<Long> categoryIds) {
         if (categoryIds == null || categoryIds.isEmpty()) {
-            return getAllCompanies(); // Trả về tất cả nếu không có filter
+            return getAllCompanies();
         }
-        // Tìm công ty theo cả category cha và con
+
         List<Company> companies = companyRepository.findByCategoryIdsIncludingParents(categoryIds);
-        List<CompanyDto> dtos = companyMapper.toDtoList(companies);
-
-        // Bổ sung thông tin thêm nếu cần
-        for (int i = 0; i < companies.size(); i++) {
-            Company company = companies.get(i);
-            CompanyDto dto = dtos.get(i);
-
-            // Thêm số lượng job
-            dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
-
-            // Thêm categoryIds
-            if (company.getCategories() != null) {
-                dto.setCategoryIds(company.getCategories().stream()
-                        .map(Category::getId)
-                        .collect(Collectors.toSet()));
-            }
-        }
-
-        return dtos;
+        return getCompanyDtos(companies);
     }
 
     @Override
@@ -196,17 +172,38 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         List<Company> companies = companyRepository.findByLocation(location);
+        return getCompanyDtos(companies);
+    }
+
+    @Override
+    public List<CompanyDto> getCompaniesByName(String name) {
+        List<Company> companies = companyRepository.findAllByCompanyNameIgnoreCase(name);
+        return getCompanyDtos(companies);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CompanyDto> getCompaniesByNameOrCategory(String name, List<Long> categoryIds) {
+        boolean isCategoryIdsEmpty = categoryIds == null || categoryIds.isEmpty();
+        List<Long> safeList = categoryIds == null ? java.util.Collections.emptyList() : categoryIds;
+
+        List<Company> companies = companyRepository.searchCompanies(
+                name == null || name.trim().isEmpty() ? null : name.trim(),
+                safeList,
+                isCategoryIdsEmpty);
+
+        return getCompanyDtos(companies);
+    }
+
+    private List<CompanyDto> getCompanyDtos(List<Company> companies) {
         List<CompanyDto> dtos = companyMapper.toDtoList(companies);
 
-        // Bổ sung thông tin thêm
         for (int i = 0; i < companies.size(); i++) {
             Company company = companies.get(i);
             CompanyDto dto = dtos.get(i);
 
-            // Thêm số lượng job
             dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
 
-            // Thêm categoryIds
             if (company.getCategories() != null) {
                 dto.setCategoryIds(company.getCategories().stream()
                         .map(Category::getId)

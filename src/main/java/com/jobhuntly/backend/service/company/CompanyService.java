@@ -22,4 +22,8 @@ public interface CompanyService {
     List<LocationCompanyResponse> getAllDistinctLocations();
 
     List<CompanyDto> getCompaniesByLocation(String location);
+
+    List<CompanyDto> getCompaniesByName(String name);
+
+    List<CompanyDto> getCompaniesByNameOrCategory(String name, List<Long> categoryIds);
 }
