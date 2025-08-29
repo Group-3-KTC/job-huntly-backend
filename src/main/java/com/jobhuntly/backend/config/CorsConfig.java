@@ -20,10 +20,6 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         List<String> allowedOrigins = new ArrayList<>(props.getCors().getAllowedOrigins());
-
-        // Thêm origin mới vào
-        allowedOrigins.add("http://13.213.40.130:3000");
-
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("*"));
