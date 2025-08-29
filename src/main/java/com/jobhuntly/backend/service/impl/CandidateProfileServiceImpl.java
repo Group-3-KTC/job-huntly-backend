@@ -25,6 +25,7 @@ public class CandidateProfileServiceImpl implements CandidateProfileService {
     private final CandidateProfileRepository candidateProfileRepository;
     private final CandidateProfileMapper mapper;
     private final ProfileDomainService profileDomainService;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional()
@@ -46,6 +47,15 @@ public class CandidateProfileServiceImpl implements CandidateProfileService {
         }
         if (request.getPhone() != null && !request.getPhone().isEmpty()) {
             user.setPhone(request.getPhone());
+        }
+
+        if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
+            try {
+                String avatarUrl = cloudinaryService.uploadFile(request.getAvatar());
+                profile.setAvatar(avatarUrl); 
+            } catch (Exception e) {
+                throw new IllegalStateException("Upload avatar thất bại.", e);
+            }
         }
 
         CandidateProfile savedProfile = candidateProfileRepository.save(profile);

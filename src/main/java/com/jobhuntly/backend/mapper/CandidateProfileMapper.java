@@ -24,6 +24,7 @@ public interface CandidateProfileMapper {
     @Mapping(target = "awards", ignore = true)
     @Mapping(target = "softSkills", ignore = true)
     @Mapping(target = "candidateSkills", ignore = true)
+    @Mapping(target = "avatar", ignore = true)
     CandidateProfile toEntity(CandidateProfileRequest dto);
 
     @Mapping(target = "profileId", ignore = true)
@@ -34,5 +35,6 @@ public interface CandidateProfileMapper {
     @Mapping(target = "awards", ignore = true)
     @Mapping(target = "softSkills", ignore = true)
     @Mapping(target = "candidateSkills", ignore = true)
+    @Mapping(target = "avatar", ignore = true)
     void updateEntity(@MappingTarget CandidateProfile entity, CandidateProfileRequest dto);
 }
