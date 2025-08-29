@@ -1,4 +1,16 @@
 services:
+  redis:
+    image: redis:7
+    command:
+      [
+        "redis-server",
+        "--appendonly","yes",
+        "--requirepass","JobHuntly123"
+      ]
+    volumes:
+      - redis-data:/data
+    networks:
+      - job-huntly-network
   job-huntly-backend:
     image: huynguyen1911/job-huntly-backend:prod-v1
     env_file:

@@ -9,11 +9,14 @@ import com.jobhuntly.backend.repository.CategoryRepository;
 import com.jobhuntly.backend.repository.SkillRepository;
 import com.jobhuntly.backend.service.SkillService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.jobhuntly.backend.constant.CacheConstant.DICT_SKILLS;
 
 @Service
 @AllArgsConstructor
@@ -61,6 +64,7 @@ public class SkillServiceImpl implements SkillService {
     }
 
     @Override
+    @Cacheable(cacheNames = DICT_SKILLS, key = "#categoryName", unless = "#result == null || #result.isEmpty()")
     public List<SkillResponse> getSkillsByCategoryName(String categoryName) {
         String rootName = normalize(categoryName);
         if (rootName.isBlank()) {

@@ -7,12 +7,15 @@ import com.jobhuntly.backend.mapper.CategoryMapper;
 import com.jobhuntly.backend.repository.CategoryRepository;
 import com.jobhuntly.backend.service.CategoryService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.jobhuntly.backend.constant.CacheConstant.DICT_CATEGORIES;
 
 @Service
 @AllArgsConstructor
@@ -73,6 +76,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Cacheable(cacheNames = DICT_CATEGORIES, key = "'all'", sync = true)
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(categoryMapper::toResponse)
