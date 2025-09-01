@@ -30,8 +30,8 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: huynguyen1911
-          password: dckr_pat_WXHIgr3YWPZu0_nCy17Vc9k6yMw
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels)
         id: meta
@@ -103,6 +103,11 @@ jobs:
             CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             IMAGE_TAG=dev-latest
+            
+            # --- Redis config cho backend ---
+            SPRING_DATA_REDIS_HOST=${{secrets.SPRING_DATA_REDIS_HOST}}
+            SPRING_DATA_REDIS_PORT=${{secrets.SPRING_DATA_REDIS_PORT}}
+            SPRING_DATA_REDIS_PASSWORD=${{secrets.SPRING_DATA_REDIS_PASSWORD}}
             
             
             
