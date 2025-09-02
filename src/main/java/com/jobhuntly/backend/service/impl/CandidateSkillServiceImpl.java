@@ -131,14 +131,33 @@ public class CandidateSkillServiceImpl implements CandidateSkillService {
         repository.delete(candidateSkill);
     }
 
+    // private void setCategoryInfo(CandidateSkillResponse response, Skill skill) {
+    //     Set<Category> categories = skill.getCategories();
+    //     if (!categories.isEmpty()) {
+    //         Category category = categories.iterator().next();
+    //         if (category.getParent() != null) {
+    //             response.setCategoryId(category.getId());
+    //             response.setCategoryName(category.getName());
+    //         } 
+    //     }
+    // }
     private void setCategoryInfo(CandidateSkillResponse response, Skill skill) {
         Set<Category> categories = skill.getCategories();
         if (!categories.isEmpty()) {
             Category category = categories.iterator().next();
+            // Set child category (industry)
+            response.setCategoryId(category.getId());
+            response.setCategoryName(category.getName());
+
+            // Set parent category
             if (category.getParent() != null) {
-                response.setCategoryId(category.getId());
-                response.setCategoryName(category.getName());
-            } 
+                response.setParentCategoryId(category.getParent().getId());
+                response.setParentCategoryName(category.getParent().getName());
+            } else {
+                // If the category is a root category, set it as the parent
+                response.setParentCategoryId(category.getId());
+                response.setParentCategoryName(category.getName());
+            }
         }
     }
 
