@@ -12,8 +12,11 @@ import com.jobhuntly.backend.repository.SavedJobRepository;
 import com.jobhuntly.backend.repository.SkillRepository;
 import com.jobhuntly.backend.service.SavedJobService;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,24 +32,35 @@ public class SavedJobServiceImpl implements SavedJobService {
     private final SavedJobMapper savedJobMapper;
     @Override
     public SavedJobResponse create(Long userId, SavedJobRequest request) {
-        final Long jobId  = request.getJobId();
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"USER_NOT_AUTHENTICATED");
+        }
+        final Long jobId = request.getJobId();
+        if (jobId == null) {
+            throw new IllegalArgumentException("job_id is required");
+        }
 
-        SavedJob existing = savedJobRepository.findByUserIdAndJobId(userId, jobId).orElse(null);
+        // 1) Đã lưu trước đó?
+        var existing = savedJobRepository.findByUserIdAndJobId(userId, jobId).orElse(null);
         if (existing != null) {
             return buildResponse(existing, jobId);
         }
 
-        // Kiểm tra job còn tồn tại
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Job not found: " + jobId));
 
         SavedJob toSave = savedJobMapper.toEntity(request);
-        SavedJob saved  = savedJobRepository.save(toSave);
+        toSave.setUserId(userId);
+        toSave.setJobId(jobId);
 
-        SavedJob reloaded = savedJobRepository.findByUserIdAndJobId(userId, jobId)
-                .orElse(saved);
-
-        return buildResponse(reloaded, job.getId());
+        try {
+            SavedJob saved = savedJobRepository.save(toSave);
+            return buildResponse(saved, job.getId());
+        } catch (DataIntegrityViolationException e) {
+            var dup = savedJobRepository.findByUserIdAndJobId(userId, jobId)
+                    .orElseThrow(() -> e);
+            return buildResponse(dup, job.getId());
+        }
     }
 
     @Override

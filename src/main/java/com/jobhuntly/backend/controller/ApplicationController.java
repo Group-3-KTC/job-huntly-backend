@@ -3,6 +3,7 @@ package com.jobhuntly.backend.controller;
 import com.jobhuntly.backend.dto.request.ApplicationRequest;
 import com.jobhuntly.backend.dto.response.ApplicationByUserResponse;
 import com.jobhuntly.backend.dto.response.ApplicationResponse;
+import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import com.jobhuntly.backend.service.ApplicationService;
 import jakarta.validation.Valid;
@@ -27,24 +28,18 @@ public class ApplicationController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public ApplicationResponse create(@Valid @ModelAttribute ApplicationRequest request,
-                                      @RequestHeader("Authorization") String authHeader) {
-        Long userId = extractUserId(authHeader);
+    public ApplicationResponse create(@Valid @ModelAttribute ApplicationRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
         return applicationService.create(userId,request);
     }
 
-    @GetMapping(value = "/by-user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<ApplicationByUserResponse> getByUser(@RequestHeader("Authorization") String authHeader,
+    @GetMapping(value = "/by-user", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Page<ApplicationByUserResponse> getByUser(
                                                      @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
                                                      Pageable pageable
                                                      ) {
-        Long userId = extractUserId(authHeader);
+        Long userId = SecurityUtils.getCurrentUserId();
         return applicationService.getByUser(userId, pageable);
-    }
-
-    private Long extractUserId(String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
-        return jwtUtil.extractUserId(token);
     }
 
 }

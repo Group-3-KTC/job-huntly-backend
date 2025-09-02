@@ -8,6 +8,9 @@ import com.jobhuntly.backend.mapper.JobMapper;
 import com.jobhuntly.backend.repository.*;
 import com.jobhuntly.backend.service.JobService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -15,9 +18,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.cache.interceptor.KeyGenerator;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.jobhuntly.backend.constant.CacheConstant.JOB_LIST_DEFAULT;
 
 @Service
 @AllArgsConstructor
@@ -31,7 +38,10 @@ public class JobServiceImpl implements JobService {
     private final CategoryRepository categoryRepository;
     private final LevelRepository levelRepository;
     private final WorkTypeRepository workTypeRepository;
+
+
     @Override
+    @CacheEvict(cacheNames = JOB_LIST_DEFAULT, allEntries = true)
     public JobResponse create(JobRequest request) {
         validateDatesAndSalary(request);
         Long companyId = request.getCompanyId();
@@ -115,8 +125,8 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @CacheEvict(cacheNames = JOB_LIST_DEFAULT, allEntries = true)
     public void delete(Long id) {
-
     }
 
     @Override

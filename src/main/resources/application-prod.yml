@@ -15,6 +15,17 @@ spring:
         format-sql: true
     show-sql: true
     database-platform: ${SPRING_JPA_DATABASE_PLATFORM}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
+      timeout: 5s
+
+  cache:
+    type: redis
+    redis:
+      cache-null-values: false
 
   mail:
     host: smtp.gmail.com
@@ -65,5 +76,4 @@ logging:
     org.springframework.boot.autoconfigure: DEBUG   # xem điều kiện auto-config
     org.springframework.security: DEBUG            # xem chain/security filter
     org.springframework.web: DEBUG
-    com.zaxxer.hikari: DEBUG                       # log kết nối Hikari/DB
     com.jobhuntly.backend: DEBUG                   # package của bạn

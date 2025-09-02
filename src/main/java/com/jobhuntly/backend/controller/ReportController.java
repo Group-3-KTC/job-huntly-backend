@@ -4,6 +4,7 @@ import com.jobhuntly.backend.dto.request.ReportRequest;
 import com.jobhuntly.backend.dto.request.ReportStatusUpdateRequest;
 import com.jobhuntly.backend.dto.response.ReportResponse;
 import com.jobhuntly.backend.entity.enums.ReportType;
+import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import com.jobhuntly.backend.service.ReportService;
 import jakarta.validation.Valid;
@@ -25,10 +26,9 @@ public class ReportController {
 
     @PostMapping
     public ResponseEntity<ReportResponse> create(
-            @Valid @RequestBody ReportRequest request,
-            @RequestHeader("Authorization") String authHeader
+            @Valid @RequestBody ReportRequest request
     ) {
-        Long userId = extractUserId(authHeader);
+        Long userId = SecurityUtils.getCurrentUserId();
         ReportResponse resp = reportService.create(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
@@ -63,10 +63,5 @@ public class ReportController {
             return ResponseEntity.ok(reportService.getAll(pageable));
         }
         return ResponseEntity.ok(reportService.getAll(type, status, pageable));
-    }
-
-    private Long extractUserId(String authHeader) {
-        String token = authHeader.replace("Bearer ", "");
-        return jwtUtil.extractUserId(token);
     }
 }
