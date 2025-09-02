@@ -131,16 +131,6 @@ public class CandidateSkillServiceImpl implements CandidateSkillService {
         repository.delete(candidateSkill);
     }
 
-    // private void setCategoryInfo(CandidateSkillResponse response, Skill skill) {
-    //     Set<Category> categories = skill.getCategories();
-    //     if (!categories.isEmpty()) {
-    //         Category category = categories.iterator().next();
-    //         if (category.getParent() != null) {
-    //             response.setCategoryId(category.getId());
-    //             response.setCategoryName(category.getName());
-    //         } 
-    //     }
-    // }
     private void setCategoryInfo(CandidateSkillResponse response, Skill skill) {
         Set<Category> categories = skill.getCategories();
         if (!categories.isEmpty()) {
