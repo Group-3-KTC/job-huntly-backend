@@ -4,6 +4,10 @@ import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
 import com.jobhuntly.backend.service.company.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,12 +23,26 @@ public class CompanyController {
 
     // Get List of Companies
     @GetMapping("")
-    public ResponseEntity<List<CompanyDto>> getListCompanies() {
-        List<CompanyDto> companies = companyService.getAllCompanies();
-        if (companies.isEmpty()) {
-            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+    public ResponseEntity<?> getListCompanies(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,asc") String[] sort,
+            @RequestParam(defaultValue = "false") boolean unpaged) {
+        
+        if (unpaged) {
+            // Trường hợp đặc biệt: Lấy tất cả (dành cho export/select nhỏ)
+            List<CompanyDto> companies = companyService.getAllCompanies();
+            if (companies.isEmpty()) {
+                return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(companies, HttpStatus.OK);
         }
-        return new ResponseEntity<>(companies, HttpStatus.OK);
+        
+        Page<CompanyDto> companyPage = companyService.getAllCompaniesWithPagination(page, size, sort);
+        if (companyPage.isEmpty()) {
+            return new ResponseEntity<>(companyPage, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companyPage, HttpStatus.OK);
     }
 
     // Get Detail Company by Id
@@ -66,13 +84,25 @@ public class CompanyController {
 
     // Lấy công ty theo danh sách category (by-categories?categoryIds=1,2,3)
     @GetMapping("/by-categories")
-    public ResponseEntity<List<CompanyDto>> getCompaniesByCategories(
-            @RequestParam(required = false) List<Long> categoryIds) {
-        List<CompanyDto> companies = companyService.getCompaniesByCategories(categoryIds);
-        if (companies.isEmpty()) {
-            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+    public ResponseEntity<?> getCompaniesByCategories(
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id,asc") String[] sort) {
+        
+        if (page == null || size == null) {
+            List<CompanyDto> companies = companyService.getCompaniesByCategories(categoryIds);
+            if (companies.isEmpty()) {
+                return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(companies, HttpStatus.OK);
         }
-        return new ResponseEntity<>(companies, HttpStatus.OK);
+        
+        Page<CompanyDto> companyPage = companyService.getCompaniesByCategoriesWithPagination(categoryIds, page, size, sort);
+        if (companyPage.isEmpty()) {
+            return new ResponseEntity<>(companyPage, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companyPage, HttpStatus.OK);
     }
 
     // Lấy danh sách các địa điểm không trùng lặp
@@ -87,34 +117,71 @@ public class CompanyController {
 
     // Tìm công ty theo địa điểm ( by-location?location=Ho Chi Minh )
     @GetMapping("/by-location")
-    public ResponseEntity<List<CompanyDto>> getCompaniesByLocation(
-            @RequestParam String location) {
-        List<CompanyDto> companies = companyService.getCompaniesByLocation(location);
-        if (companies.isEmpty()) {
-            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+    public ResponseEntity<?> getCompaniesByLocation(
+            @RequestParam String location,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id,asc") String[] sort) {
+        
+        if (page == null || size == null) {
+            List<CompanyDto> companies = companyService.getCompaniesByLocation(location);
+            if (companies.isEmpty()) {
+                return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(companies, HttpStatus.OK);
         }
-        return new ResponseEntity<>(companies, HttpStatus.OK);
+        
+        Page<CompanyDto> companyPage = companyService.getCompaniesByLocationWithPagination(location, page, size, sort);
+        if (companyPage.isEmpty()) {
+            return new ResponseEntity<>(companyPage, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companyPage, HttpStatus.OK);
     }
 
     // Tìm kiếm công ty theo tên
     @GetMapping("/by-name")
-    public ResponseEntity<List<CompanyDto>> searchCompaniesByName(@RequestParam String name) {
-        List<CompanyDto> companies = companyService.getCompaniesByName(name);
-        if (companies.isEmpty()) {
-            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+    public ResponseEntity<?> searchCompaniesByName(
+            @RequestParam String name,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id,asc") String[] sort) {
+        
+        if (page == null || size == null) {
+            List<CompanyDto> companies = companyService.getCompaniesByName(name);
+            if (companies.isEmpty()) {
+                return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(companies, HttpStatus.OK);
         }
-        return new ResponseEntity<>(companies, HttpStatus.OK);
+
+        Page<CompanyDto> companyPage = companyService.getCompaniesByNameWithPagination(name, page, size, sort);
+        if (companyPage.isEmpty()) {
+            return new ResponseEntity<>(companyPage, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companyPage, HttpStatus.OK);
     }
 
     // Tìm kiếm công ty theo tên hoặc ngành nghề
     @GetMapping("/search")
-    public ResponseEntity<List<CompanyDto>> searchCompanies(
+    public ResponseEntity<?> searchCompanies(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) List<Long> categoryIds) {
-        List<CompanyDto> companies = companyService.getCompaniesByNameOrCategory(name, categoryIds);
-        if (companies.isEmpty()) {
-            return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id,asc") String[] sort) {
+
+        if (page == null || size == null) {
+            List<CompanyDto> companies = companyService.getCompaniesByNameOrCategory(name, categoryIds);
+            if (companies.isEmpty()) {
+                return new ResponseEntity<>(companies, HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(companies, HttpStatus.OK);
         }
-        return new ResponseEntity<>(companies, HttpStatus.OK);
+
+        Page<CompanyDto> companyPage = companyService.getCompaniesByNameOrCategoryWithPagination(name, categoryIds, page, size, sort);
+        if (companyPage.isEmpty()) {
+            return new ResponseEntity<>(companyPage, HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(companyPage, HttpStatus.OK);
     }
 }
