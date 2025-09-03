@@ -68,6 +68,8 @@ public class ProfileServiceImpl implements ProfileService {
                         .ifPresent(category -> {
                             response.setCategoryId(category.getId());
                             response.setCategoryName(category.getName());
+                            response.setParentCategoryId(category.getParent().getId());
+                            response.setParentCategoryName(category.getParent().getName());
                         });
             }
         }

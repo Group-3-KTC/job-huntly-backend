@@ -14,6 +14,10 @@ import com.jobhuntly.backend.repository.UserRepository;
 import com.jobhuntly.backend.service.company.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -212,5 +216,90 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         return dtos;
+    }
+
+    public Page<CompanyDto> getAllCompaniesWithPagination(int page, int size, String[] sort) {
+        Pageable pageable = createPageableFromParams(page, size, sort);
+        Page<Company> companyPage = companyRepository.findAll(pageable);
+        return companyPage.map(companyMapper::toDto);
+    }
+
+    @Override
+    public Page<CompanyDto> getCompaniesByCategoriesWithPagination(List<Long> categoryIds, int page, int size, String[] sort) {
+        // Xử lý sort
+        Sort sortable = createSortFromParams(sort);
+        Pageable pageable = PageRequest.of(page, size, sortable);
+
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return getAllCompaniesWithPagination(page, size, sort);
+        }
+
+        Page<Company> companiesPage = companyRepository.findByCategoryIdsIncludingParents(categoryIds, pageable);
+        return companiesPage.map(companyMapper::toDto);
+    }
+
+    @Override
+    public Page<CompanyDto> getCompaniesByLocationWithPagination(String location, int page, int size, String[] sort) {
+        Sort sortable = createSortFromParams(sort);
+        Pageable pageable = PageRequest.of(page, size, sortable);
+
+        Page<Company> companiesPage = companyRepository.findByLocation(location, pageable);
+        return companiesPage.map(companyMapper::toDto);
+    }
+
+    @Override
+    public Page<CompanyDto> getCompaniesByNameWithPagination(String name, int page, int size, String[] sort) {
+        Sort sortable = createSortFromParams(sort);
+        Pageable pageable = PageRequest.of(page, size, sortable);
+
+        Page<Company> companiesPage = companyRepository.findAllByCompanyNameIgnoreCase(name, pageable);
+        return companiesPage.map(companyMapper::toDto);
+    }
+
+    @Override
+    public Page<CompanyDto> getCompaniesByNameOrCategoryWithPagination(String name, List<Long> categoryIds, int page, int size, String[] sort) {
+        Sort sortable = createSortFromParams(sort);
+        Pageable pageable = PageRequest.of(page, size, sortable);
+
+        boolean categoryIdsEmpty = categoryIds == null || categoryIds.isEmpty();
+        Page<Company> companiesPage = companyRepository.searchCompanies(name, categoryIds, categoryIdsEmpty, pageable);
+        return companiesPage.map(companyMapper::toDto);
+    }
+
+    // Phương thức tiện ích để tạo Pageable từ các tham số
+    private Pageable createPageableFromParams(int page, int size, String[] sort) {
+        String sortField = "id";
+        Sort.Direction direction = Sort.Direction.ASC;
+
+        if (sort != null && sort.length > 0) {
+            String[] sortParts = sort[0].split(",");
+            sortField = sortParts[0];
+            if (sortParts.length > 1) {
+                direction = sortParts[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            }
+        }
+
+        return PageRequest.of(page, size, direction, sortField);
+    }
+
+    // Phương thức tiện ích để tạo Sort từ tham số sort
+    private Sort createSortFromParams(String[] sort) {
+        Sort sortable = Sort.unsorted();
+        if (sort != null && sort.length > 0) {
+            String sortField = "id";
+            Sort.Direction direction = Sort.Direction.ASC;
+
+            if (sort[0].contains(",")) {
+                String[] parts = sort[0].split(",");
+                sortField = parts[0];
+                direction = parts.length > 1 && parts[1].equalsIgnoreCase("desc") ?
+                        Sort.Direction.DESC : Sort.Direction.ASC;
+            } else {
+                sortField = sort[0];
+            }
+
+            sortable = Sort.by(direction, sortField);
+        }
+        return sortable;
     }
 }

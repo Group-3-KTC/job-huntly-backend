@@ -17,6 +17,8 @@ public interface CandidateSkillMapper {
     @Mapping(target = "levelName", source = "level.name")
     @Mapping(target = "categoryId", ignore = true)
     @Mapping(target = "categoryName", ignore = true)
+    @Mapping(target = "parentCategoryId", ignore = true)
+    @Mapping(target = "parentCategoryName", ignore = true)
     CandidateSkillResponse toResponseDTO(CandidateSkill candidateSkill);
 
     @Mapping(target = "id", ignore = true)
