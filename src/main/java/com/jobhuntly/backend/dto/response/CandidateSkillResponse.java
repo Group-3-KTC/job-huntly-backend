@@ -14,4 +14,6 @@ public class CandidateSkillResponse {
     private String levelName;
     private Long categoryId;
     private String categoryName;
+    private Long parentCategoryId; 
+    private String parentCategoryName;
 }
