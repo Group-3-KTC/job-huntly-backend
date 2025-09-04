@@ -95,6 +95,8 @@ jobs:
 
             BACKEND_HOST=${{ secrets.BACKEND_HOST }}
             BACKEND_PREFIX=/api/v1
+            
+            FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}
 
             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
 
