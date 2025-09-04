@@ -663,3 +663,62 @@ CREATE TABLE cv_template (
 
 ALTER TABLE users
     ADD COLUMN activation_token_expires_at DATETIME NULL;
+
+ALTER TABLE companies
+  ADD COLUMN vip_until DATETIME NULL,
+  ADD INDEX idx_companies_vip_until (vip_until);
+
+ALTER TABLE companies ADD COLUMN is_vip TINYINT(1) NOT NULL DEFAULT 0;
+
+-- 1) Gói VIP (có thể thêm gói 3/6/12 tháng sau này)
+CREATE TABLE IF NOT EXISTS packages (
+  package_id     BIGINT PRIMARY KEY AUTO_INCREMENT,
+  code           VARCHAR(50) UNIQUE NOT NULL,      -- 'VIP_1M'
+  name           VARCHAR(120) NOT NULL,            -- 'VIP 1 Month'
+  type           VARCHAR(50) DEFAULT 'VIP',
+  duration_days  INT NOT NULL DEFAULT 30,
+  price_vnd      BIGINT NOT NULL,
+  is_active      TINYINT(1) NOT NULL DEFAULT 1,
+  created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 2) Lịch sử thanh toán (đa cổng: VNPay, MoMo...)
+CREATE TABLE IF NOT EXISTS payments (
+  payment_id        BIGINT PRIMARY KEY AUTO_INCREMENT,
+  company_id        BIGINT NOT NULL,
+  package_id        BIGINT NULL,
+  amount_vnd        BIGINT NOT NULL,
+  currency          CHAR(3) NOT NULL DEFAULT 'VND',
+  status            ENUM('PENDING','REQUIRES_ACTION','PAID','FAILED','REFUNDED','PARTIALLY_REFUNDED','CHARGEBACK') NOT NULL DEFAULT 'PENDING',
+  provider          VARCHAR(32) NOT NULL,          -- 'VNPAY','MOMO',...
+  method            VARCHAR(32) NULL,              -- 'QR','WALLET',...
+  txn_ref           VARCHAR(64) NOT NULL,          -- idempotency key nội bộ
+  provider_txn      VARCHAR(128) NULL,             -- transactionNo/transId
+  provider_order_id VARCHAR(128) NULL,             -- orderId của provider nếu có
+  metadata_json     JSON NULL,
+  paid_at           DATETIME NULL,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_txn_ref (txn_ref),
+  UNIQUE KEY uq_provider_txn (provider, provider_txn),
+  KEY idx_company_created (company_id, created_at)
+);
+
+-- 3) Subscription VIP theo thời hạn
+CREATE TABLE IF NOT EXISTS company_subscriptions (
+  subscription_id   BIGINT PRIMARY KEY AUTO_INCREMENT,
+  company_id        BIGINT NOT NULL,
+  package_id        BIGINT NOT NULL,
+  status            ENUM('ACTIVE','EXPIRED','CANCELLED') NOT NULL,
+  start_at          DATETIME NOT NULL,
+  end_at            DATETIME NOT NULL,
+  latest_payment_id BIGINT NULL,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_company_end (company_id, end_at)
+);
+
+INSERT INTO packages (code, name, type, duration_days, price_vnd, is_active)
+VALUES ('VIP_1M', 'VIP 1 Month', 'VIP', 30, 100000, 1)
+ON DUPLICATE KEY UPDATE name=VALUES(name), duration_days=VALUES(duration_days), price_vnd=VALUES(price_vnd), is_active=VALUES(is_active);

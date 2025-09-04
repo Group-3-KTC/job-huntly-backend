@@ -68,7 +68,7 @@ public class CvTemplateController {
     }
 
     // Download CV as PDF
-    @GetMapping("/download/{templateId}")
+    @GetMapping("/{templateId}/download")
     public ResponseEntity<byte[]> downloadTemplate(@PathVariable Long templateId) {
         Long userId = SecurityUtils.getCurrentUserId();
         var combinedProfile = profileService.getCombinedProfile(userId);

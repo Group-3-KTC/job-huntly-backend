@@ -2,12 +2,15 @@ package com.jobhuntly.backend.repository;
 
 import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
 import com.jobhuntly.backend.entity.Company;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface CompanyRepository extends JpaRepository<Company, Long> {
@@ -55,4 +58,11 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
             @Param("categoryIds") List<Long> categoryIds,
             @Param("categoryIdsEmpty") boolean categoryIdsEmpty,
             Pageable pageable);
+
+    // cập nhật thời gian vip cho company
+    @Modifying
+    @Transactional
+    @Query("update Company c set c.vipUntil = :until where c.id = :companyId")
+    int updateVipUntil(@Param("companyId") Long companyId, @Param("until") OffsetDateTime until);
+
 }

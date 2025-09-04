@@ -2,6 +2,8 @@ package com.jobhuntly.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -76,6 +78,12 @@ public class Company {
 
     @Column(name = "avatar_cover")
     private String avatarCover;
+
+    @Column(name = "vip_until")
+    private OffsetDateTime vipUntil;
+
+    @Column(name = "is_vip")
+    private Boolean isVip;
 
     // Many-to-Many relationship with Category
     @ManyToMany
