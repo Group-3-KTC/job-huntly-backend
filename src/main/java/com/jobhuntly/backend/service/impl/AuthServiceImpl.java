@@ -25,6 +25,7 @@ import com.jobhuntly.backend.service.email.EmailSender;
 import com.jobhuntly.backend.service.email.EmailValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -34,11 +35,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.jobhuntly.backend.util.TokenUtil.newUrlSafeToken;
+import static com.jobhuntly.backend.util.TokenUtil.sha256Hex;
 
 @Service
 @RequiredArgsConstructor
@@ -53,23 +60,33 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final CandidateProfileRepository candidateProfileRepo;
     private final AuthCookieService authCookieService;
+    private final SpringTemplateEngine templateEngine;
     @Value("${google.client-id}")
     private String GOOGLE_CLIENT_ID;
     @Value("${backend.host}")
     private String BACKEND_HOST;
     @Value("${backend.prefix}")
     private String BACKEND_PREFIX;
+    @Value("${frontend.host}")
+    private String frontendBaseUrl;
+
+    @Value("${activation.ttl}")
+    private Duration activationTtl;
+
+    @Value("${activation.resend-cooldown}")
+    private Duration resendCooldown;
 
 
     @Override
+    @Transactional
     public ResponseEntity<RegisterResponse> register(RegisterRequest request) {
         if (!emailValidator.test(request.getEmail())) {
-            throw new IllegalStateException("Email không hợp lệ");
+            throw new IllegalStateException("Invalid email address.");
         }
 
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
-            throw new IllegalStateException("Email đã được sử dụng");
+            throw new IllegalStateException("Email is already in use. Please use a different one.");
         }
         Role role = roleRepository.findByRoleName(request.getRole().toUpperCase())
                 .orElseThrow(() -> new RuntimeException("Role not found"));
@@ -90,44 +107,64 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        // String activationLink = BACKEND_HOST + BACKEND_PREFIX + "/auth/activate?token=" + token;
-        String activationLink = "http://18.142.226.139:8080" + BACKEND_PREFIX + "/auth/activate?token=" + token;
-
-        String htmlContent = String.format("""
-                <html>
-                  <body style="font-family: Arial, sans-serif;">
-                    <h2 style="color:#0a66c2;">Chào mừng bạn đến với JobHuntly!</h2>
-                    <p>Nhấn vào nút bên dưới để kích hoạt tài khoản:</p>
-                    <a href="%s"
-                       style="display:inline-block;padding:10px 20px;background-color:#0a66c2;color:white;text-decoration:none;border-radius:5px;">
-                       Kích hoạt
-                    </a>
-                  </body>
-                </html>
-                """, activationLink);
-        emailSender.send(
-                request.getEmail(),
-                "Kích hoạt tài khoản của bạn",
-                htmlContent
-        );
+        issueAndEmailActivationToken(user);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new RegisterResponse("success", "Đăng ký thành công! Vui lòng kiểm tra email để kích hoạt."));
+                .body(new RegisterResponse("success", "Registered. Please check your email to activate your account."));
     }
 
     @Override
-    public ResponseEntity<RegisterResponse> activateAccount(String token) {
-        User user = userRepository.findByActivationToken(token)
-                .orElseThrow(() -> new IllegalStateException("Token không hợp lệ"));
+    public ResponseEntity<RegisterResponse> activateAccount(String tokenRaw) {
+        if (tokenRaw == null || tokenRaw.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing token");
+        }
 
-        user.setIsActive(true);
-        user.setStatus(Status.ACTIVE);
+        String hash = sha256Hex(tokenRaw);
+
+        User user = userRepository.findByActivationToken(hash)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired link"));
+
+        Instant now = Instant.now();
+        Instant exp = user.getActivationTokenExpiresAt();
+        if (exp == null || !exp.isAfter(now)) {
+            user.setActivationToken(null);
+            user.setActivationTokenExpiresAt(null);
+            userRepository.save(user);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired link");
+        }
+
         user.setActivationToken(null);
+        user.setActivationTokenExpiresAt(null);
+
+        user.setStatus(Status.ACTIVE);
+        user.setIsActive(true);
+
         userRepository.save(user);
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new RegisterResponse("success", "Tài khoản đã được kích hoạt thành công!"));
+                .body(new RegisterResponse("success", "Account activated successfully."));
     }
+
+    @Override
+    @Transactional
+    public ResponseEntity<Void> resendActivation(String email) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            if (Boolean.TRUE.equals(user.getIsActive())) return;
+
+            if (!resendCooldown.isZero() && user.getActivationTokenExpiresAt() != null) {
+                Instant lastIssuedAt = user.getActivationTokenExpiresAt().minus(activationTtl);
+
+                if (Instant.now().isBefore(lastIssuedAt.plus(resendCooldown))) {
+                    return;
+                }
+            }
+
+            issueAndEmailActivationToken(user);
+        });
+
+        return ResponseEntity.ok().build();
+    }
+
 
     @Override
     public LoginResponse login(LoginRequest request, HttpServletRequest req, HttpServletResponse res) {
@@ -270,4 +307,38 @@ public class AuthServiceImpl implements AuthService {
             return null;
         }
     }
+
+    @Transactional
+    protected void issueAndEmailActivationToken(User user) {
+        String raw = newUrlSafeToken(32);
+        String hash = sha256Hex(raw);
+
+        user.setActivationToken(hash);
+        user.setActivationTokenExpiresAt(Instant.now().plus(activationTtl));
+        userRepository.save(user);
+
+        long ttlMinutes = activationTtl.toMinutes();
+        String ttlText = ttlMinutes < 60
+                ? ttlMinutes + " minutes"
+                : activationTtl.toHours() + " hours";
+
+        String activationLink = frontendBaseUrl + "/activate?token=" + raw;
+
+        Context context = new Context();
+        context.setVariable("activationLink", activationLink);
+        context.setVariable("ttlText", ttlText);
+        context.setVariable("appName", "JobHuntly");
+        context.setVariable("year", java.time.Year.now().toString());
+        context.setVariable("supportEmail", "support@jobhuntly.com");
+        context.setVariable("logoUrl", "https://your-cdn.com/jobhuntly-logo.png");
+
+        String htmlContent = templateEngine.process("activation-email", context);
+
+        emailSender.send(
+                user.getEmail(),
+                "[JobHuntly] Activate your account",
+                htmlContent
+        );
+    }
+
 }

@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "users")
 @Data
@@ -39,6 +41,9 @@ public class User {
 
     @Column(name = "activation_token", length = 64)
     private String activationToken;
+
+    @Column(name = "activation_token_expires_at")
+    private Instant activationTokenExpiresAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

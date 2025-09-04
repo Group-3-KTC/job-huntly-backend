@@ -61,11 +61,15 @@ cloudinary:
   api-secret: ${CLOUDINARY_API_SECRET:${CLOUDINARY_SECRET:}}
 
 frontend:
-  host: http://localhost:3000
+  host: ${FRONTEND_HOST}
 
 backend:
   host: ${BACKEND_HOST:http://localhost:8080}
-  prefix: ${BACKEND_PREFIX:api/v1}
+  prefix: ${BACKEND_PREFIX:/api/v1}
+
+activation:
+  ttl: PT5M
+  resend-cooldown: PT2M
 
 # VNPay
 vnpay:

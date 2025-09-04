@@ -661,6 +661,9 @@ CREATE TABLE cv_template (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+ALTER TABLE users
+    ADD COLUMN activation_token_expires_at DATETIME NULL;
+
 ALTER TABLE companies
   ADD COLUMN vip_until DATETIME NULL,
   ADD INDEX idx_companies_vip_until (vip_until);
