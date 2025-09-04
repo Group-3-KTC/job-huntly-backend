@@ -117,7 +117,7 @@ public class PaymentService {
     public Page<PaymentResponseByCompany> getByCompany(Long companyId, Pageable pageable) {
         int size = Math.min(Math.max(pageable.getPageSize(), 1), 100);
         int page = Math.max(pageable.getPageNumber(), 0);
-        Pageable enforced = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+        Pageable enforced = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "paymentId"));
 
         return paymentRepo.findByCompanyId(companyId, enforced).map(paymentMapper::toList);
     }

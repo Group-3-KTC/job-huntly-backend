@@ -10,8 +10,9 @@ import org.mapstruct.Mapping;
 public interface PaymentMapper {
     PaymentResponse toResponse(Payment payment);
 
-    @Mapping(target = "companyId", source = "companyId") // nếu là quan hệ: source = "company.id"
-    @Mapping(target = "provider", expression = "java(p.getProvider() != null ? p.getProvider().name() : null)")
-    @Mapping(target = "status", expression = "java(p.getStatus() != null ? p.getStatus().name() : null)")
+    @Mapping(target = "id", source = "paymentId")
+    @Mapping(target = "companyId", source = "companyId")
+    @Mapping(target = "provider", source = "provider") // provider là String
+    @Mapping(target = "status",   expression = "java(payment.getStatus() != null ? payment.getStatus().name() : null)")
     PaymentResponseByCompany toList(Payment payment);
 }
