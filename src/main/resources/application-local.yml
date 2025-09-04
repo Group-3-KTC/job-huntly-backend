@@ -68,3 +68,17 @@ frontend:
 backend:
   host: ${BACKEND_HOST:http://localhost:8080}
   prefix: ${BACKEND_PREFIX:api/v1}
+
+# VNPay
+vnpay:
+  pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  api-url: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+  return-url: http://localhost:8080/api/v1/payments/vnpay/return
+  tmn-code: ${VNPAY_TMN_CODE}
+  secret-key: ${VNPAY_SECRET_KEY}
+  version: "2.1.0"
+  expire-minutes: 15
+
+logging:
+  level:
+    com.jobhuntly.backend.vnpay: DEBUG
