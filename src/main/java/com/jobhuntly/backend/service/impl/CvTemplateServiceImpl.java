@@ -157,12 +157,10 @@ public class CvTemplateServiceImpl implements CvTemplateService {
                     "--margin-bottom", "0mm",
                     "--margin-left", "0mm",
                     "--margin-right", "0mm",
-                    "--disable-smart-shrinking",
                     "--print-media-type",
                     "--enable-local-file-access",
                     "--encoding", "utf-8",
                     "--dpi", "300",
-                    "--zoom", "1.3",
                     tempHtml.getAbsolutePath(),
                     tempPdf.getAbsolutePath()
             );
