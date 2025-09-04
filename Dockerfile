@@ -19,6 +19,12 @@ FROM eclipse-temurin:17-jre-jammy AS runtime
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y \
+    wkhtmltopdf \
+    xfonts-75dpi \
+    xfonts-base \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy file JAR đã build
 # Nếu libs có nhiều JAR, đảm bảo chỉ còn 1 file hoặc đổi tên pattern cho đúng
 COPY --from=builder /app/build/libs/*.jar /app/app.jar

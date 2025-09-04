@@ -651,3 +651,12 @@ CREATE TABLE candidate_skill (
 
 ALTER TABLE `candidate_profile`
     DROP COLUMN `fullname`;
+
+CREATE TABLE cv_template (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    html_url VARCHAR(500) NOT NULL,
+    preview_image_url VARCHAR(500) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
