@@ -83,7 +83,6 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/auth/me").authenticated()
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
-                        //.anyRequest().permitAll()
                 )
 
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
