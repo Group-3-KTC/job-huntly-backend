@@ -162,7 +162,7 @@ public class CvTemplateServiceImpl implements CvTemplateService {
                     "--enable-local-file-access",
                     "--encoding", "utf-8",
                     "--dpi", "300",
-                    "--zoom", "1.0",
+                    "--zoom", "1.3",
                     tempHtml.getAbsolutePath(),
                     tempPdf.getAbsolutePath()
             );
