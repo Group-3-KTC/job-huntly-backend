@@ -54,7 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.loginWithGoogle(reqBody, req, res));
     }
 
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest req, HttpServletResponse res) {
         authCookieService.clearAuthCookie(req, res);
         return ResponseEntity.noContent().build();

@@ -85,7 +85,7 @@ CREATE TABLE companies
     location_country  VARCHAR(100) NULL,
     founded_year YEAR NULL,
     quantity_employee INT NULL,
-    status            ENUM('active','inactive','pending') DEFAULT 'inactive',
+    status            ENUM('active','inactive','banned') DEFAULT 'inactive',
     is_pro_company    TINYINT(1) DEFAULT 0,
     followers_count   INT      DEFAULT 0,
     jobs_count        INT      DEFAULT 0,
