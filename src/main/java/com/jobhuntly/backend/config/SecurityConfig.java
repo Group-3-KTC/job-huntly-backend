@@ -75,12 +75,14 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/application").authenticated()
                                 .requestMatchers("/api/v1/auth/**", "/actuator/health").permitAll()
                                 .requestMatchers(HttpMethod.GET, WebEndpoints.PUBLIC_GET).permitAll()
                                 .requestMatchers(HttpMethod.POST, WebEndpoints.PUBLIC_POST).permitAll()
                                 .requestMatchers(HttpMethod.PUT, WebEndpoints.PUBLIC_PUT).permitAll()
                                 .requestMatchers(HttpMethod.DELETE, WebEndpoints.PUBLIC_DELETE).permitAll()
                                 .requestMatchers("/api/v1/auth/me").authenticated()
+                                .requestMatchers("/api/v1/save-job/**").authenticated()
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
