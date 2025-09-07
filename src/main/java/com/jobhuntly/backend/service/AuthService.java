@@ -14,6 +14,7 @@ public interface AuthService {
     ResponseEntity<RegisterResponse> register(RegisterRequest request);
 
     ResponseEntity<RegisterResponse> activateAccount(String token);
+    ResponseEntity<Void> resendActivation(String email);
 
     LoginResponse login(LoginRequest request, HttpServletRequest req,
                         HttpServletResponse res);

@@ -95,6 +95,8 @@ jobs:
 
             BACKEND_HOST=${{ secrets.BACKEND_HOST }}
             BACKEND_PREFIX=/api/v1
+            
+            FRONTEND_HOST=${{ secrets.FRONTEND_HOST }}
 
             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
 
@@ -104,10 +106,14 @@ jobs:
             DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
             IMAGE_TAG=dev-latest
             
-            # --- Redis config cho backend ---
+            # --- Redis ---
             SPRING_DATA_REDIS_HOST=${{secrets.SPRING_DATA_REDIS_HOST}}
             SPRING_DATA_REDIS_PORT=${{secrets.SPRING_DATA_REDIS_PORT}}
             SPRING_DATA_REDIS_PASSWORD=${{secrets.SPRING_DATA_REDIS_PASSWORD}}
+            
+            # --- VNpay ---
+            VNPAY_TMN_CODE=${{secrets.VNPAY_TMN_CODE}}
+            VNPAY_SECRET_KEY=${{secrets.VNPAY_SECRET_KEY}}
             
             
             

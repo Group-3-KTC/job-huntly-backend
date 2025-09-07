@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -37,6 +38,13 @@ public class SavedJobController {
         boolean deleted = savedJobService.delete(userId, jobId);
         return deleted ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Boolean>> isSaved(@RequestParam("job_id") Long jobId) {
+        Long userId = SecurityUtils.getCurrentUserId(); // nhớ trả 401 nếu anonymous
+        boolean saved = savedJobService.exists(userId, jobId);
+        return ResponseEntity.ok(Map.of("saved", saved));
     }
 
     // GET BY USER

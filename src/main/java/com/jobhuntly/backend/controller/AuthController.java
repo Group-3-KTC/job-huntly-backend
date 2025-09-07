@@ -37,6 +37,11 @@ public class AuthController {
         return authService.activateAccount(token);
     }
 
+    @PostMapping("/activation/resend")
+    public ResponseEntity<Void> resend(@RequestParam("email") String email) {
+        return authService.resendActivation(email);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest reqBody,
                                                HttpServletRequest req,

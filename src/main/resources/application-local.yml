@@ -46,7 +46,7 @@ spring:
 
 security:
   cors:
-    allowed-origins: [ "http://localhost:3000", "http://13.213.40.130:3000", "http://localhost:5173" ]  # thêm domain FE khác nếu cần
+    allowed-origins: [ "http://localhost:3000", "http://47.129.60.85:3000" ]  # thêm domain FE khác nếu cần
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}
@@ -63,8 +63,28 @@ cloudinary:
   api-secret: ${CLOUDINARY_API_SECRET:${CLOUDINARY_SECRET:}}
 
 frontend:
-  host: http://localhost:3000
+  host: ${FRONTEND_HOST}
 
 backend:
   host: ${BACKEND_HOST:http://localhost:8080}
   prefix: ${BACKEND_PREFIX:api/v1}
+
+# VNPay
+vnpay:
+  pay-url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+  api-url: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
+  return-url: http://localhost:8080/api/v1/payments/vnpay/return
+  tmn-code: ${VNPAY_TMN_CODE}
+  secret-key: ${VNPAY_SECRET_KEY}
+  version: "2.1.0"
+  expire-minutes: 15
+
+logging:
+  level:
+    com.jobhuntly.backend.vnpay: DEBUG
+  host: ${BACKEND_HOST}
+  prefix: ${BACKEND_PREFIX:/api/v1}
+
+activation:
+  ttl: PT5M
+  resend-cooldown: PT2M
