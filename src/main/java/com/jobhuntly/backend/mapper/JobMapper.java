@@ -22,6 +22,7 @@ public interface JobMapper {
     JobResponse toResponse(Job job);
 
 
+    @Named("toCompanyBrief")
     @Mapping(source = "id",          target = "id")
     @Mapping(source = "companyName", target = "name")
     @Mapping(source = "avatar",      target = "avatar")
@@ -31,6 +32,8 @@ public interface JobMapper {
     @Mapping(source = "name",    target = "name")
     @Mapping(source = "city.id", target = "cityId")
     JobResponse.WardBrief toWardBrief(Ward ward);
+
+    @Named("toWardBriefList")
     List<JobResponse.WardBrief> toWardBriefList(Set<Ward> wards);
 
     @Mapping(target = "id",         ignore = true)
@@ -43,11 +46,29 @@ public interface JobMapper {
     Job toEntity(JobRequest jobRequest);
 
     @BeanMapping(ignoreByDefault = true)
-    @Mapping(source = "id",     target = "id")
-    @Mapping(source = "title",  target = "title")
-    @Mapping(source = "company", target = "company")
-    @Mapping(source = "skills",  target = "skillNames", qualifiedByName = "toSkillNames")
-    @Mapping(source = "categories", target = "categoryNames", qualifiedByName = "toCategoryNames")
+    @Mappings({
+            @Mapping(source = "id",            target = "id"),
+            @Mapping(source = "title",         target = "title"),
+            @Mapping(source = "datePost",      target = "datePost"),
+            @Mapping(source = "expiredDate",   target = "expiredDate"),
+            @Mapping(source = "description",   target = "description"),
+            @Mapping(source = "requirements",  target = "requirements"),
+            @Mapping(source = "benefits",      target = "benefits"),
+            @Mapping(source = "location",      target = "location"),
+            @Mapping(source = "status",        target = "status"),
+
+            @Mapping(source = "salaryMin",     target = "salaryMin"),
+            @Mapping(source = "salaryMax",     target = "salaryMax"),
+            @Mapping(source = "salaryType",    target = "salaryType"),
+            // salaryDisplay sẽ được set ở @AfterMapping (đã có)
+
+            @Mapping(source = "company",       target = "company",          qualifiedByName = "toCompanyBrief"),
+            @Mapping(source = "categories",    target = "categoryNames",    qualifiedByName = "toCategoryNames"),
+            @Mapping(source = "skills",        target = "skillNames",       qualifiedByName = "toSkillNames"),
+            @Mapping(source = "levels",        target = "levelNames",       qualifiedByName = "toLevelNames"),
+            @Mapping(source = "workTypes",     target = "workTypeNames",    qualifiedByName = "toWorkTypeNames"),
+            @Mapping(source = "wards",         target = "wards",            qualifiedByName = "toWardBriefList")
+    })
     JobResponse toResponseLite(Job job);
 
     @AfterMapping
