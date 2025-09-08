@@ -43,14 +43,22 @@ public class CvTemplateServiceImpl implements CvTemplateService {
             throw new IllegalArgumentException("Preview image is required");
         }
 
-        String htmlUrl = cloudinaryService.uploadFile(htmlFile);
-        String previewUrl = cloudinaryService.uploadFile(previewImage);
-
         CvTemplate entity = CvTemplate.builder()
                 .name(name)
-                .htmlUrl(htmlUrl)
-                .previewImageUrl(previewUrl)
+                .htmlUrl("PENDING")
+                .previewImageUrl("PENDING")
                 .build();
+        repository.save(entity);
+
+        Long cvId = entity.getId();
+
+        CloudinaryService.CloudAsset htmlAsset = cloudinaryService.uploadCvTemplateFile(cvId, htmlFile, "html");
+        CloudinaryService.CloudAsset previewAsset = cloudinaryService.uploadCvTemplateFile(cvId, previewImage,
+                "preview");
+
+        entity.setHtmlUrl(htmlAsset.secureUrl());
+        entity.setPreviewImageUrl(previewAsset.secureUrl());
+
         repository.save(entity);
         return CvTemplateMapper.toResponse(entity);
     }
@@ -81,24 +89,34 @@ public class CvTemplateServiceImpl implements CvTemplateService {
             e.setName(name);
         }
         if (htmlFile != null && !htmlFile.isEmpty()) {
-            String htmlUrl = cloudinaryService.uploadFile(htmlFile);
-            e.setHtmlUrl(htmlUrl);
+            CloudinaryService.CloudAsset htmlAsset = cloudinaryService.uploadCvTemplateFile(id, htmlFile, "html");
+            e.setHtmlUrl(htmlAsset.secureUrl());
         }
         if (previewImage != null && !previewImage.isEmpty()) {
-            String previewUrl = cloudinaryService.uploadFile(previewImage);
-            e.setPreviewImageUrl(previewUrl);
+            CloudinaryService.CloudAsset previewAsset = cloudinaryService.uploadCvTemplateFile(id, previewImage,
+                    "preview");
+            e.setPreviewImageUrl(previewAsset.secureUrl());
         }
 
         repository.save(e);
         return CvTemplateMapper.toResponse(e);
     }
-
+    
     @Override
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new NoSuchElementException("Template not found: " + id);
+        CvTemplate template = repository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Template not found: " + id));
+        try {
+            if (template.getHtmlUrl() != null) {
+                cloudinaryService.deleteCvTemplateFileByUrl(template.getHtmlUrl());
+            }
+            if (template.getPreviewImageUrl() != null) {
+                cloudinaryService.deleteCvTemplateFileByUrl(template.getPreviewImageUrl());
+            }
+        } catch (IOException ignored) {
         }
-        repository.deleteById(id);
+
+        repository.delete(template);
     }
 
     public String renderHtml(Long templateId, ProfileCombinedResponse profile) {
