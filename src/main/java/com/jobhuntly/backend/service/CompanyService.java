@@ -1,4 +1,4 @@
-package com.jobhuntly.backend.service.company;
+package com.jobhuntly.backend.service;
 
 import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
