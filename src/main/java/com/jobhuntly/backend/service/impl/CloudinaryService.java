@@ -100,55 +100,44 @@ public class CloudinaryService {
         destroyAllTypes("applications/" + applicationId + "/cv");
     }
 
-    // ===================== USER MULTI CVs (N-1) =====================
-    /**
-     * Tạo CV mới cho user (KHÔNG overwrite). Đặt vào folder users/{userId}/cvs.
-     * Cloudinary sẽ tạo tên file duy nhất (unique_filename=true).
-     */
-    public CloudAsset uploadUserCv(Long userId, MultipartFile file, String displayName) throws IOException {
-        validateCommon(file); // không check MIME
-        String folder = "users/" + userId + "/cvs";
+    // ===================== CV TEMPLATES (Admin manages many CVs)
+    // =====================
 
-        Map<?, ?> res = cloudinary.uploader().upload(
-                file.getBytes(),
-                ObjectUtils.asMap(
-                        "folder", folder,
-                        "resource_type", "raw",
-                        "use_filename", true,
-                        "unique_filename", true,
-                        "filename", safeFilename(displayName)
-                )
-        );
-        return toAsset(res);
+    /**
+     * Upload file cho CV template (create + update).
+     * public_id = cv_templates/{cvId}/{type}
+     * type: "html" hoặc "preview"
+     */
+    public CloudAsset uploadCvTemplateFile(Long cvId, MultipartFile file, String type) throws IOException {
+        validateCommon(file);
+        String publicId = "cv_templates/" + cvId + "/" + type;
+
+        try {
+            Map<?, ?> res = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap(
+                            "public_id", publicId,
+                            "overwrite", true,
+                            "invalidate", true,
+                            "resource_type", "auto"));
+            return toAsset(res);
+        } catch (Exception e) {
+            throw new IOException("Failed to upload CV template file to Cloudinary", e);
+        }
     }
 
     /**
-     * Ghi đè 1 CV cụ thể theo URL hiện đang lưu (fallback khi cần update đúng file).
-     * Trích public_id từ URL và overwrite.
+     * Xóa file CV template theo URL.
      */
-    public CloudAsset replaceUserCvByUrl(String existingUrl, MultipartFile newFile) throws IOException {
-        validateCommon(newFile);
-        String publicId = extractPublicIdFromUrl(existingUrl);
-        if (publicId == null) throw new IOException("Không trích được public_id từ URL: " + existingUrl);
-
-        Map<?, ?> res = cloudinary.uploader().upload(
-                newFile.getBytes(),
-                ObjectUtils.asMap(
-                        "public_id", publicId,
-                        "resource_type", "raw",
-                        "overwrite", true,
-                        "invalidate", true
-                )
-        );
-        return toAsset(res);
-    }
-
-    /**
-     * Xoá 1 CV cụ thể theo URL (khi bạn chỉ lưu URL).
-     */
-    public void deleteUserCvByUrl(String url) throws IOException {
-        String publicId = extractPublicIdFromUrl(url);
-        if (publicId != null) destroyAllTypes(publicId);
+    public void deleteCvTemplateFileByUrl(String url) throws IOException {
+        try {
+            String publicId = extractPublicIdFromUrl(url);
+            if (publicId != null) {
+                destroyAllTypes(publicId);
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to delete CV template file from Cloudinary", e);
+        }
     }
 
     // ===================== Helpers =====================

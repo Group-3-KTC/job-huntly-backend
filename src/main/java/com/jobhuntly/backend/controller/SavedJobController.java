@@ -52,7 +52,7 @@ public class SavedJobController {
     }
 
     // GET BY USER
-    @GetMapping("/user/{userId}")
+    @GetMapping("/by-user")
     public ResponseEntity<List<SavedJobResponse>> getByUserId() {
         Long userId = SecurityUtils.getCurrentUserId();
         List<SavedJobResponse> list = savedJobService.getByUserId(userId);
