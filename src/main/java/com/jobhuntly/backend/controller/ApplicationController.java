@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${backend.prefix}/application")
 public class ApplicationController {
     private final ApplicationService applicationService;
-    private final JwtUtil jwtUtil;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
@@ -40,6 +39,40 @@ public class ApplicationController {
                                                      ) {
         Long userId = SecurityUtils.getCurrentUserId();
         return applicationService.getByUser(userId, pageable);
+    }
+
+    @PostMapping(
+            value = "/{jobId}/reapply",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ResponseStatus(HttpStatus.OK)
+    public ApplicationResponse reapply(
+            @PathVariable Long jobId,
+            @Valid @ModelAttribute ApplicationRequest request
+    ) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (request.getJobId() == null || !request.getJobId().equals(jobId)) {
+            request.setJobId(jobId);
+        }
+        return applicationService.update(userId, jobId, request);
+    }
+
+    @GetMapping(value = "/detail/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApplicationResponse getDetailByJob(
+            @PathVariable Integer jobId
+    ) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return applicationService.getDetail(userId, jobId);
+    }
+
+    @GetMapping(value = "/by-job/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Page<ApplicationResponse> getByJob(
+            @PathVariable Integer jobId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return applicationService.getByJob(jobId, pageable);
     }
 
 }

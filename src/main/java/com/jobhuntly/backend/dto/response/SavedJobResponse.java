@@ -12,6 +12,7 @@ public record SavedJobResponse(
         LocalDateTime createdAt,
         String companyName,
         String companyAvatar,
+        Long companyId,
         String titleJob,
         String salaryDisplay,
         @JsonProperty("skill_job") List<String> skillJob
