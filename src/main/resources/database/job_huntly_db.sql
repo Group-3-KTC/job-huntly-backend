@@ -726,3 +726,16 @@ ON DUPLICATE KEY UPDATE name=VALUES(name), duration_days=VALUES(duration_days), 
 ALTER TABLE "applications"
   ADD COLUMN "attempt_count" INT NOT NULL DEFAULT 1 AFTER "status",
   ADD COLUMN "last_user_action_at" DATETIME NULL AFTER "attempt_count";
+
+drop table follows;
+ CREATE TABLE `follows` (
+   `follow_id` INT NOT NULL AUTO_INCREMENT,
+   `user_id` INT NOT NULL,
+   `company_id` INT NOT NULL,
+   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   PRIMARY KEY (`follow_id`),
+   KEY `fk_follows_user` (`user_id`),
+   KEY `fk_follows_company` (`company_id`),
+   CONSTRAINT `fk_follows_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+   CONSTRAINT `fk_follows_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`company_id`) ON DELETE RESTRICT ON UPDATE CASCADE
+ );
