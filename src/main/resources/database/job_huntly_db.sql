@@ -85,7 +85,7 @@ CREATE TABLE companies
     location_country  VARCHAR(100) NULL,
     founded_year YEAR NULL,
     quantity_employee INT NULL,
-    status            ENUM('active','inactive','pending') DEFAULT 'inactive',
+    status            ENUM('active','inactive','banned') DEFAULT 'inactive',
     is_pro_company    TINYINT(1) DEFAULT 0,
     followers_count   INT      DEFAULT 0,
     jobs_count        INT      DEFAULT 0,
@@ -722,6 +722,10 @@ CREATE TABLE IF NOT EXISTS company_subscriptions (
 INSERT INTO packages (code, name, type, duration_days, price_vnd, is_active)
 VALUES ('VIP_1M', 'VIP 1 Month', 'VIP', 30, 100000, 1)
 ON DUPLICATE KEY UPDATE name=VALUES(name), duration_days=VALUES(duration_days), price_vnd=VALUES(price_vnd), is_active=VALUES(is_active);
+
+ALTER TABLE "applications"
+  ADD COLUMN "attempt_count" INT NOT NULL DEFAULT 1 AFTER "status",
+  ADD COLUMN "last_user_action_at" DATETIME NULL AFTER "attempt_count";
 
 
 CREATE TABLE IF NOT EXISTS `tickets` (

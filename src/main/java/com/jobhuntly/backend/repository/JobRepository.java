@@ -1,12 +1,11 @@
 package com.jobhuntly.backend.repository;
 
+import com.jobhuntly.backend.entity.Application;
 import com.jobhuntly.backend.entity.Job;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
@@ -23,9 +22,6 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
     @Override
     @EntityGraph(attributePaths = {"company", "skills"})
     Page<Job> findAll(Pageable pageable);
-
-    @EntityGraph(attributePaths = {"company"})
-    Page<Job> findAllByCompany_Id(Long companyId, Pageable pageable);
 
     // filter theo mức lương
     @Query("""

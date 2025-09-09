@@ -20,6 +20,7 @@ public interface SavedJobMapper {
     @Mapping(target = "createdAt",     source = "saved.createdAt")
     @Mapping(target = "companyName",   source = "company.companyName")
     @Mapping(target = "companyAvatar", source = "company.avatar")
+    @Mapping(target = "companyId", source = "company.id")
     @Mapping(target = "titleJob",      source = "job.title")
     @Mapping(target = "skillJob",      source = "skillNames")
     @Mapping(target = "salaryDisplay", ignore = true)

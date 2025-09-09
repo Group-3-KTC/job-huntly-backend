@@ -11,9 +11,8 @@ import com.jobhuntly.backend.repository.CategoryRepository;
 import com.jobhuntly.backend.repository.CompanyRepository;
 import com.jobhuntly.backend.repository.JobRepository;
 import com.jobhuntly.backend.repository.UserRepository;
-import com.jobhuntly.backend.service.company.CompanyService;
+import com.jobhuntly.backend.service.CompanyService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -107,10 +106,17 @@ public class CompanyServiceImpl implements CompanyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Company ID Not found: " + id));
 
         companyDto.setId(id);
+        
+        // Lưu dữ liệu hiện tại mà không muốn bị ghi đè
+        Long currentUserId = existing.getUser().getId();
+        Set<Category> currentCategories = existing.getCategories();
+        
+        // Áp dụng các thay đổi từ dto vào entity hiện tại
         companyMapper.updateEntityFromDto(companyDto, existing);
-
+        
+        // Xử lý userId riêng (nếu có)
         if (companyDto.getUserId() != null
-                && !companyDto.getUserId().equals(existing.getUser().getId())) {
+                && !companyDto.getUserId().equals(currentUserId)) {
 
             User user = userRepository.findById(companyDto.getUserId())
                     .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + companyDto.getUserId()));
@@ -119,12 +125,13 @@ public class CompanyServiceImpl implements CompanyService {
             }
             // Nếu đã có công ty khác thì chặn (nếu business yêu cầu)
             if (companyRepository.existsByUser_Id(user.getId())
-                    && !existing.getUser().getId().equals(user.getId())) {
+                    && !currentUserId.equals(user.getId())) {
                 throw new IllegalArgumentException("Recruiter này đã sở hữu công ty khác");
             }
             existing.setUser(user);
         }
 
+        // Xử lý categories riêng (nếu có)
         if (companyDto.getCategoryIds() != null) {
             Set<Category> cats = new java.util.HashSet<>(categoryRepository.findAllById(companyDto.getCategoryIds()));
             existing.setCategories(cats); // replace toàn bộ set

@@ -9,4 +9,5 @@ public interface SavedJobService {
     SavedJobResponse create(Long userId, SavedJobRequest request);
     boolean delete(Long userId, Long jobId);
     List<SavedJobResponse> getByUserId(Long userId);
+    boolean exists(Long userId, Long jobId);
 }

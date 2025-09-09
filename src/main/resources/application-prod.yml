@@ -92,3 +92,28 @@ logging:
     org.springframework.web: DEBUG
     com.jobhuntly.backend: DEBUG                   # package của bạn
     com.jobhuntly.backend.vnpay: DEBUG
+
+mail:
+  imap:
+    host: imap.gmail.com
+    port: 993
+    username: ${GMAIL_IMAP_USERNAME}
+    password: ${GMAIL_IMAP_PASS}
+    folder: INBOX
+    poll-interval-ms: 30000
+    mark-seen: true
+    move-to-folder: Processed
+    peek: true
+
+  gmail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${GMAIL_IMAP_USERNAME}
+    password: ${GMAIL_IMAP_PASS}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true

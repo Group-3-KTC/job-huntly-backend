@@ -79,6 +79,11 @@ public class SavedJobServiceImpl implements SavedJobService {
         return result;
     }
 
+    @Override
+    public boolean exists(Long userId, Long jobId) {
+        return savedJobRepository.findByUserIdAndJobId(userId, jobId).isPresent();
+    }
+
     private SavedJobResponse buildResponse(SavedJob saved, Long jobId) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Job not found: " + jobId));

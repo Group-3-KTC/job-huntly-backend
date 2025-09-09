@@ -4,13 +4,14 @@ import java.time.LocalDateTime;
 
 public record ApplicationResponse(
         Integer id,
-        Integer userId,
-        Integer jobId,
+        Long userId,
+        Long jobId,
         String cv,
         String email,
         String status,
         String phoneNumber,
         String candidateName,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String cvDownload
 ) {
 }
