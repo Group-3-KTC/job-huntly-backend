@@ -1,7 +1,9 @@
 package com.jobhuntly.backend.controller;
 
+import com.jobhuntly.backend.dto.request.UserRequest;
 import com.jobhuntly.backend.dto.response.UserDto;
 import com.jobhuntly.backend.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,5 +33,31 @@ public class UserController {
             usersPage = userService.findAll(pageable);
         }
         return new ResponseEntity<>(usersPage, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        UserDto userDto = userService.getUserById(id);
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
+    }
+    
+    @PostMapping
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserRequest userRequest) {
+        UserDto createdUser = userService.createUser(userRequest);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
+    
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserDto> updateUser(
+            @PathVariable Long id,
+            @RequestBody UserRequest userRequest) {
+        UserDto updatedUser = userService.updateUserById(id, userRequest);
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUserById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
