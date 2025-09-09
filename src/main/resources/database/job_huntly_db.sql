@@ -722,3 +722,7 @@ CREATE TABLE IF NOT EXISTS company_subscriptions (
 INSERT INTO packages (code, name, type, duration_days, price_vnd, is_active)
 VALUES ('VIP_1M', 'VIP 1 Month', 'VIP', 30, 100000, 1)
 ON DUPLICATE KEY UPDATE name=VALUES(name), duration_days=VALUES(duration_days), price_vnd=VALUES(price_vnd), is_active=VALUES(is_active);
+
+ALTER TABLE "applications"
+  ADD COLUMN "attempt_count" INT NOT NULL DEFAULT 1 AFTER "status",
+  ADD COLUMN "last_user_action_at" DATETIME NULL AFTER "attempt_count";

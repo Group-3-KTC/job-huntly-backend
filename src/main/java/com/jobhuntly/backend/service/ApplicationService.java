@@ -11,4 +11,8 @@ public interface ApplicationService {
 
     Page<ApplicationByUserResponse> getByUser(Long userId, Pageable pageable);
     Page<ApplicationResponse> getByJob(Integer jobId, Pageable pageable);
+
+    ApplicationResponse update(Long userId, Long jobId, ApplicationRequest req);
+
+    ApplicationResponse getDetail(Long userId, Integer jobId);
 }

@@ -46,6 +46,12 @@ public class Application {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name="attempt_count", nullable=false)
+    private int attemptCount = 1;
+
+    @Column(name="last_user_action_at")
+    private LocalDateTime lastUserActionAt;
+
     @PrePersist
     void prePersist() {
         if (this.status == null || this.status.isBlank()) {

@@ -1,6 +1,7 @@
 package com.jobhuntly.backend.service.impl;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,18 @@ public class CloudinaryService {
             String resourceType, // image | raw | video
             String format,
             Long bytes,
-            String version // "v123..."
-    ) {}
+            String version, // "v123..."
+            String viewUrl,      // URL mở trực tiếp (inline)
+            String downloadUrl   // URL ép tải xuống (signed)
+    ) {
+        public CloudAsset(String secureUrl,
+                          String resourceType,
+                          String format,
+                          Long bytes,
+                          String version) {
+            this(secureUrl, resourceType, format, bytes, version, secureUrl, null);
+        }
+    }
 
     public String uploadFile(MultipartFile file) throws IOException {
         try {
@@ -81,19 +92,28 @@ public class CloudinaryService {
 
     // ===================== APPLICATION CV (1-1, overwrite) =====================
     public CloudAsset uploadApplicationCv(Integer applicationId, MultipartFile file) throws IOException {
-        validateCommon(file); // chỉ check rỗng + size
-        String publicId = "applications/" + applicationId + "/cv";
+        validateCommon(file);
+        String publicId = "applications/%d/cv.pdf".formatted(applicationId);
 
         Map<?, ?> res = cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap(
+                        "upload_preset", "public_cv",
                         "public_id", publicId,
                         "resource_type", "raw",
                         "overwrite", true,
-                        "invalidate", true
+                        "invalidate", true,
+                        "access_mode", "public"
                 )
         );
-        return toAsset(res);
+        String secureUrl = (String) res.get("secure_url");
+
+        String resourceType = (String) res.get("resource_type");
+        String format       = (String) res.get("format");
+        Long bytes          = (res.get("bytes") instanceof Number n) ? n.longValue() : null;
+        String version      = (res.get("version") != null) ? "v" + res.get("version") : null;
+
+        return new CloudAsset(secureUrl, resourceType, format, bytes, version);
     }
 
     public void deleteApplicationCv(Integer applicationId) throws IOException {
