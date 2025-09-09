@@ -324,13 +324,14 @@ public class AuthServiceImpl implements AuthService {
 
         String activationLink = frontendBaseUrl + "/activate?token=" + raw;
 
+
         Context context = new Context();
         context.setVariable("activationLink", activationLink);
         context.setVariable("ttlText", ttlText);
         context.setVariable("appName", "JobHuntly");
         context.setVariable("year", java.time.Year.now().toString());
         context.setVariable("supportEmail", "support@jobhuntly.com");
-        context.setVariable("logoUrl", "https://your-cdn.com/jobhuntly-logo.png");
+        context.setVariable("logoUrl", "https://res.cloudinary.com/dfbqhd5ht/image/upload/v1757058535/logo-title-white_yjzvvr.png");
 
         String htmlContent = templateEngine.process("activation-email", context);
 

@@ -30,7 +30,7 @@ spring:
         cache-null-values: false
 
   mail:
-    host: smtp.gmail.com
+    host: smtp.zoho.com
     port: 587
     username: ${SPRING_MAIL_USERNAME}
     password: ${SPRING_MAIL_PASSWORD}
@@ -46,7 +46,7 @@ spring:
 
 security:
   cors:
-    allowed-origins: [ "http://localhost:3000", "http://47.129.60.85:3000" ]  # thêm domain FE khác nếu cần
+    allowed-origins: [ "http://localhost:3000", "http://47.129.60.85:3000", "http://localhost:5173", "http://jobhuntly.io.vn", "https://jobhuntly.io.vn" ]  # thêm domain FE khác nếu cần
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}
@@ -88,3 +88,28 @@ logging:
 activation:
   ttl: PT5M
   resend-cooldown: PT2M
+
+mail:
+  imap:
+    host: imap.gmail.com
+    port: 993
+    username: contact.jobhuntly@gmail.com
+    password: bdri ragb opns ehgz
+    folder: INBOX
+    poll-interval-ms: 30000
+    mark-seen: true
+    move-to-folder: Processed
+    peek: true
+
+  gmail:
+    host: smtp.gmail.com
+    port: 587
+    username: contact.jobhuntly@gmail.com
+    password: bdri ragb opns ehgz
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
