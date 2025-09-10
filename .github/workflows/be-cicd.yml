@@ -146,5 +146,8 @@ jobs:
 
             echo "Starting new container with correct name..."
             docker compose -f compose.yml up -d --remove-orphans
+            
+            echo "Cleaning up unused Docker images..."
+            docker image prune -f
 
             echo "Deployment completed!"
