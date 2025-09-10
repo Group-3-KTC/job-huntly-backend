@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface CompanyRepository extends JpaRepository<Company, Long> {
@@ -64,5 +65,7 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
     @Transactional
     @Query("update Company c set c.vipUntil = :until where c.id = :companyId")
     int updateVipUntil(@Param("companyId") Long companyId, @Param("until") OffsetDateTime until);
+
+    List<Company> findByIdIn(Collection<Long> ids);
 
 }
