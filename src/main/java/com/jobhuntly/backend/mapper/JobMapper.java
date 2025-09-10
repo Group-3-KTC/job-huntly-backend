@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public interface JobMapper {
 
 
-    @Mapping(source = "company",    target = "company")
+    @Mapping(source = "company",       target = "company",          qualifiedByName = "toCompanyBrief")
     @Mapping(source = "categories", target = "categoryNames", qualifiedByName = "toCategoryNames")
     @Mapping(source = "skills",     target = "skillNames",    qualifiedByName = "toSkillNames")
     @Mapping(source = "levels",     target = "levelNames",    qualifiedByName = "toLevelNames")
