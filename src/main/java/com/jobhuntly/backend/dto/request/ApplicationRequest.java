@@ -8,8 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class ApplicationRequest {
-//    @NotNull
-//    private Long userId;      // JWT thì có thể bỏ trường này
 
     @NotNull
     private Long jobId;

@@ -132,7 +132,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application app = applicationRepository.lockByUserAndJob(userId, jobId)
                 .orElseThrow(() -> new EntityNotFoundException("Bạn chưa ứng tuyển job này."));
 
-        // Đảm bảo đúng chủ sở hữu
         if (!Objects.equals(app.getUser().getId(), userId)) {
             throw new IllegalStateException("Không có quyền cập nhật hồ sơ ứng tuyển này.");
         }
@@ -154,7 +153,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (req.getCandidateName() != null) app.setCandidateName(req.getCandidateName());
         if (req.getDescription() != null)   app.setDescription(req.getDescription());
 
-        // 4) Upload CV nếu có — BẮT IOException NGAY TẠI ĐÂY (Cách A)
+        // 4) Upload CV nếu có
         MultipartFile cvFile = req.getCvFile();
         boolean uploadedCv = false;
         if (cvFile != null && !cvFile.isEmpty()) {
@@ -187,5 +186,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application app = applicationRepository.findByUser_IdAndJob_Id(userId, jobId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
         return applicationMapper.toResponse(app);
+    }
+
+    @Override
+    public boolean hasApplied(Long userId, Long jobId) {
+        return applicationRepository.existsByUser_IdAndJob_Id(userId, jobId);
     }
 }
