@@ -15,4 +15,6 @@ public interface ApplicationService {
     ApplicationResponse update(Long userId, Long jobId, ApplicationRequest req);
 
     ApplicationResponse getDetail(Long userId, Integer jobId);
+
+    boolean hasApplied(Long userId, Long jobId);
 }

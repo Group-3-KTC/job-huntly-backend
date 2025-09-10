@@ -3,6 +3,7 @@ package com.jobhuntly.backend.controller;
 import com.jobhuntly.backend.dto.request.ApplicationRequest;
 import com.jobhuntly.backend.dto.response.ApplicationByUserResponse;
 import com.jobhuntly.backend.dto.response.ApplicationResponse;
+import com.jobhuntly.backend.dto.response.ApplyStatusResponse;
 import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import com.jobhuntly.backend.service.ApplicationService;
@@ -73,6 +74,13 @@ public class ApplicationController {
             Pageable pageable
     ) {
         return applicationService.getByJob(jobId, pageable);
+    }
+
+    @GetMapping("/status")
+    public ApplyStatusResponse getApplyStatus(@RequestParam("job_id") Long jobId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        boolean applied = applicationService.hasApplied(userId, jobId);
+        return new ApplyStatusResponse(applied);
     }
 
 }
