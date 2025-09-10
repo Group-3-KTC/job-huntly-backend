@@ -17,4 +17,6 @@ public interface ApplicationService {
     ApplicationResponse getDetail(Long userId, Integer jobId);
 
     boolean hasApplied(Long userId, Long jobId);
+
+    ApplicationResponse updateStatusByStaff(Long userId, Long jobId, String status);
 }

@@ -2,6 +2,8 @@ package com.jobhuntly.backend.service.impl;
 
 import com.jobhuntly.backend.dto.request.ReportRequest;
 import com.jobhuntly.backend.dto.request.ReportStatusUpdateRequest;
+import com.jobhuntly.backend.dto.response.CompanyDto;
+import com.jobhuntly.backend.dto.response.JobResponse;
 import com.jobhuntly.backend.dto.response.ReportResponse;
 import com.jobhuntly.backend.entity.Report;
 import com.jobhuntly.backend.entity.User;
@@ -11,6 +13,8 @@ import com.jobhuntly.backend.repository.CompanyRepository;
 import com.jobhuntly.backend.repository.JobRepository;
 import com.jobhuntly.backend.repository.ReportRepository;
 import com.jobhuntly.backend.repository.UserRepository;
+import com.jobhuntly.backend.service.CompanyService;
+import com.jobhuntly.backend.service.JobService;
 import com.jobhuntly.backend.service.ReportService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -31,6 +35,8 @@ public class ReportServiceImpl implements ReportService {
     private final JobRepository jobRepository;
     private final CompanyRepository companyRepository;
     private final ReportMapper reportMapper;
+    private final JobService jobService;
+    private final CompanyService companyService;
 
     @Override
     public ReportResponse create(ReportRequest request, Long userId) {
@@ -94,7 +100,36 @@ public class ReportServiceImpl implements ReportService {
     public ReportResponse getDetailByReportId(Long reportId) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new EntityNotFoundException("Report not found: " + reportId));
-        return reportMapper.toResponse(report);
+        ReportResponse resp = reportMapper.toResponse(report);
+
+        Long contentId = report.getReportedContentId();
+        if (contentId == null) {
+            return resp;
+        }
+
+        ReportType type = report.getReportType();
+        if (type == null) {
+            return resp;
+        }
+
+        switch (type) {
+            case JOB -> {
+                JobResponse job = jobService.getById(contentId);
+                resp.setJob(job);
+            }
+            case COMPANY -> {
+                CompanyDto company = companyService.getCompanyById(contentId);
+                resp.setCompany(company);
+            }
+            case USER -> {
+                throw new IllegalArgumentException("ReportType USER hiện chưa được hỗ trợ.");
+            }
+            default -> {
+                throw new IllegalStateException("Loại báo cáo không hợp lệ: " + type);
+            }
+        }
+
+        return resp;
     }
 
     @Override

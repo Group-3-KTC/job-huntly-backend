@@ -64,7 +64,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setStatus(null);
 
         // 1) Lưu trước để có appId (dùng cho public_id Cloudinary: applications/{appId}/cv)
-        applicationRepository.saveAndFlush(app); // đảm bảo có ID ngay tại đây
+        applicationRepository.saveAndFlush(app);
 
         // 2) Upload CV nếu có
         MultipartFile cvFile = req.getCvFile();
@@ -138,13 +138,23 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // 1) Giới hạn tổng số lần (kể cả lần đầu)
         if (app.getAttemptCount() >= MAX_ATTEMPTS) {
-            throw new IllegalStateException("Bạn đã đạt giới hạn 4 lần ứng tuyển cho công việc này.");
+            throw new IllegalStateException(
+                    "Bạn đã đạt giới hạn " + MAX_ATTEMPTS + " lần ứng tuyển cho công việc này."
+            );
         }
 
         // 2) Cooldown chống spam
         if (app.getLastUserActionAt() != null &&
                 app.getLastUserActionAt().isAfter(LocalDateTime.now().minus(COOLDOWN))) {
-            throw new IllegalStateException("Bạn vừa cập nhật hồ sơ, vui lòng thử lại sau.");
+
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime deadline = app.getLastUserActionAt().plus(COOLDOWN);
+            long minutesLeft = Duration.between(now, deadline).toMinutes();
+
+            throw new IllegalStateException(
+                    "Bạn vừa cập nhật hồ sơ cách đây chưa lâu. "
+                            + "Vui lòng thử lại sau khoảng " + minutesLeft + " phút nữa."
+            );
         }
 
         // 3) Cập nhật thông tin hồ sơ (KHÔNG thay đổi status — company mới có quyền đổi)
@@ -191,5 +201,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public boolean hasApplied(Long userId, Long jobId) {
         return applicationRepository.existsByUser_IdAndJob_Id(userId, jobId);
+    }
+
+    @Override
+    public ApplicationResponse updateStatusByStaff(Long userId, Long jobId, String status) {
+        Application app = applicationRepository
+                .lockByUserAndJob(userId, jobId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
+
+        // Chỉ cập nhật status, không tăng attempt, không stamp
+        app.setStatus(status);
+
+        Application saved = applicationRepository.save(app);
+        return applicationMapper.toResponse(saved);
     }
 }
