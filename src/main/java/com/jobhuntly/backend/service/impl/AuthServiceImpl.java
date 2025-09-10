@@ -25,6 +25,10 @@ import com.jobhuntly.backend.service.PasswordTokenService;
 import com.jobhuntly.backend.service.email.EmailSender;
 import com.jobhuntly.backend.service.email.EmailValidator;
 import com.jobhuntly.backend.service.email.MailTemplateService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -368,6 +372,46 @@ public class AuthServiceImpl implements AuthService {
         passwordTokenService.clearPasswordToken(u);
     }
 
+    @Override
+    public void refreshToken(HttpServletRequest req, HttpServletResponse res) {
+        String refresh = readCookie(req, "refresh_token");
+        if (refresh == null || refresh.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token");
+        }
+
+        Claims c;
+        try {
+            c = jwtUtil.parseAndValidate(refresh);
+        } catch (ExpiredJwtException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh expired");
+        } catch (JwtException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh");
+        }
+
+        if (!jwtUtil.isRefresh(c)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong token type");
+        }
+
+        Long userId = Long.valueOf(c.getSubject());
+        Integer version = (Integer) c.get("v");
+
+        User u = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        if (!version.equals(u.getRefreshTokenVersion())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh revoked");
+        }
+
+        // 1) Cấp access token mới
+        String newAccess = jwtUtil.issueAccessToken(u);
+        authCookieService.setAccessCookie(res, newAccess, jwtUtil.getAccessTtl());
+
+        // 2) (Tuỳ chọn) Sliding refresh: cấp refresh mới để gia hạn phiên
+        // Lưu ý: không có bảng phiên => không chống được replay refresh cũ
+        String newRefresh = jwtUtil.issueRefreshToken(u);
+        authCookieService.setRefreshCookie(res, newRefresh, jwtUtil.getRefreshTtl());
+    }
+
 
     private GoogleIdToken verifyGoogleIdToken(String idTokenString, String clientId) {
         try {
@@ -420,4 +464,11 @@ public class AuthServiceImpl implements AuthService {
         return m < 60 ? (m + " minutes") : (ttl.toHours() + " hours");
     }
 
+    private String readCookie(HttpServletRequest req, String name) {
+        if (req.getCookies() == null) return null;
+        for (Cookie c : req.getCookies()) {
+            if (name.equals(c.getName())) return c.getValue();
+        }
+        return null;
+    }
 }

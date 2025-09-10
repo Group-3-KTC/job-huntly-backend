@@ -61,7 +61,6 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    // -------- Trạng thái / Kích hoạt --------
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)
     private Status status;
@@ -76,7 +75,6 @@ public class User {
     @Column(name = "activation_token_expires_at")
     private Instant activationTokenExpiresAt;
 
-    // -------- Provider / Multi-auth --------
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", length = 20)
     private AuthProvider authProvider; // LOCAL | GOOGLE
@@ -85,9 +83,8 @@ public class User {
     @Builder.Default
     private Boolean passwordSet = false;
 
-    // -------- Token đặt/reset mật khẩu (dùng chung 3 cột) --------
     @Column(name = "password_token_hash", length = 64)
-    private String passwordTokenHash; // SHA-256 hex của token thô
+    private String passwordTokenHash;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "password_token_purpose", length = 16)
@@ -96,7 +93,6 @@ public class User {
     @Column(name = "password_token_expires_at")
     private Instant passwordTokenExpiresAt;
 
-    // -------- Notification flags --------
     @Column(name = "sms_notification_active", nullable = false)
     @Builder.Default
     private Boolean smsNotificationActive = false;
@@ -105,12 +101,10 @@ public class User {
     @Builder.Default
     private Boolean emailNotificationActive = true;
 
-    // -------- Timestamps --------
     @CreationTimestamp
     @Column(name = "create_at", updatable = false)
     private Instant createdAt;
 
-    // -------- Quan hệ khác --------
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Company company;
 }

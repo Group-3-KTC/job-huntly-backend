@@ -46,13 +46,14 @@ spring:
 
 security:
   cors:
-    allowed-origins: [ "http://localhost:3000", "http://47.129.60.85:3000", "http://localhost:5173", "http://jobhuntly.io.vn", "https://jobhuntly.io.vn" ]  # thêm domain FE khác nếu cần
+    allowed-origins: [ "http://localhost:3000", "http://47.129.60.85:3000", "http://localhost:5173", "http://jobhuntly.io.vn", "https://jobhuntly.io.vn", http://admin.jobhuntly.io.vn", https://admin.jobhuntly.io.vn" ]  # thêm domain FE khác nếu cần
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}
     expiry-seconds: ${JWT_EXPIRATION:7200000}
     issuer: "jobhuntly"
     cookie-name: "access_token"         # httpOnly cookie do BE set
+    cookie-domain: "jobhuntly.io.vn"
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}

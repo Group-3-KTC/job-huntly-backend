@@ -16,7 +16,7 @@ public class AuthCookieServiceImpl implements AuthCookieService {
     @Value("${security.jwt.cookie-name:access_token}")
     private String cookieName;
 
-    @Value("${security.jwt.cookie-domain:}") // thêm nếu có domain
+    @Value("${security.jwt.cookie-domain:jobhuntly.io.vn}") // thêm nếu có domain
     private String cookieDomain;
 
     public void setAuthCookie(HttpServletRequest req, HttpServletResponse res, String token, long ttlSeconds) {

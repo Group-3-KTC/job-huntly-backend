@@ -51,6 +51,7 @@ security:
     expiry-seconds: ${JWT_EXPIRATION:7200s}
     issuer: "jobhuntly"
     cookie-name: "access_token"
+    cookie-domain: "jobhuntly.io.vn"
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}
