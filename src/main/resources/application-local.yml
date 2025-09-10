@@ -93,8 +93,8 @@ mail:
   imap:
     host: imap.gmail.com
     port: 993
-    username: contact.jobhuntly@gmail.com
-    password: bdri ragb opns ehgz
+    username: ${GMAIL_IMAP_USERNAME}
+    password: ${GMAIL_IMAP_PASS}
     folder: INBOX
     poll-interval-ms: 30000
     mark-seen: true
@@ -104,8 +104,8 @@ mail:
   gmail:
     host: smtp.gmail.com
     port: 587
-    username: contact.jobhuntly@gmail.com
-    password: bdri ragb opns ehgz
+    username: ${GMAIL_IMAP_USERNAME}
+    password: ${GMAIL_IMAP_PASS}
     properties:
       mail:
         smtp:

@@ -778,3 +778,17 @@ ALTER TABLE users
 
 CREATE INDEX idx_users_pwdtoken_purpose_hash
     ON users (password_token_purpose, password_token_hash);
+
+
+drop table follows;
+ CREATE TABLE `follows` (
+   `follow_id` INT NOT NULL AUTO_INCREMENT,
+   `user_id` INT NOT NULL,
+   `company_id` INT NOT NULL,
+   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+   PRIMARY KEY (`follow_id`),
+   KEY `fk_follows_user` (`user_id`),
+   KEY `fk_follows_company` (`company_id`),
+   CONSTRAINT `fk_follows_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+   CONSTRAINT `fk_follows_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`company_id`) ON DELETE RESTRICT ON UPDATE CASCADE
+ );

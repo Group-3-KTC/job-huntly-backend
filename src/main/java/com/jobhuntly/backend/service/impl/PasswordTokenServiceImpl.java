@@ -18,7 +18,6 @@ import java.util.Base64;
 @Service
 @RequiredArgsConstructor
 public class PasswordTokenServiceImpl implements PasswordTokenService {
-
     private final UserRepository userRepository;
     private static final SecureRandom RNG = new SecureRandom();
 
@@ -40,11 +39,11 @@ public class PasswordTokenServiceImpl implements PasswordTokenService {
         String hash = DigestUtils.sha256Hex(rawToken);
         User u = userRepository
                 .findByPasswordTokenPurposeAndPasswordTokenHash(expectedPurpose, hash)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid token"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalid or expired"));
 
         if (u.getPasswordTokenExpiresAt() == null || u.getPasswordTokenExpiresAt().isBefore(Instant.now())) {
             clearPasswordToken(u);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalid or expired");
         }
         return u;
     }
@@ -63,4 +62,5 @@ public class PasswordTokenServiceImpl implements PasswordTokenService {
         // URL-safe, không có '='
         return Base64.getUrlEncoder().withoutPadding().encodeToString(buf);
     }
+
 }

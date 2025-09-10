@@ -126,7 +126,7 @@ public class AuthServiceImpl implements AuthService {
         String hash = sha256Hex(tokenRaw);
 
         User user = userRepository.findByActivationToken(hash)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired link"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalid or expired"));
 
         Instant now = Instant.now();
         Instant exp = user.getActivationTokenExpiresAt();
@@ -134,7 +134,7 @@ public class AuthServiceImpl implements AuthService {
             user.setActivationToken(null);
             user.setActivationTokenExpiresAt(null);
             userRepository.save(user);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired link");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalid or expired");
         }
 
         user.setActivationToken(null);
@@ -313,11 +313,10 @@ public class AuthServiceImpl implements AuthService {
             return; // trả 204/200 để tránh lộ logic
         }
 
-        Duration ttl = Duration.ofMinutes(30);
-        String raw = passwordTokenService.issuePasswordToken(u, PasswordTokenPurpose.SET, ttl);
+        String raw = passwordTokenService.issuePasswordToken(u, PasswordTokenPurpose.SET, activationTtl);
 
         String link = FRONTEND_HOST + "/auth" + "/set-password?token=" + raw;
-        String html = mailTemplateService.renderSetPasswordEmail(link, ttl.toMinutes() + " minutes");
+        String html = mailTemplateService.renderSetPasswordEmail(link, ttlText(activationTtl));
         emailSender.send(u.getEmail(), "[JobHuntly] Set your password", html);
     }
 
@@ -350,11 +349,10 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
 
-        Duration ttl = Duration.ofMinutes(30);
-        String raw = passwordTokenService.issuePasswordToken(u, PasswordTokenPurpose.RESET, ttl);
+        String raw = passwordTokenService.issuePasswordToken(u, PasswordTokenPurpose.RESET, activationTtl);
 
         String link = FRONTEND_HOST + "/auth" + "/reset-password?token=" + raw;
-        String html = mailTemplateService.renderResetPasswordEmail(link, ttl.toMinutes() + " minutes");
+        String html = mailTemplateService.renderResetPasswordEmail(link, ttlText(activationTtl));
         emailSender.send(u.getEmail(), "[JobHuntly] Reset your password", html);
     }
 
@@ -395,10 +393,7 @@ public class AuthServiceImpl implements AuthService {
         user.setActivationTokenExpiresAt(Instant.now().plus(activationTtl));
         userRepository.save(user);
 
-        long ttlMinutes = activationTtl.toMinutes();
-        String ttlText = ttlMinutes < 60
-                ? ttlMinutes + " minutes"
-                : activationTtl.toHours() + " hours";
+        String ttlText = ttlText(activationTtl);
 
         String activationLink = FRONTEND_HOST + "/auth" + "/activate?token=" + raw;
 
@@ -418,6 +413,11 @@ public class AuthServiceImpl implements AuthService {
                 "[JobHuntly] Activate your account",
                 htmlContent
         );
+    }
+
+    private static String ttlText(Duration ttl) {
+        long m = ttl.toMinutes();
+        return m < 60 ? (m + " minutes") : (ttl.toHours() + " hours");
     }
 
 }
