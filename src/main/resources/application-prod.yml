@@ -44,7 +44,7 @@ spring:
 
 security:
   cors:
-    allowed-origins: [ "http://localhost:3000", "http://47.129.60.85:3000", "http://localhost:5173", "http://jobhuntly.io.vn", "https://jobhuntly.io.vn" ]  # thêm domain FE khác nếu cần
+    allowed-origins: [ "http://localhost:3000", "http://47.129.60.85:3000", "http://localhost:5173", "http://jobhuntly.io.vn", "https://jobhuntly.io.vn", "http://admin.jobhuntly.io.vn", "https://admin.jobhuntly.io.vn" ]
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}
