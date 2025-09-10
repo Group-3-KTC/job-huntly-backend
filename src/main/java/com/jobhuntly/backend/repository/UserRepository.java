@@ -1,7 +1,7 @@
 package com.jobhuntly.backend.repository;
 
-import com.jobhuntly.backend.entity.Role;
 import com.jobhuntly.backend.entity.User;
+import com.jobhuntly.backend.entity.enums.PasswordTokenPurpose;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,4 +29,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
        where u.id = :id
     """)
     int clearActivationToken(@Param("id") Long id);
+
+    Optional<User> findByPasswordTokenPurposeAndPasswordTokenHash(PasswordTokenPurpose purpose, String passwordTokenHash);
+
 }

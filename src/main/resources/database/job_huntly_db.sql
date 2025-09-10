@@ -767,3 +767,14 @@ CREATE TABLE IF NOT EXISTS `ticket_messages` (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+ALTER TABLE users
+    ADD COLUMN auth_provider VARCHAR(20) NULL AFTER google_id,
+    ADD COLUMN password_set TINYINT(1) DEFAULT 0 AFTER auth_provider;
+
+ALTER TABLE users
+    ADD COLUMN password_token_hash VARCHAR(64) NULL AFTER activation_token,
+    ADD COLUMN password_token_purpose ENUM('SET','RESET') NULL AFTER password_token_hash,
+    ADD COLUMN password_token_expires_at DATETIME(3) NULL AFTER password_token_purpose;
+
+CREATE INDEX idx_users_pwdtoken_purpose_hash
+    ON users (password_token_purpose, password_token_hash);

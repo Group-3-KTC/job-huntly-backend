@@ -1,5 +1,6 @@
-package com.jobhuntly.backend.service.auth;
+package com.jobhuntly.backend.service.impl;
 
+import com.jobhuntly.backend.service.AuthCookieService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthCookieService {
+public class AuthCookieServiceImpl implements AuthCookieService {
 
     @Value("${security.jwt.cookie-name:access_token}")
     private String cookieName;
@@ -61,4 +62,6 @@ public class AuthCookieService {
         if (xfProto != null) return "https".equalsIgnoreCase(xfProto);
         return req.isSecure();
     }
+
+
 }
