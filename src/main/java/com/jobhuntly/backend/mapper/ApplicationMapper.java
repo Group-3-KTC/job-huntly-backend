@@ -23,6 +23,7 @@ public interface ApplicationMapper {
     @Mapping(target = "status",        source = "status")
     @Mapping(target = "cv",            source = "cv")
     @Mapping(target = "createdAt",     source = "createdAt")
+    @Mapping(target = "description", source = "description")
 
     @Mapping(target = "jobId",         source = "job.id")
     @Mapping(target = "title",         source = "job.title")

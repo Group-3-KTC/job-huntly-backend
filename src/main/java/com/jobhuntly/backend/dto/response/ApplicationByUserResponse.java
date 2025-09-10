@@ -10,6 +10,7 @@ public record ApplicationByUserResponse(
         Long applicationId,
         String status,
         String cv,
+        String description,
         LocalDateTime createdAt,
 
         Integer jobId,

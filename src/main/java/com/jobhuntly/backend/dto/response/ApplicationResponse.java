@@ -11,6 +11,7 @@ public record ApplicationResponse(
         String status,
         String phoneNumber,
         String candidateName,
+        String description,
         LocalDateTime createdAt,
         String cvDownload
 ) {
