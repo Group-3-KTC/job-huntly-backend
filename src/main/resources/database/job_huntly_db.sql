@@ -727,6 +727,59 @@ ALTER TABLE "applications"
   ADD COLUMN "attempt_count" INT NOT NULL DEFAULT 1 AFTER "status",
   ADD COLUMN "last_user_action_at" DATETIME NULL AFTER "attempt_count";
 
+
+CREATE TABLE IF NOT EXISTS `tickets` (
+     `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+     `subject` VARCHAR(500),
+    `from_email` VARCHAR(320) NOT NULL,
+    `customer_email` VARCHAR(254),
+    `thread_id` VARCHAR(512) NOT NULL,
+    `created_at` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `status` ENUM('OPEN', 'PENDING', 'CLOSED') NOT NULL DEFAULT 'OPEN',
+
+    UNIQUE KEY `uk_tickets_thread_id` (`thread_id`),
+    KEY `ix_tickets_created_at` (`created_at` DESC),
+    KEY `ix_tickets_status` (`status`),
+    KEY `ix_tickets_customer_email` (`customer_email`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS `ticket_messages` (
+     `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+     `ticket_id` BIGINT NOT NULL,
+     `message_id` VARCHAR(512) NOT NULL,
+    `in_reply_to` VARCHAR(512),
+    `from_email` VARCHAR(320) NOT NULL,
+    `sent_at` TIMESTAMP(6) NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `body_text` LONGTEXT,
+    `body_html` LONGTEXT,
+    `direction` ENUM('INBOUND','OUTBOUND') NOT NULL DEFAULT 'INBOUND',
+
+
+    CONSTRAINT `fk_ticket_messages_ticket`
+    FOREIGN KEY (`ticket_id`) REFERENCES `tickets`(`id`)
+    ON DELETE CASCADE,
+    UNIQUE KEY `uk_ticket_messages_message_id` (`message_id`),
+    KEY `ix_ticket_messages_ticket_id` (`ticket_id`),
+    KEY `ix_ticket_messages_sent_at` (`sent_at`),
+    KEY `ix_ticket_messages_in_reply_to` (`in_reply_to`),
+    KEY `ix_ticket_messages_from_email` (`from_email`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+ALTER TABLE users
+    ADD COLUMN auth_provider VARCHAR(20) NULL AFTER google_id,
+    ADD COLUMN password_set TINYINT(1) DEFAULT 0 AFTER auth_provider;
+
+ALTER TABLE users
+    ADD COLUMN password_token_hash VARCHAR(64) NULL AFTER activation_token,
+    ADD COLUMN password_token_purpose ENUM('SET','RESET') NULL AFTER password_token_hash,
+    ADD COLUMN password_token_expires_at DATETIME(3) NULL AFTER password_token_purpose;
+
+CREATE INDEX idx_users_pwdtoken_purpose_hash
+    ON users (password_token_purpose, password_token_hash);
+
+
 drop table follows;
  CREATE TABLE `follows` (
    `follow_id` INT NOT NULL AUTO_INCREMENT,

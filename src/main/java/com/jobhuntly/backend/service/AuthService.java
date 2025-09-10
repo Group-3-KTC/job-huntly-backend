@@ -24,4 +24,11 @@ public interface AuthService {
                                   HttpServletResponse res);
 
     MeResponse getUserMe(String email);
+    // A) Set password (Google)
+    void sendSetPasswordLink(String email);           // chỉ cho user GOOGLE
+    void setPassword(String token, String newPassword);
+
+    // B) Forgot/Reset password (LOCAL)
+    void sendResetPasswordLink(String email);         // chỉ cho user LOCAL
+    void resetPassword(String token, String newPassword);
 }

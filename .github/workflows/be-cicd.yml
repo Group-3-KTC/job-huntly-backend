@@ -115,7 +115,9 @@ jobs:
             VNPAY_TMN_CODE=${{secrets.VNPAY_TMN_CODE}}
             VNPAY_SECRET_KEY=${{secrets.VNPAY_SECRET_KEY}}
             
-            
+            # --- Gmail sender ---
+            GMAIL_IMAP_USERNAME=${{secrets.GMAIL_IMAP_USERNAME}}
+            GMAIL_IMAP_PASS=${{secrets.GMAIL_IMAP_PASS}}
             
             EOF
             chmod 600 ~/job-huntly-backend/.env
