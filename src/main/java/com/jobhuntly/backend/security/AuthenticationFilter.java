@@ -47,6 +47,9 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         String p = request.getServletPath();
         String base = backendPrefix.endsWith("/") ? backendPrefix.substring(0, backendPrefix.length() - 1) : backendPrefix;
 
+        // auth/me ko đc bỏ qua mà phải filter
+        if (p.startsWith(base + "/auth/me")) return false;
+
         // Bỏ qua các endpoint auth (login/register/refresh/activate...)
         if (p.startsWith(base + "/auth")) return true;
 
