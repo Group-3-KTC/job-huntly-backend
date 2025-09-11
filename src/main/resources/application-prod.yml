@@ -52,7 +52,8 @@ security:
     refresh-ttl: P7D
     issuer: jobhuntly
   cookie:
-    domain: .jobhuntly.io.vn
+#    domain: .jobhuntly.io.vn
+    domain: ""
     secure: false
     same-site: Lax
 
