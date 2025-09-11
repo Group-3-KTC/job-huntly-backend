@@ -87,7 +87,8 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
                 String authority = role != null && role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
-                AppPrincipal principal = SecurityUtils.getCurrentUser();
+                AppPrincipal principal = new AppPrincipal(userId, email);
+
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority(authority)));
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));

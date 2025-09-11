@@ -22,6 +22,7 @@ import com.jobhuntly.backend.repository.CandidateProfileRepository;
 import com.jobhuntly.backend.repository.RoleRepository;
 import com.jobhuntly.backend.repository.UserRepository;
 import com.jobhuntly.backend.security.cookie.AuthCookieService;
+import com.jobhuntly.backend.security.cookie.CookieProperties;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import com.jobhuntly.backend.service.AuthService;
 import com.jobhuntly.backend.service.OneTimeTokenService;
@@ -68,6 +69,8 @@ public class AuthServiceImpl implements AuthService {
 
     private final SessionService sessionService;
     private final OneTimeTokenService oneTimeTokenService;
+
+    private final CookieProperties cookieProps;
 
     @Value("${google.client-id}")
     private String GOOGLE_CLIENT_ID;
@@ -328,7 +331,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void refreshToken(HttpServletRequest req, HttpServletResponse res) {
-        String rawRefresh = authCookieService.readCookie(req, "RT").orElse(null);
+        String rawRefresh = authCookieService.readCookie(req, cookieProps.getRefreshName()).orElse(null);
         if (rawRefresh == null || rawRefresh.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token");
         }
