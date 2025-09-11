@@ -19,7 +19,6 @@ public class UserPrincipal implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         com.jobhuntly.backend.entity.User u = userRepo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        // map Role entity -> ROLE_*
         String roleName = "ROLE_" + u.getRole().getRoleName().toUpperCase();
         return org.springframework.security.core.userdetails.User
                 .withUsername(u.getEmail())

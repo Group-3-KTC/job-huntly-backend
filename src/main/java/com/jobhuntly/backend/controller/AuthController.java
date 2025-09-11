@@ -4,8 +4,9 @@ import com.jobhuntly.backend.dto.auth.request.*;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
 import com.jobhuntly.backend.dto.auth.response.MeResponse;
 import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
+import com.jobhuntly.backend.security.cookie.AuthCookieService;
 import com.jobhuntly.backend.service.AuthService;
-import com.jobhuntly.backend.service.impl.AuthCookieServiceImpl;
+import com.jobhuntly.backend.service.impl.SessionServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -22,7 +23,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${backend.prefix}/auth")
 public class AuthController {
     private final AuthService authService;
-    private final AuthCookieServiceImpl authCookieServiceImpl;
+    private final AuthCookieService authCookieService;
+    private final SessionServiceImpl sessionService;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -56,9 +58,18 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest req, HttpServletResponse res) {
-        authCookieServiceImpl.clearAuthCookie(req, res);
+        String rawRefresh = authCookieService.readCookie(req, "RT").orElse(null);
+        sessionService.revokeCurrent(rawRefresh);
+        authCookieService.clearAuthCookies(req, res);
         return ResponseEntity.noContent().build();
     }
+
+//    @PostMapping("/logout-all")
+//    public ResponseEntity<Void> logoutAll(HttpServletRequest req, HttpServletResponse res) {
+//        sessionService.revokeAll(currentUserId);
+//        authCookieService.clearAuthCookies(req, res);
+//        return ResponseEntity.noContent().build();
+//    }
 
     @GetMapping("/me")
     public ResponseEntity<MeResponse> me(@AuthenticationPrincipal(expression = "email") String email) {
@@ -72,7 +83,6 @@ public class AuthController {
         authService.refreshToken(req, res);
         return ResponseEntity.noContent().build();
     }
-
 
     @PostMapping("/password/set-link")
     public ResponseEntity<Void> sendSetPasswordLink(@Valid @RequestBody EmailOnlyRequest req) {

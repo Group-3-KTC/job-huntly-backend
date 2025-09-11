@@ -48,10 +48,13 @@ security:
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}
-    expiry-seconds: ${JWT_EXPIRATION:7200s}
-    issuer: "jobhuntly"
-    cookie-name: "access_token"
-    cookie-domain: "jobhuntly.io.vn"
+    access-ttl: PT15M
+    refresh-ttl: P7D
+    issuer: jobhuntly
+  cookie:
+    domain: .jobhuntly.io.vn
+    secure: true
+    same-site: Lax
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}

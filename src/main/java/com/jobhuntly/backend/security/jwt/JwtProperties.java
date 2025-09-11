@@ -11,8 +11,8 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "security.jwt")
 public class JwtProperties {
     private String secret;
-    private Duration expirySeconds;
-    private String issuer;
-    private String cookieName = "access_token";
+    private String issuer = "jobhuntly";
+    private Duration accessTtl = Duration.ofMinutes(15);
+    private Duration refreshTtl = Duration.ofDays(7);
 }
 

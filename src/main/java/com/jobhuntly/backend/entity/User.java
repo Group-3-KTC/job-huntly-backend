@@ -1,7 +1,6 @@
 package com.jobhuntly.backend.entity;
 
 import com.jobhuntly.backend.entity.enums.AuthProvider;
-import com.jobhuntly.backend.entity.enums.PasswordTokenPurpose;
 import com.jobhuntly.backend.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
@@ -17,12 +17,10 @@ import java.time.Instant;
         name = "users",
         indexes = {
                 @Index(name = "idx_users_email", columnList = "email"),
-                @Index(name = "idx_users_google_id", columnList = "google_id"),
-                @Index(name = "idx_users_pwdtoken_purpose_hash", columnList = "password_token_purpose, password_token_hash")
+                @Index(name = "idx_users_google_id", columnList = "google_id")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "ux_users_email", columnNames = {"email"})
-                // Lưu ý: MySQL cho phép nhiều NULL ở unique index; google_id đã unique = true ở @Column
         }
 )
 @Data
@@ -36,14 +34,12 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
-    // -------- Profile / Account --------
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
     @Column(name = "google_id", unique = true, length = 64)
     private String googleId;
 
-    // Cho phép null để account social không cần password
     @Column(name = "password_hash")
     private String passwordHash;
 
@@ -69,12 +65,6 @@ public class User {
     @Builder.Default
     private Boolean isActive = true;
 
-    @Column(name = "activation_token", length = 64)
-    private String activationToken;
-
-    @Column(name = "activation_token_expires_at")
-    private Instant activationTokenExpiresAt;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider", length = 20)
     private AuthProvider authProvider; // LOCAL | GOOGLE
@@ -82,16 +72,6 @@ public class User {
     @Column(name = "password_set", nullable = false)
     @Builder.Default
     private Boolean passwordSet = false;
-
-    @Column(name = "password_token_hash", length = 64)
-    private String passwordTokenHash;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "password_token_purpose", length = 16)
-    private PasswordTokenPurpose passwordTokenPurpose; // SET | RESET
-
-    @Column(name = "password_token_expires_at")
-    private Instant passwordTokenExpiresAt;
 
     @Column(name = "sms_notification_active", nullable = false)
     @Builder.Default
@@ -104,6 +84,16 @@ public class User {
     @CreationTimestamp
     @Column(name = "create_at", updatable = false)
     private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+
+    @Column(name = "password_changed_at")
+    private Instant passwordChangedAt;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private Company company;

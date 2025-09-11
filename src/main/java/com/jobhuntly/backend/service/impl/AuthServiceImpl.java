@@ -5,6 +5,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.util.Utils;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
+import com.jobhuntly.backend.dto.auth.RefreshResult;
+import com.jobhuntly.backend.dto.auth.StartSessionResult;
 import com.jobhuntly.backend.dto.auth.request.GoogleLoginRequest;
 import com.jobhuntly.backend.dto.auth.request.LoginRequest;
 import com.jobhuntly.backend.dto.auth.request.RegisterRequest;
@@ -14,21 +16,19 @@ import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
 import com.jobhuntly.backend.entity.CandidateProfile;
 import com.jobhuntly.backend.entity.Role;
 import com.jobhuntly.backend.entity.User;
-import com.jobhuntly.backend.entity.enums.PasswordTokenPurpose;
+import com.jobhuntly.backend.entity.enums.OneTimeTokenPurpose;
 import com.jobhuntly.backend.entity.enums.Status;
 import com.jobhuntly.backend.repository.CandidateProfileRepository;
 import com.jobhuntly.backend.repository.RoleRepository;
 import com.jobhuntly.backend.repository.UserRepository;
+import com.jobhuntly.backend.security.cookie.AuthCookieService;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import com.jobhuntly.backend.service.AuthService;
-import com.jobhuntly.backend.service.PasswordTokenService;
+import com.jobhuntly.backend.service.OneTimeTokenService;
+import com.jobhuntly.backend.service.SessionService;
 import com.jobhuntly.backend.service.email.EmailSender;
 import com.jobhuntly.backend.service.email.EmailValidator;
 import com.jobhuntly.backend.service.email.MailTemplateService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -48,27 +48,27 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.UUID;
-
-import static com.jobhuntly.backend.util.TokenUtil.newUrlSafeToken;
-import static com.jobhuntly.backend.util.TokenUtil.sha256Hex;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
     private final UserRepository userRepository;
     private final EmailValidator emailValidator;
     private final EmailSender emailSender;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final AuthenticationManager authManager;
-    private final UserRepository userRepo;
     private final JwtUtil jwtUtil;
     private final CandidateProfileRepository candidateProfileRepo;
-    private final AuthCookieServiceImpl authCookieServiceImpl;
+    private final AuthCookieService authCookieService;
+
     private final SpringTemplateEngine templateEngine;
-    private final PasswordTokenService passwordTokenService;
     private final MailTemplateService mailTemplateService;
+
+    private final SessionService sessionService;
+    private final OneTimeTokenService oneTimeTokenService;
+
     @Value("${google.client-id}")
     private String GOOGLE_CLIENT_ID;
     @Value("${backend.host}")
@@ -92,14 +92,12 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalStateException("Invalid email address.");
         }
 
-        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
-        if (existingUser.isPresent()) {
+        userRepository.findByEmail(request.getEmail()).ifPresent(u -> {
             throw new IllegalStateException("Email is already in use. Please use a different one.");
-        }
+        });
+
         Role role = roleRepository.findByRoleName(request.getRole().toUpperCase())
                 .orElseThrow(() -> new RuntimeException("Role not found"));
-
-        String token = UUID.randomUUID().toString();
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -107,11 +105,9 @@ public class AuthServiceImpl implements AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .role(role)
+                .status(Status.INACTIVE)
                 .isActive(false)
-                .activationToken(token)
                 .build();
-
-        user.setStatus(Status.INACTIVE);
 
         userRepository.save(user);
 
@@ -127,26 +123,10 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing token");
         }
 
-        String hash = sha256Hex(tokenRaw);
-
-        User user = userRepository.findByActivationToken(hash)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalid or expired"));
-
-        Instant now = Instant.now();
-        Instant exp = user.getActivationTokenExpiresAt();
-        if (exp == null || !exp.isAfter(now)) {
-            user.setActivationToken(null);
-            user.setActivationTokenExpiresAt(null);
-            userRepository.save(user);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalid or expired");
-        }
-
-        user.setActivationToken(null);
-        user.setActivationTokenExpiresAt(null);
+        User user = oneTimeTokenService.verifyAndConsumeOrThrow(tokenRaw, OneTimeTokenPurpose.ACTIVATION);
 
         user.setStatus(Status.ACTIVE);
         user.setIsActive(true);
-
         userRepository.save(user);
 
         return ResponseEntity.status(HttpStatus.OK)
@@ -159,12 +139,8 @@ public class AuthServiceImpl implements AuthService {
         userRepository.findByEmail(email).ifPresent(user -> {
             if (Boolean.TRUE.equals(user.getIsActive())) return;
 
-            if (!resendCooldown.isZero() && user.getActivationTokenExpiresAt() != null) {
-                Instant lastIssuedAt = user.getActivationTokenExpiresAt().minus(activationTtl);
-
-                if (Instant.now().isBefore(lastIssuedAt.plus(resendCooldown))) {
-                    return;
-                }
+            if (!oneTimeTokenService.canResend(user, OneTimeTokenPurpose.ACTIVATION, resendCooldown)) {
+                return;
             }
 
             issueAndEmailActivationToken(user);
@@ -173,10 +149,9 @@ public class AuthServiceImpl implements AuthService {
         return ResponseEntity.ok().build();
     }
 
-
     @Override
     public LoginResponse login(LoginRequest request, HttpServletRequest req, HttpServletResponse res) {
-        User user = userRepo.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (user.getGoogleId() != null && (user.getPasswordHash() == null || user.getPasswordHash().isBlank())) {
@@ -189,29 +164,28 @@ public class AuthServiceImpl implements AuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-
         String actualRole = user.getRole().getRoleName().toUpperCase();
-        String requestedRole = Optional.ofNullable(request.getRole())
-                .map(String::toUpperCase)
-                .orElse(null);
-
+        String requestedRole = Optional.ofNullable(request.getRole()).map(String::toUpperCase).orElse(null);
         if (requestedRole != null && !requestedRole.equals(actualRole)) {
             throw new org.springframework.security.authentication.BadCredentialsException("Role không phù hợp");
         }
+
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
+
+        StartSessionResult ss = sessionService.startSession(user, req, deviceLabelFromUA(req));
+        authCookieService.setRefreshCookie(res, ss.refreshToken(), jwtUtil.getRefreshTtl());
+        String access = jwtUtil.issueAccessToken(user);
+        authCookieService.setAccessCookie(res, access, jwtUtil.getAccessTtl());
 
         String avatar = candidateProfileRepo.findByUser_Id(user.getId())
                 .map(CandidateProfile::getAvatar)
                 .orElse(null);
 
-        long accessTtlSeconds = Duration.ofDays(30).toSeconds();
-        String token = jwtUtil.generateToken(user.getEmail(), actualRole.toUpperCase(), user.getId());
-
-        authCookieServiceImpl.setAuthCookie(req, res, token, accessTtlSeconds);
-
         return LoginResponse.builder()
                 .email(user.getEmail())
                 .fullName(user.getFullName())
-                .role(actualRole.toUpperCase())
+                .role(actualRole)
                 .avatarUrl(avatar)
                 .build();
     }
@@ -220,10 +194,9 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse loginWithGoogle(GoogleLoginRequest request,
                                          HttpServletRequest req,
                                          HttpServletResponse res) {
+
         GoogleIdToken idToken = verifyGoogleIdToken(request.getIdToken(), GOOGLE_CLIENT_ID);
-        if (idToken == null) {
-            throw new RuntimeException("Invalid Google ID token");
-        }
+        if (idToken == null) throw new RuntimeException("Invalid Google ID token");
 
         GoogleIdToken.Payload payload = idToken.getPayload();
         String googleUserId = payload.getSubject();
@@ -232,29 +205,24 @@ public class AuthServiceImpl implements AuthService {
         String fullName = (String) payload.get("name");
         String avatarUrl = (String) payload.get("picture");
 
-
         if (email == null || !emailVerified) {
             throw new RuntimeException("Google email is missing or not verified");
         }
 
-        // find-or-create
-        Optional<User> byGoogle = userRepository.findByGoogleId(googleUserId);
-        User user = byGoogle.orElseGet(() -> userRepository.findByEmail(email).orElse(null));
+        User user = userRepository.findByGoogleId(googleUserId)
+                .orElseGet(() -> userRepository.findByEmail(email).orElse(null));
 
         if (user == null) {
-            user = new User();
-            user.setEmail(email);
-            user.setFullName(fullName);
-            user.setGoogleId(googleUserId);
-            user.setStatus(Status.ACTIVE);
-            user.setIsActive(true);
-            user.setActivationToken(null);
-            user.setPasswordHash(null);
-
             Role role = roleRepository.findByRoleName("CANDIDATE")
                     .orElseThrow(() -> new RuntimeException("Default role not found"));
-            user.setRole(role);
-            
+            user = User.builder()
+                    .email(email)
+                    .fullName(fullName)
+                    .googleId(googleUserId)
+                    .status(Status.ACTIVE)
+                    .isActive(true)
+                    .role(role)
+                    .build();
             user = userRepository.save(user);
 
             CandidateProfile profile = new CandidateProfile();
@@ -268,27 +236,20 @@ public class AuthServiceImpl implements AuthService {
             userRepository.save(user);
         }
 
+        user.setLastLoginAt(Instant.now());
+        userRepository.save(user);
+
+        StartSessionResult ss = sessionService.startSession(user, req, deviceLabelFromUA(req));
+        authCookieService.setRefreshCookie(res, ss.refreshToken(), jwtUtil.getRefreshTtl());
+        String access = jwtUtil.issueAccessToken(user);
+        authCookieService.setAccessCookie(res, access, jwtUtil.getAccessTtl());
+
         String roleName = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "CANDIDATE";
-
-        long accessTtlSeconds = jwtUtil.getExpirationSeconds() > 0
-                ? jwtUtil.getExpirationSeconds()
-                : java.time.Duration.ofDays(30).toSeconds();
-
-        String token = jwtUtil.generateToken(user.getEmail(), roleName, user.getId());
-
-        authCookieServiceImpl.setAuthCookie(req, res, token, accessTtlSeconds);
-
         String avatar = candidateProfileRepo.findByUser_Id(user.getId())
                 .map(CandidateProfile::getAvatar)
                 .orElse(null);
 
-        return new LoginResponse(
-                user.getEmail(),
-                user.getFullName(),
-                roleName,
-                avatar
-
-        );
+        return new LoginResponse(user.getEmail(), user.getFullName(), roleName, avatar);
     }
 
     @Override
@@ -306,20 +267,19 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+
     @Override
     public void sendSetPasswordLink(String email) {
-        User u = userRepo.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.OK)); // tránh lộ email
+        User u = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.OK));
 
-        // Chỉ cho phép nếu là “Google account chưa có pass”
+        // Chỉ cho phép nếu là Google account CHƯA có pass
         if (u.getGoogleId() == null || (u.getPasswordHash() != null && !u.getPasswordHash().isBlank())) {
-            // Không phải case đặt lần đầu
-            return; // trả 204/200 để tránh lộ logic
+            return;
         }
 
-        String raw = passwordTokenService.issuePasswordToken(u, PasswordTokenPurpose.SET, activationTtl);
-
-        String link = FRONTEND_HOST + "/auth" + "/set-password?token=" + raw;
+        String raw = oneTimeTokenService.issue(u, OneTimeTokenPurpose.SET_PASSWORD, activationTtl);
+        String link = FRONTEND_HOST + "/auth/set-password?token=" + raw;
         String html = mailTemplateService.renderSetPasswordEmail(link, ttlText(activationTtl));
         emailSender.send(u.getEmail(), "[JobHuntly] Set your password", html);
     }
@@ -327,35 +287,30 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void setPassword(String token, String newPassword) {
-        User u = passwordTokenService.verifyPasswordTokenOrThrow(token, PasswordTokenPurpose.SET);
+        User u = oneTimeTokenService.verifyAndConsumeOrThrow(token, OneTimeTokenPurpose.SET_PASSWORD);
 
-        // An toàn: đảm bảo là tài khoản Google
         if (u.getGoogleId() == null) {
-            passwordTokenService.clearPasswordToken(u);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a Google account");
         }
 
         u.setPasswordHash(passwordEncoder.encode(newPassword));
-        u.setPasswordSet(true); // bạn đã có cột này
-        userRepo.save(u);
-
-        passwordTokenService.clearPasswordToken(u);
+        u.setPasswordSet(true);
+        u.setPasswordChangedAt(Instant.now());
+        userRepository.save(u);
     }
 
     @Override
     public void sendResetPasswordLink(String email) {
-        User u = userRepo.findByEmail(email)
+        User u = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.OK));
 
-        // Chỉ gửi nếu user đã có password (LOCAL hoặc Google đã đặt pass)
+        // Chỉ gửi nếu user đã có password (LOCAL hoặc Google đã set)
         if (u.getPasswordHash() == null || u.getPasswordHash().isBlank()) {
-            // Gợi ý FE hiển thị “Đặt mật khẩu lần đầu” thay vì reset
             return;
         }
 
-        String raw = passwordTokenService.issuePasswordToken(u, PasswordTokenPurpose.RESET, activationTtl);
-
-        String link = FRONTEND_HOST + "/auth" + "/reset-password?token=" + raw;
+        String raw = oneTimeTokenService.issue(u, OneTimeTokenPurpose.RESET_PASSWORD, activationTtl);
+        String link = FRONTEND_HOST + "/auth/reset-password?token=" + raw;
         String html = mailTemplateService.renderResetPasswordEmail(link, ttlText(activationTtl));
         emailSender.send(u.getEmail(), "[JobHuntly] Reset your password", html);
     }
@@ -363,65 +318,36 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void resetPassword(String token, String newPassword) {
-        User u = passwordTokenService.verifyPasswordTokenOrThrow(token, PasswordTokenPurpose.RESET);
+        User u = oneTimeTokenService.verifyAndConsumeOrThrow(token, OneTimeTokenPurpose.RESET_PASSWORD);
 
-        // Cho cả LOCAL và Google (đã set pass)
         u.setPasswordHash(passwordEncoder.encode(newPassword));
-        userRepo.save(u);
-
-        passwordTokenService.clearPasswordToken(u);
+        u.setPasswordSet(true);
+        u.setPasswordChangedAt(Instant.now());
+        userRepository.save(u);
     }
 
     @Override
     public void refreshToken(HttpServletRequest req, HttpServletResponse res) {
-        String refresh = readCookie(req, "refresh_token");
-        if (refresh == null || refresh.isBlank()) {
+        String rawRefresh = authCookieService.readCookie(req, "RT").orElse(null);
+        if (rawRefresh == null || rawRefresh.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing refresh token");
         }
 
-        Claims c;
-        try {
-            c = jwtUtil.parseAndValidate(refresh);
-        } catch (ExpiredJwtException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh expired");
-        } catch (JwtException e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh");
-        }
+        RefreshResult rr = sessionService.rotate(rawRefresh, req);
 
-        if (!jwtUtil.isRefresh(c)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong token type");
-        }
+        authCookieService.setRefreshCookie(res, rr.newRefreshToken(), jwtUtil.getRefreshTtl());
 
-        Long userId = Long.valueOf(c.getSubject());
-        Integer version = (Integer) c.get("v");
-
-        User u = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
-
-        if (!version.equals(u.getRefreshTokenVersion())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh revoked");
-        }
-
-        // 1) Cấp access token mới
-        String newAccess = jwtUtil.issueAccessToken(u);
-        authCookieService.setAccessCookie(res, newAccess, jwtUtil.getAccessTtl());
-
-        // 2) (Tuỳ chọn) Sliding refresh: cấp refresh mới để gia hạn phiên
-        // Lưu ý: không có bảng phiên => không chống được replay refresh cũ
-        String newRefresh = jwtUtil.issueRefreshToken(u);
-        authCookieService.setRefreshCookie(res, newRefresh, jwtUtil.getRefreshTtl());
+        String access = jwtUtil.issueAccessToken(rr.user());
+        authCookieService.setAccessCookie(res, access, jwtUtil.getAccessTtl());
     }
-
 
     private GoogleIdToken verifyGoogleIdToken(String idTokenString, String clientId) {
         try {
             HttpTransport transport = Utils.getDefaultTransport();
             JsonFactory jsonFactory = Utils.getDefaultJsonFactory();
-
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
                     .setAudience(Collections.singletonList(clientId))
                     .build();
-
             return verifier.verify(idTokenString);
         } catch (Exception ex) {
             return null;
@@ -430,18 +356,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Transactional
     protected void issueAndEmailActivationToken(User user) {
-        String raw = newUrlSafeToken(32);
-        String hash = sha256Hex(raw);
+        String raw = oneTimeTokenService.issue(user, OneTimeTokenPurpose.ACTIVATION, activationTtl);
 
-        user.setActivationToken(hash);
-        user.setActivationTokenExpiresAt(Instant.now().plus(activationTtl));
-        userRepository.save(user);
+        String activationLink = FRONTEND_HOST + "/auth/activate?token=" + raw;
 
         String ttlText = ttlText(activationTtl);
-
-        String activationLink = FRONTEND_HOST + "/auth" + "/activate?token=" + raw;
-
-
         Context context = new Context();
         context.setVariable("activationLink", activationLink);
         context.setVariable("ttlText", ttlText);
@@ -451,12 +370,7 @@ public class AuthServiceImpl implements AuthService {
         context.setVariable("logoUrl", "https://res.cloudinary.com/dfbqhd5ht/image/upload/v1757058535/logo-title-white_yjzvvr.png");
 
         String htmlContent = templateEngine.process("activation-email", context);
-
-        emailSender.send(
-                user.getEmail(),
-                "[JobHuntly] Activate your account",
-                htmlContent
-        );
+        emailSender.send(user.getEmail(), "[JobHuntly] Activate your account", htmlContent);
     }
 
     private static String ttlText(Duration ttl) {
@@ -464,11 +378,21 @@ public class AuthServiceImpl implements AuthService {
         return m < 60 ? (m + " minutes") : (ttl.toHours() + " hours");
     }
 
-    private String readCookie(HttpServletRequest req, String name) {
-        if (req.getCookies() == null) return null;
-        for (Cookie c : req.getCookies()) {
-            if (name.equals(c.getName())) return c.getValue();
-        }
-        return null;
+    private String deviceLabelFromUA(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent == null) return "Unknown Device";
+
+        String os = userAgent.contains("Windows") ? "Windows" :
+                userAgent.contains("Mac") ? "Mac" :
+                        userAgent.contains("X11") ? "Unix" :
+                                userAgent.contains("Android") ? "Android" :
+                                        userAgent.contains("iPhone") ? "iPhone" : "Unknown OS";
+
+        String browser = (userAgent.contains("Chrome")) ? "Chrome" :
+                (userAgent.contains("Firefox")) ? "Firefox" :
+                        (userAgent.contains("Safari") && !userAgent.contains("Chrome")) ? "Safari" :
+                                (userAgent.contains("Edge")) ? "Edge" : "Unknown Browser";
+
+        return browser + " - " + os;
     }
 }
