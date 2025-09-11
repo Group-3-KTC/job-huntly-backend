@@ -55,8 +55,8 @@ security:
     issuer: jobhuntly
   cookie:
     domain: .jobhuntly.io.vn
-    secure: true
-    same-site: None
+    secure: false
+    same-site: Lax
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}
