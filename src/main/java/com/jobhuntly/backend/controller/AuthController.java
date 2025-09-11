@@ -6,6 +6,7 @@ import com.jobhuntly.backend.dto.auth.response.LoginResponse;
 import com.jobhuntly.backend.dto.auth.response.MeResponse;
 import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
 import com.jobhuntly.backend.security.cookie.AuthCookieService;
+import com.jobhuntly.backend.security.cookie.CookieProperties;
 import com.jobhuntly.backend.service.AuthService;
 import com.jobhuntly.backend.service.impl.SessionServiceImpl;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,7 @@ public class AuthController {
     private final AuthService authService;
     private final AuthCookieService authCookieService;
     private final SessionServiceImpl sessionService;
+    private final CookieProperties cookieProps;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -59,7 +61,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest req, HttpServletResponse res) {
-        String rawRefresh = authCookieService.readCookie(req, "RT").orElse(null);
+        String rawRefresh = authCookieService.readCookie(req, cookieProps.getRefreshName()).orElse(null);
         sessionService.revokeCurrent(rawRefresh);
         authCookieService.clearAuthCookies(req, res);
         return ResponseEntity.noContent().build();

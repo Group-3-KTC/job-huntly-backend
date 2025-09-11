@@ -52,6 +52,8 @@ security:
     refresh-ttl: P7D
     issuer: jobhuntly
   cookie:
+    access-name: AT
+    refresh-name: RT
     domain: .jobhuntly.io.vn
     secure: false
     same-site: Lax
