@@ -1,6 +1,7 @@
 package com.jobhuntly.backend.controller;
 
 import com.jobhuntly.backend.dto.request.ApplicationRequest;
+import com.jobhuntly.backend.dto.request.ApplicationStatusUpdateRequest;
 import com.jobhuntly.backend.dto.response.ApplicationByUserResponse;
 import com.jobhuntly.backend.dto.response.ApplicationResponse;
 import com.jobhuntly.backend.dto.response.ApplyStatusResponse;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -81,6 +83,13 @@ public class ApplicationController {
         Long userId = SecurityUtils.getCurrentUserId();
         boolean applied = applicationService.hasApplied(userId, jobId);
         return new ApplyStatusResponse(applied);
+    }
+
+    @PatchMapping(value = "/status", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('RECRUITER','ADMIN')")
+    public ApplicationResponse updateStatusByStaff(@Valid @RequestBody ApplicationStatusUpdateRequest req) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return applicationService.updateStatusByStaff(userId, req.getJobId(), req.getStatus());
     }
 
 }
