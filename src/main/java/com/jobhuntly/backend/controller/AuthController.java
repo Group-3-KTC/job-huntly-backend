@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.controller;
 
+import com.jobhuntly.backend.dto.auth.AppPrincipal;
 import com.jobhuntly.backend.dto.auth.request.*;
 import com.jobhuntly.backend.dto.auth.response.LoginResponse;
 import com.jobhuntly.backend.dto.auth.response.MeResponse;
@@ -72,11 +73,12 @@ public class AuthController {
 //    }
 
     @GetMapping("/me")
-    public ResponseEntity<MeResponse> me(@AuthenticationPrincipal(expression = "email") String email) {
-        if (email == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        MeResponse dto = authService.getUserMe(email);
+    public ResponseEntity<MeResponse> me(@AuthenticationPrincipal AppPrincipal principal) {
+        if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        MeResponse dto = authService.getUserMe(principal.email());
         return ResponseEntity.ok(dto);
     }
+
 
     @PostMapping("/refresh")
     public ResponseEntity<Void> refresh(HttpServletRequest req, HttpServletResponse res) {
