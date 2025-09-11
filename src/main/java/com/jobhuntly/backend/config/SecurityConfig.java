@@ -2,9 +2,9 @@ package com.jobhuntly.backend.config;
 
 import com.jobhuntly.backend.security.AuthenticationFilter;
 import com.jobhuntly.backend.security.WebEndpoints;
+import com.jobhuntly.backend.security.cookie.CookieProperties;
 import com.jobhuntly.backend.security.handlers.RestAccessDeniedHandler;
 import com.jobhuntly.backend.security.handlers.RestAuthenticationEntryPoint;
-import com.jobhuntly.backend.security.jwt.JwtProperties;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -49,8 +49,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationFilter authenticationFilter(JwtUtil jwtUtil, JwtProperties jwtProps) {
-        return new AuthenticationFilter(jwtUtil, jwtProps);
+    public AuthenticationFilter authenticationFilter(JwtUtil jwtUtil, CookieProperties cookieProperties) {
+        return new AuthenticationFilter(jwtUtil, cookieProperties);
     }
 
     @Bean

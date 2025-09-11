@@ -19,8 +19,6 @@ public interface UserMapper {
     @Mapping(target = "role", source = "roleId", qualifiedByName = "roleIdToRole")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "passwordHash", source = "password")
-    @Mapping(target = "activationToken", ignore = true)
-    @Mapping(target = "activationTokenExpiresAt", ignore = true)
     @Mapping(target = "company", ignore = true)
     User toEntity(UserRequest userRequest);
     

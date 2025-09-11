@@ -776,6 +776,9 @@ ALTER TABLE users
     ADD COLUMN password_token_purpose ENUM('SET','RESET') NULL AFTER password_token_hash,
     ADD COLUMN password_token_expires_at DATETIME(3) NULL AFTER password_token_purpose;
 
+ALTER TABLE users
+    ADD COLUMN refresh_token_version INT NOT NULL DEFAULT 0 AFTER password_set;
+
 CREATE INDEX idx_users_pwdtoken_purpose_hash
     ON users (password_token_purpose, password_token_hash);
 
@@ -792,3 +795,68 @@ drop table follows;
    CONSTRAINT `fk_follows_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
    CONSTRAINT `fk_follows_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`company_id`) ON DELETE RESTRICT ON UPDATE CASCADE
  );
+
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+  session_id              int PRIMARY KEY AUTO_INCREMENT,
+  user_id                 int NOT NULL,
+  session_family_id       CHAR(36) NOT NULL,
+  parent_session_id       int NULL,
+  replaced_by_session_id  int NULL,
+  refresh_token_hash      CHAR(64) NOT NULL,
+  refresh_expires_at      DATETIME(3) NOT NULL,
+  created_at              DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  last_seen_at            DATETIME(3) NULL,
+  revoked_at              DATETIME(3) NULL,
+  reuse_detected_at       DATETIME(3) NULL,
+  ip_address              VARCHAR(45) NULL,
+  user_agent              VARCHAR(255) NULL,
+  device_label            VARCHAR(100) NULL,
+
+  CONSTRAINT fk_sessions_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_sessions_parent
+    FOREIGN KEY (parent_session_id) REFERENCES user_sessions(session_id)
+    ON DELETE SET NULL,
+  CONSTRAINT fk_sessions_replaced_by
+    FOREIGN KEY (replaced_by_session_id) REFERENCES user_sessions(session_id)
+    ON DELETE SET NULL,
+
+  UNIQUE KEY ux_refresh_hash (refresh_token_hash),
+  KEY idx_user (user_id),
+  KEY idx_family (session_family_id),
+  KEY idx_expires (refresh_expires_at),
+  KEY idx_revoked (revoked_at)
+);
+
+CREATE TABLE IF NOT EXISTS user_one_time_tokens (
+  token_id      int PRIMARY KEY AUTO_INCREMENT,
+  user_id       int NOT NULL,
+  purpose       ENUM('ACTIVATION','SET_PASSWORD','RESET_PASSWORD','EMAIL_CHANGE') NOT NULL,
+  token_hash    CHAR(64) NOT NULL,
+  expires_at    DATETIME(3) NOT NULL,
+  consumed_at   DATETIME(3) NULL,
+  created_at    DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+  CONSTRAINT fk_ott_user
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE CASCADE,
+
+  UNIQUE KEY ux_purpose_hash (purpose, token_hash),
+  KEY idx_user_purpose (user_id, purpose),
+  KEY idx_expires (expires_at)
+);
+
+ALTER TABLE users
+DROP COLUMN activation_token,
+DROP COLUMN password_token_hash,
+DROP COLUMN password_token_purpose,
+DROP COLUMN password_token_expires_at,
+DROP COLUMN refresh_token_version,
+DROP COLUMN activation_token_expires_at;
+
+ALTER TABLE users
+    ADD COLUMN updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  ADD COLUMN last_login_at DATETIME(3) NULL,
+  ADD COLUMN password_changed_at DATETIME(3) NULL;

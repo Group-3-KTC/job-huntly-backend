@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.security.jwt;
 
+import com.jobhuntly.backend.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -11,121 +12,97 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Objects;
 
 @Component
+@Getter
 public class JwtUtil {
 
+    public static final String CLAIM_TYP = "typ";
+    public static final String TYP_ACCESS = "access";
+    public static final String TYP_REFRESH = "refresh";
+    public static final String CLAIM_ROLE = "role";
+    public static final String CLAIM_USERID = "userId";
+    public static final String CLAIM_VERSION = "v";
+
     private final SecretKey key;
-
-    @Getter
-    private final long expirationMillis;
-
-    @Getter
     private final String issuer;
+    private final Duration accessTtl;
+    private final Duration refreshTtl;
 
     public JwtUtil(JwtProperties props) {
-        // Validate cấu hình
-        String secretB64 = requireNonBlank(props.getSecret(), "Missing security.jwt.secret (JWT_SECRET_KEY)").trim();
-        Duration expiry  = Objects.requireNonNull(props.getExpirySeconds(), "Missing security.jwt.expiry-seconds");
-        this.issuer      = requireNonBlank(props.getIssuer(), "Missing security.jwt.issuer").trim();
-
-        // BẮT BUỘC giải mã Base64
-        byte[] keyBytes;
-        try {
-            keyBytes = Decoders.BASE64.decode(secretB64);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("JWT secret must be Base64 (cannot decode).", e);
-        }
-        if (keyBytes.length < 32) {
-            throw new IllegalStateException("JWT secret too short for HS256 (>= 32 bytes after Base64 decoding).");
-        }
-
-        this.key = Keys.hmacShaKeyFor(keyBytes);
-        this.expirationMillis = expiry.getSeconds() * 1000L;
+        this.key = buildKey(props.getSecret());
+        this.issuer = props.getIssuer();
+        this.accessTtl = props.getAccessTtl();
+        this.refreshTtl = props.getRefreshTtl();
     }
 
-    public String generateToken(String subject, String role, Long userId) {
+    private SecretKey buildKey(String secretBase64OrRaw) {
+        try {
+            byte[] bytes;
+            try {
+                bytes = Decoders.BASE64.decode(secretBase64OrRaw);
+            } catch (IllegalArgumentException e) {
+                bytes = secretBase64OrRaw.getBytes(StandardCharsets.UTF_8);
+            }
+            return Keys.hmacShaKeyFor(bytes);
+        } catch (Exception e) {
+            throw new IllegalStateException("Invalid JWT secret key", e);
+        }
+    }
+
+    public String issueAccessToken(User user) {
         Instant now = Instant.now();
         return Jwts.builder()
-                .setSubject(subject)
+                .setSubject(user.getEmail())
                 .setIssuer(issuer)
-                .claim("role", role)
-                .claim("userId", userId)
+                .claim(CLAIM_ROLE, user.getRole())
+                .claim(CLAIM_USERID, user.getId())
+                .claim(CLAIM_TYP, TYP_ACCESS)
                 .setIssuedAt(Date.from(now))
-                .setExpiration(Date.from(now.plusMillis(expirationMillis)))
+                .setExpiration(Date.from(now.plus(accessTtl)))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        return extractAllClaims(token).getSubject();
+    public String issueRefreshToken(Long userId, int version) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId))
+                .setIssuer(issuer)
+                .claim(CLAIM_VERSION, version)
+                .claim(CLAIM_TYP, TYP_REFRESH)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(Date.from(now.plus(refreshTtl)))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    public String extractRole(String token) {
-        return extractAllClaims(token).get("role", String.class);
-    }
-
-    public Date extractExpiration(String token) {
-        return extractAllClaims(token).getExpiration();
-    }
-
-    public boolean isTokenValid(String token, String expectedUsername) {
-        try {
-            Claims claims = extractAllClaims(token);
-            String subject = claims.getSubject();
-            if (subject == null || (expectedUsername != null && !subject.equals(expectedUsername))) {
-                return false;
-            }
-            return !isTokenExpired(claims.getExpiration());
-        } catch (JwtException ex) {
-            // gồm ExpiredJwtException, MalformedJwtException, SignatureException...
-            return false;
-        }
-    }
-
-    public long getExpirationSeconds() {
-        return expirationMillis / 1000L;
-    }
-
-
-    private Claims extractAllClaims(String token) throws JwtException {
+    public Claims parseAndValidate(String token) throws JwtException {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .requireIssuer(issuer)
+                .setSigningKey((Key) key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
 
-    private boolean isTokenExpired(Date expiration) {
-        return expiration == null || expiration.before(new Date());
+    public boolean isAccess(Claims c)  { return TYP_ACCESS.equals(c.get(CLAIM_TYP)); }
+    public boolean isRefresh(Claims c) { return TYP_REFRESH.equals(c.get(CLAIM_TYP)); }
+
+    public Long userIdFromClaims(Claims c) {
+        Object v = c.get(CLAIM_USERID);
+        if (v == null) return null;
+        if (v instanceof Number) return ((Number) v).longValue();
+        return Long.valueOf(String.valueOf(v));
     }
 
-    private static String requireNonBlank(String v, String message) {
-        if (v == null || v.trim().isEmpty()) {
-            throw new IllegalStateException(message);
-        }
-        return v.trim();
-    }
-
-    public Long extractUserId(String token) {
-        Claims claims = extractAllClaims(token);
-        Object userIdClaim = claims.get("userId");
-        if (userIdClaim == null) {
-            return null;
-        }
-
-        // Handle different number types
-        if (userIdClaim instanceof Number) {
-            return ((Number) userIdClaim).longValue();
-        } else if (userIdClaim instanceof String) {
-            return Long.parseLong((String) userIdClaim);
-        }
-
-        throw new IllegalArgumentException("Invalid userId claim type: " + userIdClaim.getClass());
+    public Integer versionFromClaims(Claims c) {
+        Object v = c.get(CLAIM_VERSION);
+        if (v == null) return null;
+        if (v instanceof Number) return ((Number) v).intValue();
+        return Integer.valueOf(String.valueOf(v));
     }
 }
