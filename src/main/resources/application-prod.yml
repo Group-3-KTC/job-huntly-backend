@@ -53,7 +53,7 @@ security:
     issuer: jobhuntly
   cookie:
     domain: .jobhuntly.io.vn
-    secure: true
+    secure: false
     same-site: Lax
 
 google:
