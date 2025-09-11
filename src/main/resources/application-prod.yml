@@ -55,8 +55,8 @@ security:
     access-name: AT
     refresh-name: RT
     domain: .jobhuntly.io.vn
-    secure: false
-    same-site: Lax
+    secure: true
+    same-site: None
 
 google:
   client-id: ${GOOGLE_CLIENT_ID}
