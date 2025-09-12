@@ -12,8 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ApplicationStatusUpdateRequest {
     @NotNull
-    private Long jobId;
-
+    private Long applicationId;
     @NotNull
     private String status;
 }

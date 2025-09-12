@@ -86,10 +86,10 @@ public class ApplicationController {
     }
 
     @PatchMapping(value = "/status", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('RECRUITER','ADMIN')")
+//    @PreAuthorize("hasAnyRole('RECRUITER','ADMIN')")
     public ApplicationResponse updateStatusByStaff(@Valid @RequestBody ApplicationStatusUpdateRequest req) {
         Long userId = SecurityUtils.getCurrentUserId();
-        return applicationService.updateStatusByStaff(userId, req.getJobId(), req.getStatus());
+        return applicationService.updateStatusByStaff(userId, req.getApplicationId(), req.getStatus());
     }
 
 }

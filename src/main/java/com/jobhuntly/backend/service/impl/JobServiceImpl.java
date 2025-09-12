@@ -38,6 +38,7 @@ public class JobServiceImpl implements JobService {
     private final CategoryRepository categoryRepository;
     private final LevelRepository levelRepository;
     private final WorkTypeRepository workTypeRepository;
+    private final NotificationService notificationService;
 
 
     @Override
@@ -109,6 +110,16 @@ public class JobServiceImpl implements JobService {
         enforceSalaryPolicy(job, request);
 
         Job saved = jobRepository.save(job);
+        try {
+            notificationService.notifyNewJobToFollowers(
+                    companyRef.getId(),
+                    saved.getId(),
+                    companyRef.getCompanyName(),
+                    saved.getTitle()
+            );
+        } catch (Exception ignore) {
+            // không làm hỏng flow tạo job nếu gửi noti lỗi
+        }
         return jobMapper.toResponse(saved);
     }
 

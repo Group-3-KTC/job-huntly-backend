@@ -32,4 +32,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query("select a from Application a where a.user.id = :userId and a.job.id = :jobId")
     Optional<Application> lockByUserAndJob(@Param("userId") Long userId, @Param("jobId") Long jobId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select a from Application a where a.id = :id")
+    Optional<Application> lockById(@Param("id") Long id);
+
 }
