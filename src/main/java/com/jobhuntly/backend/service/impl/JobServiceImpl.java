@@ -43,7 +43,7 @@ public class JobServiceImpl implements JobService {
 
 
     @Override
-//    @CacheEvict(cacheNames = JOB_LIST_DEFAULT, allEntries = true)
+    @CacheEvict(cacheNames = JOB_LIST_DEFAULT, allEntries = true)
     public JobResponse create(JobRequest request) {
         validateDatesAndSalary(request);
         Long companyId = request.getCompanyId();
