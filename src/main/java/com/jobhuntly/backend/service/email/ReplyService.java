@@ -25,7 +25,6 @@ public class ReplyService {
     private final TicketMessageRepository msgRepo;
     private final EmailService emailService;
 
-    // Địa chỉ from hệ thống của bạn (nhớ đồng bộ với MailPollingService.SYSTTEM_EMAILS)
     private static final String SYSTEM_FROM = "contact.jobhuntly@gmail.com";
     private static final String SYSTEM_FROM_NAME = "JobHuntly Support";
 
@@ -34,7 +33,6 @@ public class ReplyService {
         Ticket ticket = ticketRepo.findById(ticketId)
                 .orElseThrow(() -> new IllegalArgumentException("Ticket not found"));
 
-        // To (ưu tiên req.to, fallback customerEmail)
         String to = null;
         if (!CollectionUtils.isEmpty(req.getTo())) {
             to = req.getTo().get(0);
@@ -43,7 +41,6 @@ public class ReplyService {
             to = ticket.getCustomerEmail();
         }
         if (!StringUtils.hasText(to)) {
-            // fallback lấy inbound gần nhất
             var lastInbound = msgRepo.findTopByTicket_IdAndDirectionOrderBySentAtDesc(ticket.getId(), MessageDirection.INBOUND);
             to = lastInbound.map(TicketMessage::getFromEmail).orElseThrow(() -> new IllegalStateException("No recipient for ticket"));
         }
@@ -53,13 +50,11 @@ public class ReplyService {
 
         String html = StringUtils.hasText(req.getBodyHtml()) ? req.getBodyHtml() : "<p></p>";
 
-        // Gửi mail
         String messageId = emailService.sendWithThreading(
                 to, subject, html, inReplyTo, null, SYSTEM_FROM, SYSTEM_FROM_NAME,
                 req.getCc(), null
         );
 
-        // Persist OUTBOUND ngay
         TicketMessage tm = new TicketMessage();
         tm.setTicket(ticket);
         tm.setMessageId(messageId);
@@ -68,7 +63,6 @@ public class ReplyService {
         tm.setSentAt(Instant.now());
         tm.setDirection(MessageDirection.OUTBOUND);
 
-        // bodyText -> extractNewContentPlain (fallback htmlToPlain)
         String bodyText = EmailParser.extractNewContentPlain(html, null);
         if (!StringUtils.hasText(bodyText)) {
             bodyText = EmailParser.htmlToPlain(html);

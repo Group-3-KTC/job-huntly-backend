@@ -57,8 +57,11 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing token");
         }
         String hash = sha256Hex(rawToken);
+        log.info("Hashed tokenRaw: {}", hash);
+        log.info("expectedPurpose: {}", expectedPurpose);
+
         OneTimeToken t = tokenRepo
-                .findByPurposeAndTokenHashAndConsumedAtIsNull(expectedPurpose, hash)
+                .findActiveWithUser(expectedPurpose, hash)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired link"));
 
         Instant now = Instant.now();
@@ -80,7 +83,7 @@ public class OneTimeTokenServiceImpl implements OneTimeTokenService {
         if (user == null || user.getId() == null) return true;
         if (cooldown == null || cooldown.isZero() || cooldown.isNegative()) return true;
 
-        return tokenRepo.findTopByUser_IdAndPurposeOrderByCreatedAtDesc(user.getId(), purpose)
+        return tokenRepo.findTopByUser_IdAndPurposeAndConsumedAtIsNullOrderByCreatedAtDesc(user.getId(), purpose)
                 .map(last -> Instant.now().isAfter(last.getCreatedAt().plus(cooldown)))
                 .orElse(true);
     }

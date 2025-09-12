@@ -121,6 +121,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<RegisterResponse> activateAccount(String tokenRaw) {
         if (tokenRaw == null || tokenRaw.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing token");
@@ -282,7 +283,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String raw = oneTimeTokenService.issue(u, OneTimeTokenPurpose.SET_PASSWORD, activationTtl);
-        String link = FRONTEND_HOST + "/auth/set-password?token=" + raw;
+        String link = FRONTEND_HOST + "/set-password?token=" + raw;
         String html = mailTemplateService.renderSetPasswordEmail(link, ttlText(activationTtl));
         emailSender.send(u.getEmail(), "[JobHuntly] Set your password", html);
     }
@@ -313,7 +314,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String raw = oneTimeTokenService.issue(u, OneTimeTokenPurpose.RESET_PASSWORD, activationTtl);
-        String link = FRONTEND_HOST + "/auth/reset-password?token=" + raw;
+        String link = FRONTEND_HOST + "/reset-password?token=" + raw;
         String html = mailTemplateService.renderResetPasswordEmail(link, ttlText(activationTtl));
         emailSender.send(u.getEmail(), "[JobHuntly] Reset your password", html);
     }
@@ -361,7 +362,7 @@ public class AuthServiceImpl implements AuthService {
     protected void issueAndEmailActivationToken(User user) {
         String raw = oneTimeTokenService.issue(user, OneTimeTokenPurpose.ACTIVATION, activationTtl);
 
-        String activationLink = FRONTEND_HOST + "/auth/activate?token=" + raw;
+        String activationLink = FRONTEND_HOST + "/activate?token=" + raw;
 
         String ttlText = ttlText(activationTtl);
         Context context = new Context();
