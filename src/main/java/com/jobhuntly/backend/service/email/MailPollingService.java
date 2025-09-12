@@ -33,7 +33,6 @@ public class MailPollingService {
     private final TicketRepository ticketRepository;
     private final TicketMessageRepository ticketMessageRepository;
 
-    // --- Cấu hình IMAP (đọc từ application.yml) ---
     @Value("${mail.imap.host}")
     private String host;
 
@@ -49,23 +48,18 @@ public class MailPollingService {
     @Value("${mail.imap.folder:INBOX}")
     private String folder;
 
-    /** Nếu true: dùng fetch PEEK (không đặt SEEN khi đọc). */
     @Value("${mail.imap.peek:true}")
     private boolean peek;
 
-    /** Sau khi xử lý có đặt cờ SEEN không */
     @Value("${mail.imap.mark-seen:true}")
     private boolean markSeen;
 
-    /** Nếu set, sau xử lý sẽ move mail sang folder này (ví dụ "Processed") */
     @Value("${mail.imap.move-to-folder:}")
     private String moveToFolder;
 
-    /** Số lượng message tối đa lấy mỗi lần (tránh quét quá nhiều) */
     @Value("${mail.imap.max-per-poll:100}")
     private int maxPerPoll;
 
-    /** Poll interval cấu hình ở @Scheduled fixedDelayString */
     @Value("${mail.imap.poll-interval-ms:30000}")
     private long pollIntervalMs;
 
@@ -73,12 +67,10 @@ public class MailPollingService {
     private String sentFolder;
 
 
-    /** Danh sách email của hệ thống (để phân loại OUTBOUND) */
     private static final Set<String> SYSTEM_EMAILS = Set.of(
             "contact.jobhuntly@gmail.com"
     );
 
-    // --- POLLER ---
     @Scheduled(fixedDelayString = "${mail.imap.poll-interval-ms:30000}")
     public void poll() {
         log.info("Starting IMAP poll");
@@ -113,8 +105,6 @@ public class MailPollingService {
                         inbox.fetch(messages, fp);
                     }
 
-
-                    // Xử lý từ cũ->mới để đảm bảo khi gặp reply thì thread trước đó có thể đã được tạo
                     Arrays.sort(messages, Comparator.comparing(m -> {
                         try {
                             return m.getSentDate();
@@ -135,7 +125,6 @@ public class MailPollingService {
                         }
                     }
 
-                    // Mark SEEN / Move
                     if (!processed.isEmpty()) {
                         if (markSeen) {
                             for (Message p : processed) {
@@ -159,22 +148,14 @@ public class MailPollingService {
         }
     }
 
-    // --- CORE ---
-
-    /**
-     * Xử lý 1 message: idempotent dựa trên Message-Id.
-     * @return true nếu xử lý thành công (để sau đó set seen/move).
-     */
     private boolean processOne(IMAPFolder inbox, Message m) throws Exception {
         String messageId = extractHeaderFirst(m, "Message-Id");
         if (!StringUtils.hasText(messageId)) {
-            // Email không có Message-Id (hiếm) -> bỏ qua để tránh duplicate
             log.warn("Skip message without Message-Id");
             return false;
         }
-        // Idempotent: nếu đã có rồi thì bỏ qua
         if (ticketMessageRepository.findByMessageId(messageId).isPresent()) {
-            return true; // đã xử lý trước đó
+            return true;
         }
 
         String inReplyTo = extractHeaderFirst(m, "In-Reply-To");
@@ -184,7 +165,6 @@ public class MailPollingService {
 
         MessageDirection direction = isSystemAddress(canonicalFrom) ? MessageDirection.OUTBOUND : MessageDirection.INBOUND;
 
-        // Tìm ticket theo In-Reply-To -> ticket_messages.message_id
         Ticket ticket = null;
         if (StringUtils.hasText(inReplyTo)) {
             Optional<TicketMessage> replied = ticketMessageRepository.findByMessageId(inReplyTo);
@@ -204,20 +184,16 @@ public class MailPollingService {
             }
         }
 
-
-        // Nếu chưa có ticket: thread mới
         if (ticket == null) {
             ticket = createNewTicketFrom(m, subject, canonicalFrom);
         }
 
-        // Parse body (ưu tiên HTML -> cắt quote; có thể dùng EmailParser)
         BodyContent bc = new BodyContent();
         collectBody(m, bc);
 
-        String strippedPlain = EmailParser.extractNewContentPlain(bc.html, bc.text); // bạn đã có util này
-        String strippedHtml  = bc.html;  // nếu bạn có hàm dạng HTML, dùng; nếu không, để bc.html
+        String strippedPlain = EmailParser.extractNewContentPlain(bc.html, bc.text);
+        String strippedHtml  = bc.html;
 
-        // Tạo TicketMessage
         TicketMessage tm = new TicketMessage();
         tm.setTicket(ticket);
         tm.setMessageId(messageId);
@@ -230,23 +206,19 @@ public class MailPollingService {
 
         ticketMessageRepository.save(tm);
 
-        // Nếu ticket chưa có customerEmail & đây là INBOUND -> set bổ sung
         if (direction == MessageDirection.INBOUND && ticket.getCustomerEmail() == null) {
             ticket.setCustomerEmail(canonicalFrom);
             ticketRepository.save(ticket);
         }
 
-        // cơ bản: ticket vẫn status OPEN (hoặc bạn có thể chuyển PENDING khi OUTBOUND, v.v.)
         return true;
     }
 
     private Ticket createNewTicketFrom(Message m, String subject, String canonicalFrom) throws Exception {
-        String threadId = extractHeaderFirst(m, "Message-Id"); // dùng Message-Id của mail mở thread làm thread_id
+        String threadId = extractHeaderFirst(m, "Message-Id");
         if (!StringUtils.hasText(threadId)) {
-            // fallback: tự sinh; nhưng KHÔNG nên vì dễ duplicate. Ở đây log và tiếp tục (không unique).
             threadId = UUID.randomUUID().toString();
         } else {
-            // Nếu đã có ticket cùng thread_id (edge-case) thì dùng lại
             Optional<Ticket> existed = ticketRepository.findByThreadId(threadId);
             if (existed.isPresent()) return existed.get();
         }
@@ -257,7 +229,6 @@ public class MailPollingService {
         t.setThreadId(threadId);
         t.setStatus(TicketStatus.OPEN);
 
-        // Nếu email mở thread là inbound (không thuộc hệ thống) -> set customerEmail
         if (!isSystemAddress(canonicalFrom)) {
             t.setCustomerEmail(canonicalFrom);
         }
@@ -278,7 +249,7 @@ public class MailPollingService {
             if (!target.isOpen()) target.open(Folder.READ_WRITE);
 
             fromFolder.copyMessages(messages.toArray(Message[]::new), target);
-            // Đánh dấu xóa ở folder nguồn
+
             for (Message m : messages) {
                 try { m.setFlag(Flags.Flag.DELETED, true); } catch (Exception ignored) {}
             }
@@ -289,8 +260,6 @@ public class MailPollingService {
             log.error("Move messages to {} failed", targetFolderName, e);
         }
     }
-
-    // --- BODY PARSER ---
 
     private static class BodyContent {
         String text = null;
@@ -309,7 +278,6 @@ public class MailPollingService {
         if (p.isMimeType("multipart/*")) {
             Object c = p.getContent();
             if (c instanceof Multipart mp) {
-                // Ưu tiên alternative -> lấy html/text tốt nhất
                 if (mp instanceof MimeMultipart mmp) {
                     String contentType = mmp.getContentType();
                     ContentType ct = new ContentType(contentType);
@@ -317,13 +285,12 @@ public class MailPollingService {
                         for (int i = mp.getCount() - 1; i >= 0; i--) {
                             BodyPart bp = mp.getBodyPart(i);
                             collectBody(bp, bc);
-                            if (bc.html != null) return; // đã có html là đủ
+                            if (bc.html != null) return;
                         }
                         return;
                     }
                 }
 
-                // Các multipart khác
                 for (int i = 0; i < mp.getCount(); i++) {
                     BodyPart bp = mp.getBodyPart(i);
                     collectBody(bp, bc);
@@ -339,7 +306,6 @@ public class MailPollingService {
             }
             return;
         }
-        // attachment các loại: bỏ qua ở bước body; nếu cần, bạn thêm luồng lưu file riêng.
     }
 
     private String getText(Part p) throws Exception {
@@ -357,8 +323,6 @@ public class MailPollingService {
         }
         return String.valueOf(c);
     }
-
-    // --- HELPERS ---
 
     private String extractFromAddress(Message m) {
         try {

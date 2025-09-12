@@ -56,7 +56,7 @@ security:
   cookie:
     access-name: AT
     refresh-name: RT
-    domain: .jobhuntly.io.vn
+#    domain: .jobhuntly.io.vn
     secure: true
     same-site: None
 
