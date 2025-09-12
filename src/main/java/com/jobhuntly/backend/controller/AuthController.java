@@ -36,6 +36,7 @@ public class AuthController {
 
     @GetMapping("/activate")
     public ResponseEntity<RegisterResponse> activate(@RequestParam("token") String token) {
+        token = token.trim();
         return authService.activateAccount(token);
     }
 
