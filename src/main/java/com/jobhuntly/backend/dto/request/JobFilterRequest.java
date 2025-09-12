@@ -38,4 +38,9 @@ public class JobFilterRequest {
     private LocalDate postedFrom;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate postedTo;
+
+    private String status;       // ví dụ: ACTIVE, INACTIVE, DRAFT
+
+    // true: chỉ lấy job còn hạn (expiredDate >= today)
+    private Boolean onlyActive;
 }

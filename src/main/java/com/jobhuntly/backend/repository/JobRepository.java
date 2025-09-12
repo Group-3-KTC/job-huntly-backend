@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
@@ -49,4 +50,10 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
 
     @EntityGraph(attributePaths = {"company", "skills"})
     List<Job> findByIdIn(List<Long> ids);
+
+    // --- Maintenance: set inactive cho job quá hạn ---
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query("update Job j set j.status = 'inactive' where j.expiredDate < CURRENT_DATE and lower(j.status) <> 'inactive'")
+    int markExpiredJobsInactive();
 }

@@ -2,6 +2,7 @@ package com.jobhuntly.backend.service.impl;
 
 import com.jobhuntly.backend.dto.request.JobFilterRequest;
 import com.jobhuntly.backend.dto.request.JobRequest;
+import com.jobhuntly.backend.dto.request.JobPatchRequest;
 import com.jobhuntly.backend.dto.response.JobResponse;
 import com.jobhuntly.backend.entity.*;
 import com.jobhuntly.backend.mapper.JobMapper;
@@ -42,7 +43,7 @@ public class JobServiceImpl implements JobService {
 
 
     @Override
-    @CacheEvict(cacheNames = JOB_LIST_DEFAULT, allEntries = true)
+//    @CacheEvict(cacheNames = JOB_LIST_DEFAULT, allEntries = true)
     public JobResponse create(JobRequest request) {
         validateDatesAndSalary(request);
         Long companyId = request.getCompanyId();
@@ -136,6 +137,89 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    public JobResponse patch(Long id, JobPatchRequest request) {
+        Job job = jobRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Job not found with id=" + id));
+
+        // scalar fields
+        if (request.getTitle() != null) job.setTitle(normalize(request.getTitle()));
+        if (request.getDescription() != null) job.setDescription(request.getDescription());
+        if (request.getRequirements() != null) job.setRequirements(request.getRequirements());
+        if (request.getBenefits() != null) job.setBenefits(request.getBenefits());
+        if (request.getLocation() != null) job.setLocation(request.getLocation());
+        if (request.getStatus() != null) job.setStatus(request.getStatus());
+        if (request.getDatePost() != null) job.setDatePost(request.getDatePost());
+        if (request.getExpiredDate() != null) job.setExpiredDate(request.getExpiredDate());
+
+        if (request.getSalaryType() != null) job.setSalaryType(request.getSalaryType());
+        if (request.getSalaryMin() != null) job.setSalaryMin(request.getSalaryMin());
+        if (request.getSalaryMax() != null) job.setSalaryMax(request.getSalaryMax());
+
+        // company change (optional)
+        if (request.getCompanyId() != null) {
+            Long cid = request.getCompanyId();
+            Company ref = companyRepository.findById(cid)
+                    .orElseThrow(() -> new IllegalArgumentException("Company not found with id=" + cid));
+            job.setCompany(ref);
+        }
+
+        // associations by names
+        if (request.getCategoryNames() != null) {
+            Set<Category> categories = loadExistingByNames(
+                    sanitizeAndDedupNames(request.getCategoryNames()),
+                    categoryRepository::findByNameIgnoreCase
+            );
+            job.setCategories(categories);
+        }
+
+        if (request.getSkillNames() != null) {
+            Set<Skill> skills = loadExistingByNames(
+                    sanitizeAndDedupNames(request.getSkillNames()),
+                    skillRepository::findByNameIgnoreCase
+            );
+            job.setSkills(skills);
+        }
+
+        if (request.getLevelNames() != null) {
+            Set<Level> levels = loadExistingByNames(
+                    sanitizeAndDedupNames(request.getLevelNames()),
+                    levelRepository::findByNameIgnoreCase
+            );
+            job.setLevels(levels);
+        }
+
+        if (request.getWorkTypeNames() != null) {
+            Set<WorkType> workTypes = loadExistingByNames(
+                    sanitizeAndDedupNames(request.getWorkTypeNames()),
+                    workTypeRepository::findByNameIgnoreCase
+            );
+            job.setWorkTypes(workTypes);
+        }
+
+        if (request.getWardIds() != null) {
+            Set<Long> wardIds = request.getWardIds().stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            Set<Ward> wards = loadExistingByIds(wardIds, wardRepository::findAllById);
+            job.setWards(wards);
+        }
+
+        // enforce salary rules after potential type change
+        JobRequest shim = JobRequest.builder()
+                .salaryType(request.getSalaryType())
+                .salaryMin(request.getSalaryMin())
+                .salaryMax(request.getSalaryMax())
+                .datePost(request.getDatePost())
+                .expiredDate(request.getExpiredDate())
+                .build();
+        validateDatesAndSalary(shim);
+        enforceSalaryPolicy(job, shim);
+
+        Job saved = jobRepository.save(job);
+        return jobMapper.toResponse(saved);
+    }
+
+    @Override
     @CacheEvict(cacheNames = JOB_LIST_DEFAULT, allEntries = true)
     public void delete(Long id) {
     }
@@ -154,6 +238,27 @@ public class JobServiceImpl implements JobService {
     @Override
     public Page<JobResponse> searchLite(JobFilterRequest request, Pageable pageable) {
         Specification<Job> spec = JobSpecifications.build(request);
+        Page<Job> page = jobRepository.findAll(spec, pageable);
+        List<Long> ids = page.getContent().stream().map(Job::getId).toList();
+        if (ids.isEmpty()) return Page.empty(pageable);
+
+        List<Job> rich = jobRepository.findByIdIn(ids);
+        Map<Long, Job> byId = rich.stream().collect(Collectors.toMap(Job::getId, j -> j));
+
+        List<JobResponse> data = ids.stream()
+                .map(byId::get)
+                .filter(Objects::nonNull)
+                .map(jobMapper::toResponseLite)
+                .toList();
+
+        return new PageImpl<>(data, pageable, page.getTotalElements());
+    }
+
+    @Override
+    public Page<JobResponse> searchByCompany(Long companyId, JobFilterRequest request, Pageable pageable) {
+        Specification<Job> companySpec = (root, query, cb) -> cb.equal(root.get("company").get("id"), companyId);
+        Specification<Job> spec = Specification.where(companySpec).and(JobSpecifications.build(request));
+
         Page<Job> page = jobRepository.findAll(spec, pageable);
         List<Long> ids = page.getContent().stream().map(Job::getId).toList();
         if (ids.isEmpty()) return Page.empty(pageable);

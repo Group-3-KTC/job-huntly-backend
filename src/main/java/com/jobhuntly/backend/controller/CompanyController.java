@@ -2,6 +2,7 @@ package com.jobhuntly.backend.controller;
 
 import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
+import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,6 +18,17 @@ import java.util.List;
 public class CompanyController {
     @Autowired
     private CompanyService companyService;
+
+    // Get current user's company
+    @GetMapping("/my-company")
+    public ResponseEntity<CompanyDto> getMyCompany() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        CompanyDto company = companyService.getCompanyByUserId(userId);
+        if (company == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(company, HttpStatus.OK);
+    }
 
     // Get List of Companies
     @GetMapping("")
