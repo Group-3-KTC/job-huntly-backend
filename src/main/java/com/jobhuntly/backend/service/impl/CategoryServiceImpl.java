@@ -76,7 +76,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Cacheable(cacheNames = DICT_CATEGORIES, key = "'all'", sync = true)
+//    @Cacheable(cacheNames = DICT_CATEGORIES, key = "'all'", sync = true)
     public List<CategoryResponse> getAllCategories() {
         return categoryRepository.findAll().stream()
                 .map(categoryMapper::toResponse)

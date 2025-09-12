@@ -64,7 +64,7 @@ public class SkillServiceImpl implements SkillService {
     }
 
     @Override
-    @Cacheable(cacheNames = DICT_SKILLS, key = "#categoryName", unless = "#result == null || #result.isEmpty()")
+//    @Cacheable(cacheNames = DICT_SKILLS, key = "#categoryName", unless = "#result == null || #result.isEmpty()")
     public List<SkillResponse> getSkillsByCategoryName(String categoryName) {
         String rootName = normalize(categoryName);
         if (rootName.isBlank()) {

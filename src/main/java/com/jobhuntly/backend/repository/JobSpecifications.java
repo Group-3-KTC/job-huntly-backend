@@ -30,6 +30,12 @@ public final class JobSpecifications {
         if (r.getPostedFrom() != null || r.getPostedTo() != null)
             specs.add(postedBetween(r.getPostedFrom(), r.getPostedTo()));
 
+        // Status
+        if (hasText(r.getStatus()))      specs.add(statusEqualsIgnoreCase(r.getStatus()));
+
+        // Only active (chưa hết hạn)
+        if (Boolean.TRUE.equals(r.getOnlyActive())) specs.add(notExpired());
+
         // ManyToMany theo name
         if (notEmpty(r.getCategoryNames()))
             specs.add(mtmByName("categories", "name", r.getCategoryNames(), r.isMatchAllCategories()));
@@ -67,6 +73,17 @@ public final class JobSpecifications {
     public static Specification<Job> companyNameEquals(String name) {
         // Đổi "name" nếu field Company khác
         return (root, cq, cb) -> cb.equal(cb.lower(root.get("company").get("name")), name.toLowerCase());
+    }
+
+    public static Specification<Job> statusEqualsIgnoreCase(String status) {
+        return (root, cq, cb) -> cb.equal(cb.lower(root.get("status")), status.toLowerCase());
+    }
+
+    public static Specification<Job> notExpired() {
+        return (root, cq, cb) -> cb.or(
+                cb.isNull(root.get("expiredDate")),
+                cb.greaterThanOrEqualTo(root.get("expiredDate"), LocalDate.now())
+        );
     }
 
     public static Specification<Job> salaryMinAtLeast(Long min) {

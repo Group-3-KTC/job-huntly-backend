@@ -22,7 +22,7 @@ public class LevelServiceImpl implements LevelService {
     private final LevelMapper levelMapper;
 
     @Override
-    @Cacheable(cacheNames = DICT_LEVELS, key = "'all'", sync = true)
+//    @Cacheable(cacheNames = DICT_LEVELS, key = "'all'", sync = true)
     public List<LevelResponse> getAllLevels() {
         return levelRepository.findAll().stream()
                 .map(levelMapper::toResponse)

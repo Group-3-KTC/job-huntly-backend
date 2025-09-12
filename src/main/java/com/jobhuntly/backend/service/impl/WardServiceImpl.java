@@ -18,7 +18,7 @@ public class WardServiceImpl implements WardService {
     public List<WardResponse> getWardByCityName(String cityName) {
         List<WardResponse> wards = wardRepository.findByCity_NameIgnoreCase(cityName)
                 .stream()
-                .map(w -> new WardResponse(w.getName())) // record dùng constructor
+                .map(w -> new WardResponse(w.getId(), w.getName())) // record dùng constructor
                 .toList();
 
         if (wards.isEmpty()) {
