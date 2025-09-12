@@ -22,7 +22,7 @@ public class WorkTypeServiceImpl implements WorkTypeService {
     private final WorkTypeRepository workTypeRepository;
 
     @Override
-//    @Cacheable(cacheNames = DICT_WORK_TYPES, key = "'all'", sync = true)
+    @Cacheable(cacheNames = DICT_WORK_TYPES, key = "'all'", sync = true)
     public List<WorkTypeResponse> getAllWorkType() {
         return workTypeRepository.findAll().stream()
                 .map(workTypeMapper::toResponse)

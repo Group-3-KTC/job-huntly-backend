@@ -22,7 +22,7 @@ public class CityServiceImpl implements CityService {
     private final CityMapper cityMapper;
 
     @Override
-//    @Cacheable(cacheNames = DICT_LOCATIONS_CITY, key = "'all'", sync = true)
+    @Cacheable(cacheNames = DICT_LOCATIONS_CITY, key = "'all'", sync = true)
     public List<CityRequest> getAllCity() {
         return cityRepository.findAll().stream()
                 .map(cityMapper::toDTO)
