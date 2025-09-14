@@ -3,6 +3,7 @@ package com.jobhuntly.backend.controller;
 import com.jobhuntly.backend.dto.request.FollowRequest;
 import com.jobhuntly.backend.dto.response.FollowCountResponse;
 import com.jobhuntly.backend.dto.response.FollowResponse;
+import com.jobhuntly.backend.dto.response.FollowStatusResponse;
 import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.service.FollowService;
 import jakarta.validation.Valid;
@@ -49,5 +50,12 @@ public class FollowController {
     ) {
         Long userId = SecurityUtils.getCurrentUserId();
         return followService.getFollowedCompanies(userId, pageable);
+    }
+
+    @GetMapping("/status")
+    public FollowStatusResponse status(@RequestParam("company_id") Long companyId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        boolean followed = followService.isFollowed(userId, companyId);
+        return new FollowStatusResponse(followed);
     }
 }
