@@ -71,6 +71,10 @@ dependencies {
 
     //OGNL
     implementation 'ognl:ognl:3.3.4'
+
+    //WebSocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework:spring-messaging'
 }
 
 tasks.named('test') {

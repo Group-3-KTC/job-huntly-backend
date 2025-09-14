@@ -18,5 +18,5 @@ public interface ApplicationService {
 
     boolean hasApplied(Long userId, Long jobId);
 
-    ApplicationResponse updateStatusByStaff(Long userId, Long jobId, String status);
+    ApplicationResponse updateStatusByStaff(Long userId, Long applicationId, String status);
 }

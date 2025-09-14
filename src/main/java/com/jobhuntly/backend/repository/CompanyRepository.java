@@ -13,9 +13,12 @@ import org.springframework.data.repository.query.Param;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface CompanyRepository extends JpaRepository<Company, Long> {
     boolean existsByUser_Id(Long user_id);
+
+    Optional<Company> findByUserId(Long userId);
 
     List<Company> findAllByCompanyNameIgnoreCase(String companyName);
 

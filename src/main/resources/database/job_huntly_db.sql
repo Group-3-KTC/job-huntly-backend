@@ -860,3 +860,22 @@ ALTER TABLE users
     ADD COLUMN updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   ADD COLUMN last_login_at DATETIME(3) NULL,
   ADD COLUMN password_changed_at DATETIME(3) NULL;
+
+ CREATE TABLE notifications (
+     notification_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+     user_id INT NOT NULL,
+     type VARCHAR(50) NOT NULL,                -- "APPLICATION_STATUS", "NEW_JOB", ...
+     title VARCHAR(200) NOT NULL,
+     message TEXT NOT NULL,
+     link VARCHAR(255) DEFAULT NULL,           -- có thể NULL nếu bạn chưa cần
+     company_id BIGINT DEFAULT NULL,
+     job_id BIGINT DEFAULT NULL,
+     application_id BIGINT DEFAULT NULL,
+     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     read_at TIMESTAMP NULL DEFAULT NULL,
+
+     CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+     INDEX idx_user_created (user_id, created_at DESC),
+     INDEX idx_company (company_id),
+     INDEX idx_job (job_id)
+ );

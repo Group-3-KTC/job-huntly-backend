@@ -58,6 +58,25 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public CompanyDto getCompanyByUserId(Long userId) {
+        Company company = companyRepository.findByUserId(userId).orElse(null);
+        if (company == null) {
+            return null;
+        }
+        CompanyDto dto = companyMapper.toDto(company);
+        dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
+
+        // Trả về categoryIds
+        if (company.getCategories() != null) {
+            dto.setCategoryIds(company.getCategories().stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toSet()));
+        }
+        return dto;
+    }
+
+    @Override
     @Transactional
     public CompanyDto createCompany(CompanyDto companyDto) {
         companyDto.setId(null);

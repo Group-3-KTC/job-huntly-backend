@@ -3,3 +3,6 @@ spring:
     name: job-huntly-backend
   profiles:
     default: local
+app:
+  redis:
+    enabled: ${APP_REDIS_ENABLED:true}

@@ -2,6 +2,7 @@ package com.jobhuntly.backend.controller;
 
 import com.jobhuntly.backend.dto.request.JobFilterRequest;
 import com.jobhuntly.backend.dto.request.JobRequest;
+import com.jobhuntly.backend.dto.request.JobPatchRequest;
 import com.jobhuntly.backend.dto.response.JobResponse;
 import com.jobhuntly.backend.service.JobService;
 import jakarta.validation.Valid;
@@ -30,6 +31,11 @@ public class JobController {
         return ResponseEntity.ok(jobService.getById(id));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<JobResponse> patch(@PathVariable Long id, @RequestBody JobPatchRequest request) {
+        return ResponseEntity.ok(jobService.patch(id, request));
+    }
+
     @GetMapping("/all")
     public ResponseEntity<Page<JobResponse>> list(
             @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC)
@@ -50,5 +56,14 @@ public class JobController {
             @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
     ) {
         return jobService.searchLite(request, pageable);
+    }
+
+    @PostMapping("/company/{companyId}/search")
+    public Page<JobResponse> searchByCompany(
+            @PathVariable Long companyId,
+            @RequestBody JobFilterRequest request,
+            @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
+    ) {
+        return jobService.searchByCompany(companyId, request, pageable);
     }
 }

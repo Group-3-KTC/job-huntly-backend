@@ -38,6 +38,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final JobRepository jobRepository;
     private final ApplicationMapper applicationMapper;
     private final CloudinaryService cloudinaryService;
+    private final NotificationService notificationService;
     @Override
     public ApplicationResponse create(Long userId, ApplicationRequest req) {
         if (req.getJobId() == null) {
@@ -205,15 +206,26 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public ApplicationResponse updateStatusByStaff(Long userId, Long jobId, String status) {
-        Application app = applicationRepository
-                .lockByUserAndJob(userId, jobId)
+    public ApplicationResponse updateStatusByStaff(Long userId, Long applicationId, String status) {
+        Application app = applicationRepository.lockById(applicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
 
         // Chỉ cập nhật status, không tăng attempt, không stamp
         app.setStatus(status);
 
         Application saved = applicationRepository.save(app);
+        try {
+            notificationService.notifyApplicationStatus(
+                    saved.getUser().getId(),
+                    saved.getJob().getId(),
+                    saved.getJob().getCompany().getId(),
+                    saved.getId().longValue(),
+                    saved.getJob().getCompany().getCompanyName(),
+                    status
+            );
+        } catch (Exception ignore) {
+            // không làm hỏng flow cập nhật nếu gửi noti lỗi
+        }
         return applicationMapper.toResponse(saved);
     }
 }
