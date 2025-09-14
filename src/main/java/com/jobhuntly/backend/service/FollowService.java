@@ -13,4 +13,6 @@ public interface FollowService {
     long countFollowers(Long companyId);
 
     Page<FollowResponse> getFollowedCompanies(Long userId, Pageable pageable);
+
+    boolean isFollowed(Long userId, Long companyId);
 }
