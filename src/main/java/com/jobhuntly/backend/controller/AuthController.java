@@ -40,7 +40,7 @@ public class AuthController {
         return authService.activateAccount(token);
     }
 
-    @PostMapping("/activation/resend")
+    @PostMapping("/resendActivation")
     public ResponseEntity<Void> resend(@RequestParam("email") String email) {
         return authService.resendActivation(email);
     }
@@ -107,7 +107,7 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/password/reset")
+    @PostMapping("/password/resetPassword")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordWithTokenRequest req) {
         authService.resetPassword(req.getToken(), req.getNewPassword());
         return ResponseEntity.noContent().build();

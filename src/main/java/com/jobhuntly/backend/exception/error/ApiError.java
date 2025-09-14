@@ -14,6 +14,7 @@ public class ApiError {
     private final String error;
     private final String message;
     private final String path;
+    private String code;
 
     public ApiError(HttpStatus status, String message, String path) {
         this.status = status.value();
