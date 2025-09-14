@@ -88,6 +88,11 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/follows/**").authenticated()
                                 .requestMatchers("/api/v1/dev/ping-noti").authenticated()
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                                .requestMatchers(
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**",
+                                        "/actuator/health"
+                                ).permitAll()
                                 .anyRequest().authenticated()
                 )
 
