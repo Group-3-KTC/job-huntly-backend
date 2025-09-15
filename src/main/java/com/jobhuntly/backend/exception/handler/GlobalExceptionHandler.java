@@ -13,6 +13,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -36,6 +37,12 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     /* ========= 4xx: Client errors ========= */
+
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthGeneral(AuthenticationException ex, HttpServletRequest req) {
+        return build(HttpStatus.UNAUTHORIZED, "Invalid email or password.", req.getRequestURI());
+    }
 
     // @Valid trên @RequestBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -98,7 +105,7 @@ public class GlobalExceptionHandler {
     // 401/403 từ Spring Security
     @ExceptionHandler({ BadCredentialsException.class, InsufficientAuthenticationException.class })
     public ResponseEntity<ApiError> handleAuth(Exception ex, HttpServletRequest req) {
-        return build(HttpStatus.UNAUTHORIZED, "Chưa xác thực hoặc token không hợp lệ.", req.getRequestURI());
+        return build(HttpStatus.UNAUTHORIZED, "Invalid email or password.", req.getRequestURI());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

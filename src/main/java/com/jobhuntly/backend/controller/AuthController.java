@@ -9,6 +9,8 @@ import com.jobhuntly.backend.security.cookie.AuthCookieService;
 import com.jobhuntly.backend.security.cookie.CookieProperties;
 import com.jobhuntly.backend.service.AuthService;
 import com.jobhuntly.backend.service.impl.SessionServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -29,22 +31,26 @@ public class AuthController {
     private final SessionServiceImpl sessionService;
     private final CookieProperties cookieProps;
 
+    @Operation(summary = "Register a new account")
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
 
+    @Operation(summary = "Activate account by token")
     @GetMapping("/activate")
     public ResponseEntity<RegisterResponse> activate(@RequestParam("token") String token) {
         token = token.trim();
         return authService.activateAccount(token);
     }
 
-    @PostMapping("/activation/resend")
+    @Operation(summary = "Resend activation email")
+    @PostMapping("/resendActivation")
     public ResponseEntity<Void> resend(@RequestParam("email") String email) {
         return authService.resendActivation(email);
     }
 
+    @Operation(summary = "Login with email/password (sets HttpOnly cookies AT/RT)")
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest reqBody,
                                                HttpServletRequest req,
@@ -53,6 +59,7 @@ public class AuthController {
         return ResponseEntity.ok(body);
     }
 
+    @Operation(summary = "Google Sign-In exchange (sets HttpOnly cookies AT/RT)")
     @PostMapping("/google")
     public ResponseEntity<LoginResponse> loginWithGoogle(@Valid @RequestBody GoogleLoginRequest reqBody,
                                                          HttpServletRequest req,
@@ -60,11 +67,32 @@ public class AuthController {
         return ResponseEntity.ok(authService.loginWithGoogle(reqBody, req, res));
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest req, HttpServletResponse res) {
-        String rawRefresh = authCookieService.readCookie(req, cookieProps.getRefreshName()).orElse(null);
-        sessionService.revokeCurrent(rawRefresh);
-        authCookieService.clearAuthCookies(req, res);
+
+    @Operation(summary = "Send set-password link")
+    @PostMapping("/password/set-link")
+    public ResponseEntity<Void> sendSetPasswordLink(@Valid @RequestBody EmailOnlyRequest req) {
+        authService.sendSetPasswordLink(req.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Send reset-password link")
+    @PostMapping("/password/forgot")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody EmailOnlyRequest req) {
+        authService.sendResetPasswordLink(req.getEmail());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Reset password by token")
+    @PostMapping("/password/resetPassword")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordWithTokenRequest req) {
+        authService.resetPassword(req.getToken(), req.getNewPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Set password for Google-account (no password yet)")
+    @PostMapping("/password/set")
+    public ResponseEntity<Void> setPassword(@Valid @RequestBody PasswordWithTokenRequest req) {
+        authService.setPassword(req.getToken(), req.getNewPassword());
         return ResponseEntity.noContent().build();
     }
 
@@ -75,6 +103,8 @@ public class AuthController {
 //        return ResponseEntity.noContent().build();
 //    }
 
+    @Operation(summary = "Get current user profile")
+    @SecurityRequirement(name = "cookieAuth")
     @GetMapping("/me")
     public ResponseEntity<MeResponse> me(@AuthenticationPrincipal AppPrincipal principal) {
         if (principal == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -82,35 +112,23 @@ public class AuthController {
         return ResponseEntity.ok(dto);
     }
 
-
+    @Operation(summary = "Refresh access token using RT cookie")
+    @SecurityRequirement(name = "cookieAuth")
     @PostMapping("/refresh")
     public ResponseEntity<Void> refresh(HttpServletRequest req, HttpServletResponse res) {
         authService.refreshToken(req, res);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/password/set-link")
-    public ResponseEntity<Void> sendSetPasswordLink(@Valid @RequestBody EmailOnlyRequest req) {
-        authService.sendSetPasswordLink(req.getEmail());
+    @Operation(summary = "Logout: clear cookies AT/RT")
+    @SecurityRequirement(name = "cookieAuth")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest req, HttpServletResponse res) {
+        String rawRefresh = authCookieService.readCookie(req, cookieProps.getRefreshName()).orElse(null);
+        sessionService.revokeCurrent(rawRefresh);
+        authCookieService.clearAuthCookies(req, res);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/password/set")
-    public ResponseEntity<Void> setPassword(@Valid @RequestBody PasswordWithTokenRequest req) {
-        authService.setPassword(req.getToken(), req.getNewPassword());
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/password/forgot")
-    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody EmailOnlyRequest req) {
-        authService.sendResetPasswordLink(req.getEmail());
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/password/reset")
-    public ResponseEntity<Void> resetPassword(@Valid @RequestBody PasswordWithTokenRequest req) {
-        authService.resetPassword(req.getToken(), req.getNewPassword());
-        return ResponseEntity.noContent().build();
-    }
 }
 
