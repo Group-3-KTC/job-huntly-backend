@@ -5,6 +5,7 @@ import com.jobhuntly.backend.dto.request.ReportStatusUpdateRequest;
 import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.dto.response.JobResponse;
 import com.jobhuntly.backend.dto.response.ReportResponse;
+import com.jobhuntly.backend.dto.response.ReportStatsResponse;
 import com.jobhuntly.backend.entity.Report;
 import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.entity.enums.ReportType;
@@ -22,8 +23,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import static com.jobhuntly.backend.entity.enums.ReportType.COMPANY;
 
 @Service
 @RequiredArgsConstructor
@@ -147,6 +146,29 @@ public class ReportServiceImpl implements ReportService {
                 .map(reportMapper::toResponse);
     }
 
+    @Override
+    public ReportStatsResponse getStats(ReportType type) {
+        long total = reportRepository.countAllByType(type);
+
+        long done = 0, process = 0, rejected = 0;
+
+        var rows = reportRepository.countGroupByStatus(type);
+        for (var row : rows) {
+            String s = (row.getStatus() == null) ? "" : row.getStatus().trim();
+            String key = s.toUpperCase(); // chống lệch hoa/thường
+
+            if ("DONE".equals(key)) {
+                done = row.getCnt();
+            } else if ("PROCESS".equals(key) || "PROCESSING".equals(key) || "IN_PROGRESS".equals(key)) {
+                process = row.getCnt();
+            } else if ("REJECTED".equals(key)) {
+                rejected = row.getCnt();
+            }
+        }
+
+        return new ReportStatsResponse(total, done, process, rejected);
+    }
+
     private void validateReportedTargetExists(ReportType type, Long targetId) {
         boolean exists = switch (type) {
             case JOB -> jobRepository.existsById(targetId);
@@ -162,7 +184,6 @@ public class ReportServiceImpl implements ReportService {
         return s == null ? null : s.trim().toUpperCase();
     }
 
-    // Cho phép 3 trạng thái mẫu. Bạn có thể chỉnh list này theo hệ thống của bạn.
     private static final java.util.Set<String> ALLOWED_STATUSES =
             java.util.Set.of("PROCESS", "DONE", "REJECTED");
 
