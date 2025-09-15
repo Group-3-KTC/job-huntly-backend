@@ -3,6 +3,7 @@ package com.jobhuntly.backend.controller;
 import com.jobhuntly.backend.dto.request.ReportRequest;
 import com.jobhuntly.backend.dto.request.ReportStatusUpdateRequest;
 import com.jobhuntly.backend.dto.response.ReportResponse;
+import com.jobhuntly.backend.dto.response.ReportStatsResponse;
 import com.jobhuntly.backend.entity.enums.ReportType;
 import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.security.jwt.JwtUtil;
@@ -63,5 +64,12 @@ public class ReportController {
             return ResponseEntity.ok(reportService.getAll(pageable));
         }
         return ResponseEntity.ok(reportService.getAll(type, status, pageable));
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<ReportStatsResponse> getStats(
+            @RequestParam(required = false) ReportType type
+    ) {
+        return ResponseEntity.ok(reportService.getStats(type));
     }
 }
