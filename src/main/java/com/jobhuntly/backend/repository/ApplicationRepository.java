@@ -19,6 +19,10 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     Page<Application> findAllByJob_Id(Long jobId, Pageable pageable);
 
+    // Lấy applications theo companyId (qua quan hệ job.company)
+    @EntityGraph(attributePaths = { "job", "job.company", "user" })
+    Page<Application> findAllByJob_Company_Id(Long companyId, Pageable pageable);
+
     boolean existsByUser_IdAndJob_Id(Long userId, Long jobId);
 
     Optional<Application> findByUser_IdAndJob_Id(Integer userId, Integer jobId);
