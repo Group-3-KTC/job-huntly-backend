@@ -3,6 +3,7 @@ package com.jobhuntly.backend.controller;
 import com.jobhuntly.backend.dto.request.UserRequest;
 import com.jobhuntly.backend.dto.response.HasCompanyResponse;
 import com.jobhuntly.backend.dto.response.UserDto;
+import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,13 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         UserDto userDto = userService.getUserById(id);
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getInfoCurrentUser() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        UserDto userDto = userService.getUserById(userId);
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
     

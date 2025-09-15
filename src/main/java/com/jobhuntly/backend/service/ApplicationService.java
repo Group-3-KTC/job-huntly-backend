@@ -12,6 +12,9 @@ public interface ApplicationService {
     Page<ApplicationByUserResponse> getByUser(Long userId, Pageable pageable);
     Page<ApplicationResponse> getByJob(Integer jobId, Pageable pageable);
 
+    // Lấy application theo companyId (dành cho recruiter/admin)
+    Page<ApplicationResponse> getByCompany(Long requesterUserId, Long companyId, Pageable pageable);
+
     ApplicationResponse update(Long userId, Long jobId, ApplicationRequest req);
 
     ApplicationResponse getDetail(Long userId, Integer jobId);
