@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.service;
 
+import com.jobhuntly.backend.dto.request.CompanyRequest;
 import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
 import org.springframework.data.domain.Page;
@@ -25,7 +26,9 @@ public interface CompanyService {
     // CRUD
     CompanyDto getCompanyById(Long id);
     CompanyDto getCompanyByUserId(Long userId);
-    CompanyDto createCompany(CompanyDto companyDto);
+    
+    CompanyDto createCompany(CompanyRequest companyRequest);
+    
     CompanyDto updateCompanyById(Long id, CompanyDto companyDto);
     void deleteCompanyById(Long id);
 }

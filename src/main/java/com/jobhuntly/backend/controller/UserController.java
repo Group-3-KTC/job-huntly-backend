@@ -1,7 +1,9 @@
 package com.jobhuntly.backend.controller;
 
 import com.jobhuntly.backend.dto.request.UserRequest;
+import com.jobhuntly.backend.dto.response.HasCompanyResponse;
 import com.jobhuntly.backend.dto.response.UserDto;
+import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,13 @@ public class UserController {
         UserDto userDto = userService.getUserById(id);
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getInfoCurrentUser() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        UserDto userDto = userService.getUserById(userId);
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
+    }
     
     @PostMapping
     public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserRequest userRequest) {
@@ -59,5 +68,11 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUserById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/has-company")
+    public ResponseEntity<HasCompanyResponse> hasCompany() {
+        HasCompanyResponse response = userService.hasCompany();
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

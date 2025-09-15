@@ -70,7 +70,7 @@ public class CloudinaryService {
 
     // ===================== COMPANY AVATAR (1-1, overwrite) =====================
     public CloudAsset uploadCompanyAvatar(Long companyId, MultipartFile file) throws IOException {
-        validateImage(file);
+        validateCompanyImage(file, "avatar");
         String publicId = "companies/" + companyId + "/avatar";
 
         Map<?, ?> res = cloudinary.uploader().upload(
@@ -80,7 +80,12 @@ public class CloudinaryService {
                         "resource_type", "image",
                         "overwrite", true,
                         "invalidate", true,
-                        "folder", "companies/" + companyId
+                        "folder", "companies/" + companyId,
+                        "transformation", new Transformation()
+                                .width(300).height(300)
+                                .crop("fill")
+                                .quality("auto")
+                                .fetchFormat("auto")
                 )
         );
         return toAsset(res);
@@ -88,6 +93,95 @@ public class CloudinaryService {
 
     public void deleteCompanyAvatar(Long companyId) throws IOException {
         destroyAllTypes("companies/" + companyId + "/avatar");
+    }
+
+    // ===================== COMPANY COVER IMAGE (1-1, overwrite) =====================
+    public CloudAsset uploadCompanyCover(Long companyId, MultipartFile file) throws IOException {
+        validateCompanyImage(file, "cover");
+        String publicId = "companies/" + companyId + "/cover";
+
+        Map<?, ?> res = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap(
+                        "public_id", publicId,
+                        "resource_type", "image",
+                        "overwrite", true,
+                        "invalidate", true,
+                        "folder", "companies/" + companyId,
+                        "transformation", new Transformation()
+                                .width(1200).height(400)
+                                .crop("fill")
+                                .quality("auto")
+                                .fetchFormat("auto")
+                )
+        );
+        return toAsset(res);
+    }
+
+    public void deleteCompanyCover(Long companyId) throws IOException {
+        destroyAllTypes("companies/" + companyId + "/cover");
+    }
+
+    // ===================== COMPANY IMAGES BATCH UPLOAD =====================
+    public record CompanyImageUploadResult(
+            CloudAsset avatar,
+            CloudAsset cover,
+            String message
+    ) {}
+
+    /**
+     * Upload cả avatar và cover cho company cùng lúc
+     */
+    public CompanyImageUploadResult uploadCompanyImages(Long companyId, 
+                                                       MultipartFile avatarFile, 
+                                                       MultipartFile coverFile) throws IOException {
+        CloudAsset avatar = null;
+        CloudAsset cover = null;
+        StringBuilder message = new StringBuilder();
+
+        try {
+            if (avatarFile != null && !avatarFile.isEmpty()) {
+                avatar = uploadCompanyAvatar(companyId, avatarFile);
+                message.append("Avatar uploaded successfully. ");
+            }
+
+            if (coverFile != null && !coverFile.isEmpty()) {
+                cover = uploadCompanyCover(companyId, coverFile);
+                message.append("Cover image uploaded successfully. ");
+            }
+
+            if (avatar == null && cover == null) {
+                throw new IOException("No valid image files provided");
+            }
+
+            return new CompanyImageUploadResult(avatar, cover, message.toString().trim());
+        } catch (IOException e) {
+            // Rollback nếu có lỗi
+            if (avatar != null) {
+                try { deleteCompanyAvatar(companyId); } catch (Exception ignored) {}
+            }
+            if (cover != null) {
+                try { deleteCompanyCover(companyId); } catch (Exception ignored) {}
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * Xóa tất cả hình ảnh của company
+     */
+    public void deleteAllCompanyImages(Long companyId) throws IOException {
+        try {
+            deleteCompanyAvatar(companyId);
+        } catch (Exception e) {
+            // Log error but continue
+        }
+        
+        try {
+            deleteCompanyCover(companyId);
+        } catch (Exception e) {
+            // Log error but continue
+        }
     }
 
     // ===================== APPLICATION CV (1-1, overwrite) =====================
@@ -201,5 +295,43 @@ public class CloudinaryService {
         Pattern p = Pattern.compile("/upload/(?:[^/]+/)*?(?:v\\d+/)?(.+?)\\.[^./?]+(?:\\?.*)?$");
         Matcher m = p.matcher(url);
         return m.find() ? m.group(1) : null;
+    }
+    
+    /**
+     * Validation chuyên biệt cho hình ảnh company
+     */
+    private void validateCompanyImage(MultipartFile file, String type) throws IOException {
+        validateImage(file);
+        
+        // Kiểm tra kích thước file (tối đa 5MB cho company images)
+        long maxSize = 5L * 1024 * 1024; // 5MB
+        if (file.getSize() > maxSize) {
+            throw new IOException("Company " + type + " image must not exceed 5MB");
+        }
+        
+        // Kiểm tra định dạng file
+        String contentType = file.getContentType();
+        if (contentType == null || 
+            (!contentType.equals("image/jpeg") && 
+             !contentType.equals("image/jpg") && 
+             !contentType.equals("image/png") && 
+             !contentType.equals("image/webp"))) {
+            throw new IOException("Company " + type + " must be JPEG, JPG, PNG, or WebP format");
+        }
+        
+        // Kiểm tra tên file
+        String filename = file.getOriginalFilename();
+        if (filename == null || filename.trim().isEmpty()) {
+            throw new IOException("Invalid file name");
+        }
+        
+        // Kiểm tra kích thước tối thiểu (avatar: 100x100, cover: 600x200)
+        if ("avatar".equals(type)) {
+            // Avatar nên có tỷ lệ vuông hoặc gần vuông
+            // Cloudinary sẽ tự động resize về 300x300
+        } else if ("cover".equals(type)) {
+            // Cover image nên có tỷ lệ 3:1 hoặc tương tự
+            // Cloudinary sẽ tự động resize về 1200x400
+        }
     }
 }

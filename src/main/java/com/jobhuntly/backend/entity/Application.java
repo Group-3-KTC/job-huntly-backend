@@ -32,7 +32,7 @@ public class Application {
     private String email;
 
     @Column(name = "status", length = 200)
-    private String status;
+    private String status; // APPLIED, REVIEWED, REJECTED
 
     @Column(name = "phone_number", length = 200)
     private String phoneNumber;

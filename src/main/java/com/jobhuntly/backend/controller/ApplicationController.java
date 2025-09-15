@@ -25,71 +25,82 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("${backend.prefix}/application")
 public class ApplicationController {
-    private final ApplicationService applicationService;
+	private final ApplicationService applicationService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApplicationResponse create(@Valid @ModelAttribute ApplicationRequest request) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        return applicationService.create(userId,request);
-    }
+	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)
+	public ApplicationResponse create(@Valid @ModelAttribute ApplicationRequest request) {
+		Long userId = SecurityUtils.getCurrentUserId();
+		return applicationService.create(userId,request);
+	}
 
-    @GetMapping(value = "/by-user", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<ApplicationByUserResponse> getByUser(
-                                                     @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-                                                     Pageable pageable
-                                                     ) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        return applicationService.getByUser(userId, pageable);
-    }
+	@GetMapping(value = "/by-user", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Page<ApplicationByUserResponse> getByUser(
+												 @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+												 Pageable pageable
+												 ) {
+		Long userId = SecurityUtils.getCurrentUserId();
+		return applicationService.getByUser(userId, pageable);
+	}
 
-    @PostMapping(
-            value = "/{jobId}/reapply",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    @ResponseStatus(HttpStatus.OK)
-    public ApplicationResponse reapply(
-            @PathVariable Long jobId,
-            @Valid @ModelAttribute ApplicationRequest request
-    ) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (request.getJobId() == null || !request.getJobId().equals(jobId)) {
-            request.setJobId(jobId);
-        }
-        return applicationService.update(userId, jobId, request);
-    }
+	@PostMapping(
+			value = "/{jobId}/reapply",
+			consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE
+	)
+	@ResponseStatus(HttpStatus.OK)
+	public ApplicationResponse reapply(
+			@PathVariable Long jobId,
+			@Valid @ModelAttribute ApplicationRequest request
+	) {
+		Long userId = SecurityUtils.getCurrentUserId();
+		if (request.getJobId() == null || !request.getJobId().equals(jobId)) {
+			request.setJobId(jobId);
+		}
+		return applicationService.update(userId, jobId, request);
+	}
 
-    @GetMapping(value = "/detail/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApplicationResponse getDetailByJob(
-            @PathVariable Integer jobId
-    ) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        return applicationService.getDetail(userId, jobId);
-    }
+	@GetMapping(value = "/detail/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ApplicationResponse getDetailByJob(
+			@PathVariable Integer jobId
+	) {
+		Long userId = SecurityUtils.getCurrentUserId();
+		return applicationService.getDetail(userId, jobId);
+	}
 
-    @GetMapping(value = "/by-job/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Page<ApplicationResponse> getByJob(
-            @PathVariable Integer jobId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
-        return applicationService.getByJob(jobId, pageable);
-    }
+	@GetMapping(value = "/by-job/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Page<ApplicationResponse> getByJob(
+			@PathVariable Integer jobId,
+			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+			Pageable pageable
+	) {
+		return applicationService.getByJob(jobId, pageable);
+	}
 
-    @GetMapping("/status")
-    public ApplyStatusResponse getApplyStatus(@RequestParam("job_id") Long jobId) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        boolean applied = applicationService.hasApplied(userId, jobId);
-        return new ApplyStatusResponse(applied);
-    }
+	// Lấy application theo company dành cho ADMIN hoặc RECRUITER (owner)
+	@GetMapping(value = "/by-company/{companyId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Page<ApplicationResponse> getByCompany(
+			@PathVariable Long companyId,
+			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+			Pageable pageable
+	) {
+		Long userId = SecurityUtils.getCurrentUserId();
+		return applicationService.getByCompany(userId, companyId, pageable);
+	}
 
-    @PatchMapping(value = "/status", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@GetMapping("/status")
+	public ApplyStatusResponse getApplyStatus(@RequestParam("job_id") Long jobId) {
+		Long userId = SecurityUtils.getCurrentUserId();
+		boolean applied = applicationService.hasApplied(userId, jobId);
+		return new ApplyStatusResponse(applied);
+	}
+
+	@PatchMapping(value = "/status", consumes = MediaType.APPLICATION_JSON_VALUE)
 //    @PreAuthorize("hasAnyRole('RECRUITER','ADMIN')")
-    public ApplicationResponse updateStatusByStaff(@Valid @RequestBody ApplicationStatusUpdateRequest req) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        return applicationService.updateStatusByStaff(userId, req.getApplicationId(), req.getStatus());
-    }
+	public ApplicationResponse updateStatusByStaff(@Valid @RequestBody ApplicationStatusUpdateRequest req) {
+		Long userId = SecurityUtils.getCurrentUserId();
+		return applicationService.updateStatusByStaff(userId, req.getApplicationId(), req.getStatus());
+	}
 
 }
