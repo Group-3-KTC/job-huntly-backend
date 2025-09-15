@@ -1,5 +1,6 @@
 package com.jobhuntly.backend.service.impl;
 
+import com.jobhuntly.backend.dto.request.CompanyRequest;
 import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
 import com.jobhuntly.backend.entity.Category;
@@ -11,6 +12,7 @@ import com.jobhuntly.backend.repository.CategoryRepository;
 import com.jobhuntly.backend.repository.CompanyRepository;
 import com.jobhuntly.backend.repository.JobRepository;
 import com.jobhuntly.backend.repository.UserRepository;
+import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +36,7 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyMapper companyMapper;
     private final CategoryRepository categoryRepository;
     private final JobRepository jobRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional(readOnly = true)
@@ -78,20 +82,13 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     @Transactional
-    public CompanyDto createCompany(CompanyDto companyDto) {
-        companyDto.setId(null);
-
-        Long userId = companyDto.getUserId();
+    public CompanyDto createCompany(CompanyRequest companyRequest) {
+        Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
             throw new IllegalArgumentException("userId là bắt buộc");
         }
 
-        // 1) Kiểm tra recruiter đã có công ty chưa
-        if (companyRepository.existsByUser_Id(userId)) {
-            throw new IllegalArgumentException("Recruiter này đã có công ty");
-        }
-
-        // 2. Load User và kiểm tra role
+        // 1. Load User và kiểm tra role
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
 
@@ -99,23 +96,87 @@ public class CompanyServiceImpl implements CompanyService {
             throw new IllegalArgumentException("Chỉ tạo công ty mới cho RECRUITER");
         }
 
-        Company entity = companyMapper.toEntity(companyDto);
+        // 2. Kiểm tra recruiter đã có công ty chưa
+        if (companyRepository.existsByUser_Id(userId)) {
+            throw new IllegalArgumentException("Recruiter này đã có công ty");
+        }
+
+        // 3. Tạo entity từ request (không có ảnh)
+        Company entity = new Company();
+        entity.setCompanyName(companyRequest.getCompanyName());
+        entity.setDescription(companyRequest.getDescription());
+        entity.setEmail(companyRequest.getEmail());
+        entity.setPhoneNumber(companyRequest.getPhoneNumber());
+        entity.setWebsite(companyRequest.getWebsite());
+        entity.setAddress(companyRequest.getAddress());
+        entity.setLocationCity(companyRequest.getLocationCity());
+        entity.setLocationCountry(companyRequest.getLocationCountry());
+        entity.setFoundedYear(companyRequest.getFoundedYear());
+        entity.setQuantityEmployee(companyRequest.getQuantityEmployee());
+        entity.setFacebookUrl(companyRequest.getFacebookUrl());
+        entity.setTwitterUrl(companyRequest.getTwitterUrl());
+        entity.setLinkedinUrl(companyRequest.getLinkedinUrl());
+        entity.setMapEmbedUrl(companyRequest.getMapEmbedUrl());
         entity.setUser(user);
 
-        // set categories từ categoryIds
-        if (companyDto.getCategoryIds() != null && !companyDto.getCategoryIds().isEmpty()) {
-            Set<Category> cats = new HashSet<>(categoryRepository.findAllById(companyDto.getCategoryIds()));
+        // Set default values
+        entity.setStatus("active");
+        entity.setIsProCompany(false);
+        entity.setIsVip(false);
+        entity.setFollowersCount(0);
+        entity.setJobsCount(0L);
+
+        // Set categories từ categoryIds
+        if (companyRequest.getCategoryIds() != null && !companyRequest.getCategoryIds().isEmpty()) {
+            Set<Category> cats = new HashSet<>(categoryRepository.findAllById(companyRequest.getCategoryIds()));
             entity.setCategories(cats);
         }
 
-        Company saved = companyRepository.save(entity);
-        CompanyDto out = companyMapper.toDto(saved);
-        if (saved.getCategories() != null) {
-            out.setCategoryIds(saved.getCategories().stream()
-                    .map(Category::getId)
-                    .collect(Collectors.toSet()));
+        // 4. Lưu trước để có companyId (dùng cho upload ảnh)
+        companyRepository.saveAndFlush(entity);
+
+        // 5. Upload ảnh nếu có
+        MultipartFile avatarFile = companyRequest.getAvatarFile();
+        MultipartFile coverFile = companyRequest.getAvatarCoverFile();
+        boolean uploadedImages = false;
+
+        if ((avatarFile != null && !avatarFile.isEmpty()) || (coverFile != null && !coverFile.isEmpty())) {
+            try {
+                CloudinaryService.CompanyImageUploadResult result = 
+                    cloudinaryService.uploadCompanyImages(entity.getId(), avatarFile, coverFile);
+                
+                if (result.avatar() != null) {
+                    entity.setAvatar(result.avatar().secureUrl());
+                }
+                if (result.cover() != null) {
+                    entity.setAvatarCover(result.cover().secureUrl());
+                }
+                uploadedImages = true;
+            } catch (Exception e) {
+                // Ném lỗi để rollback DB; asset chưa được tạo thì không cần dọn
+                throw new IllegalStateException("Upload ảnh thất bại. Vui lòng thử lại.", e);
+            }
         }
-        return out;
+
+        // 6. Lưu cập nhật cuối
+        try {
+            Company saved = companyRepository.save(entity);
+            CompanyDto out = companyMapper.toDto(saved);
+            if (saved.getCategories() != null) {
+                out.setCategoryIds(saved.getCategories().stream()
+                        .map(Category::getId)
+                        .collect(Collectors.toSet()));
+            }
+            return out;
+        } catch (RuntimeException ex) {
+            // Nếu đã upload ảnh thành công mà DB save lỗi -> dọn asset trên Cloudinary (best effort)
+            if (uploadedImages) {
+                try { 
+                    cloudinaryService.deleteAllCompanyImages(entity.getId()); 
+                } catch (Exception ignore) {}
+            }
+            throw ex;
+        }
     }
 
     @Override
