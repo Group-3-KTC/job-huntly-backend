@@ -1,16 +1,26 @@
 package com.jobhuntly.backend.controller;
 
+import com.jobhuntly.backend.dto.request.CompanyRequest;
 import com.jobhuntly.backend.dto.response.CompanyDto;
 import com.jobhuntly.backend.dto.response.LocationCompanyResponse;
 import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.service.CompanyService;
+import com.jobhuntly.backend.service.impl.CloudinaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -18,6 +28,9 @@ import java.util.List;
 public class CompanyController {
     @Autowired
     private CompanyService companyService;
+    
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     // Get current user's company
     @GetMapping("/my-company")
@@ -81,14 +94,21 @@ public class CompanyController {
         return new ResponseEntity<>(updatedCompany, HttpStatus.OK);
     }
 
-    // Create Company
-    @PostMapping("/add")
-    public ResponseEntity<CompanyDto> createCompany(@RequestBody CompanyDto companyDto) {
-        CompanyDto createdCompany = companyService.createCompany(companyDto);
-        if (createdCompany == null) {
+    // Create Company với ảnh - Sử dụng @ModelAttribute cho gọn
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CompanyDto> createCompany(@ModelAttribute CompanyRequest companyRequest) {
+        try {
+            // Parse categoryIds nếu có
+            if (companyRequest.getCategoryIds() != null && !companyRequest.getCategoryIds().isEmpty()) {
+                // categoryIds đã được Spring tự động bind từ FormData
+                // Không cần parse thêm
+            }
+
+            CompanyDto createdCompany = companyService.createCompany(companyRequest);
+            return new ResponseEntity<>(createdCompany, HttpStatus.CREATED);
+        } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(createdCompany, HttpStatus.CREATED);
     }
 
     // Lấy công ty theo danh sách category (by-categories?categoryIds=1,2,3)

@@ -1,16 +1,19 @@
 package com.jobhuntly.backend.service.impl;
 
 import com.jobhuntly.backend.dto.request.UserRequest;
+import com.jobhuntly.backend.dto.response.HasCompanyResponse;
 import com.jobhuntly.backend.dto.response.UserDto;
 import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.exception.ResourceNotFoundException;
 import com.jobhuntly.backend.mapper.RoleMapper;
 import com.jobhuntly.backend.mapper.UserMapper;
 import com.jobhuntly.backend.repository.UserRepository;
+import com.jobhuntly.backend.security.SecurityUtils;
 import com.jobhuntly.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,5 +119,30 @@ public class UserServiceImpl implements UserService {
             throw new ResourceNotFoundException("User không tồn tại với ID: " + id);
         }
         userRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HasCompanyResponse hasCompany() {
+        Long userId = SecurityUtils.getCurrentUserId();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User không tồn tại với ID: " + userId));
+        
+        HasCompanyResponse.HasCompanyResponseBuilder responseBuilder = HasCompanyResponse.builder()
+                .userId(userId)
+                .hasCompany(false);
+
+        if (user.getCompany() != null) {
+            responseBuilder
+                    .hasCompany(true)
+                    .companyId(user.getCompany().getId())
+                    .companyName(user.getCompany().getCompanyName())
+                    .message("User already has company");
+        } else {
+            responseBuilder.message("User does not have company");
+        }
+
+        return responseBuilder.build();
     }
 }
