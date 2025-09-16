@@ -63,7 +63,7 @@ public class ApplicationController {
 
 	@GetMapping(value = "/detail/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public ApplicationResponse getDetailByJob(
-			@PathVariable Integer jobId
+			@PathVariable Long jobId
 	) {
 		Long userId = SecurityUtils.getCurrentUserId();
 		return applicationService.getDetail(userId, jobId);
@@ -92,8 +92,7 @@ public class ApplicationController {
 	@GetMapping("/status")
 	public ApplyStatusResponse getApplyStatus(@RequestParam("job_id") Long jobId) {
 		Long userId = SecurityUtils.getCurrentUserId();
-		boolean applied = applicationService.hasApplied(userId, jobId);
-		return new ApplyStatusResponse(applied);
+		return applicationService.hasApplied(userId, jobId);
 	}
 
 	@PatchMapping(value = "/status", consumes = MediaType.APPLICATION_JSON_VALUE)
