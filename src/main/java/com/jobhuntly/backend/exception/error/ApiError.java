@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -15,10 +16,20 @@ public class ApiError {
     private final String message;
     private final String path;
     private String code;
+    private Map<String, Object> extra;
 
-    public ApiError(HttpStatus status, String message, String path) {
+    public ApiError(HttpStatus status, String message, String path, String code, Map<String, Object> extra) {
         this.status = status.value();
         this.error = status.getReasonPhrase();
+        this.message = message;
+        this.path = path;
+        this.code = code;
+        this.extra = extra;
+    }
+
+    public ApiError(HttpStatus status, String error, String message, String path) {
+        this.status = status.value();
+        this.error = error;
         this.message = message;
         this.path = path;
     }
