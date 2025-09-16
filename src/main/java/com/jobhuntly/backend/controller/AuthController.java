@@ -96,12 +96,12 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/logout-all")
-    public ResponseEntity<Void> logoutAll(HttpServletRequest req, HttpServletResponse res) {
-        sessionService.revokeAll(currentUserId);
-        authCookieService.clearAuthCookies(req, res);
-        return ResponseEntity.noContent().build();
-    }
+//    @PostMapping("/logout-all")
+//    public ResponseEntity<Void> logoutAll(HttpServletRequest req, HttpServletResponse res) {
+//        sessionService.revokeAll(currentUserId);
+//        authCookieService.clearAuthCookies(req, res);
+//        return ResponseEntity.noContent().build();
+//    }
 
     @Operation(summary = "Get current user profile")
     @SecurityRequirement(name = "cookieAuth")
