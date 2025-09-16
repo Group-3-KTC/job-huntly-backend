@@ -84,7 +84,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             try {
                 Claims c = jwtUtil.parseAndValidate(at);
                 if (jwtUtil.isAccess(c)) {
-                    // set từ claims như code của bạn (hoặc từ user)
                     String email = c.getSubject();
                     String role = String.valueOf(c.get(JwtUtil.CLAIM_ROLE));
                     Long userId = jwtUtil.userIdFromClaims(c);
@@ -107,7 +106,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // 2) ✨ Silent refresh bằng RT nếu chưa authenticated bằng AT
         if (!authenticated) {
             String rt = extractCookie(req, cookieProps.getRefreshName(), "RT");
             if (rt != null && !rt.isBlank()) {
@@ -115,16 +113,12 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                     Claims rc = jwtUtil.parseAndValidate(rt);
                     if (jwtUtil.isRefresh(rc)) {
                         Long userId = jwtUtil.userIdFromClaims(rc);
-                        // (tuỳ bạn) có thể kiểm tra versionFromClaims(rc) với user.getTokenVersion()
                         User user = userRepository.findById(userId).orElse(null);
                         if (user != null) {
-                            // phát hành AT mới từ User
                             String newAt = jwtUtil.issueAccessToken(user);
 
-                            // set cookie AT mới, TTL dùng luôn cấu hình của bạn
                             authCookieService.setAccessCookie(res, newAt, jwtUtil.getAccessTtl());
 
-                            // set SecurityContext cho request hiện tại
                             setAuthFromUser(req, user);
 
                             authenticated = true;
@@ -142,7 +136,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // 3) Tiếp tục chuỗi filter; nếu vẫn chưa auth & endpoint yêu cầu auth → EntryPoint sẽ trả 401
         chain.doFilter(req, res);
     }
 
