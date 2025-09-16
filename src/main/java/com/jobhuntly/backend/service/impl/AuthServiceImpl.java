@@ -18,6 +18,8 @@ import com.jobhuntly.backend.entity.Role;
 import com.jobhuntly.backend.entity.User;
 import com.jobhuntly.backend.entity.enums.OneTimeTokenPurpose;
 import com.jobhuntly.backend.entity.enums.Status;
+import com.jobhuntly.backend.exception.AccountBannedException;
+import com.jobhuntly.backend.exception.GoogleAccountNeedsPasswordException;
 import com.jobhuntly.backend.repository.CandidateProfileRepository;
 import com.jobhuntly.backend.repository.RoleRepository;
 import com.jobhuntly.backend.repository.UserRepository;
@@ -159,8 +161,9 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (user.getGoogleId() != null && (user.getPasswordHash() == null || user.getPasswordHash().isBlank())) {
-            throw new IllegalStateException(
-                    "This account uses Google Sign-In. Please sign in with Google or set a password first."
+            throw new GoogleAccountNeedsPasswordException(
+                    "This account uses Google Sign-In. Please sign in with Google or set a password first.",
+                    user.getEmail()
             );
         }
 
@@ -172,6 +175,12 @@ public class AuthServiceImpl implements AuthService {
         String requestedRole = Optional.ofNullable(request.getRole()).map(String::toUpperCase).orElse(null);
         if (requestedRole != null && !requestedRole.equals(actualRole)) {
             throw new org.springframework.security.authentication.BadCredentialsException("Role không phù hợp");
+        }
+
+        if ("BANNED".equalsIgnoreCase(String.valueOf(user.getStatus()))) {
+            throw new AccountBannedException(
+                    "Your account has been banned. If you believe this is a mistake, please contact our support."
+            );
         }
 
         user.setLastLoginAt(Instant.now());
@@ -233,10 +242,22 @@ public class AuthServiceImpl implements AuthService {
             profile.setUser(user);
             profile.setAvatar(avatarUrl);
             candidateProfileRepo.save(profile);
+
         } else {
-            if (user.getGoogleId() == null) user.setGoogleId(googleUserId);
-            if (user.getStatus() != Status.ACTIVE) user.setStatus(Status.ACTIVE);
-            user.setIsActive(true);
+            if (user.getStatus() == Status.BANNED) {
+                throw new AccountBannedException(
+                        "Your account has been banned. If you believe this is a mistake, please contact our support."
+                );
+            }
+
+            if (user.getGoogleId() == null) {
+                user.setGoogleId(googleUserId);
+            }
+
+            if (user.getStatus() == Status.ACTIVE && !Boolean.TRUE.equals(user.getIsActive())) {
+                user.setIsActive(true);
+            }
+
             userRepository.save(user);
         }
 
@@ -256,10 +277,17 @@ public class AuthServiceImpl implements AuthService {
         return new LoginResponse(user.getEmail(), user.getFullName(), roleName, avatar);
     }
 
+
     @Override
     public MeResponse getUserMe(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+        if ("BANNED".equalsIgnoreCase(String.valueOf(user.getStatus()))) {
+            throw new AccountBannedException(
+                    "Your account has been banned. If you believe this is a mistake, please contact our support."
+            );
+        }
 
         String avatar = candidateProfileRepo.findByUser_Id(user.getId())
                 .map(CandidateProfile::getAvatar)

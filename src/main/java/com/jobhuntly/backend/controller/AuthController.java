@@ -8,7 +8,7 @@ import com.jobhuntly.backend.dto.auth.response.RegisterResponse;
 import com.jobhuntly.backend.security.cookie.AuthCookieService;
 import com.jobhuntly.backend.security.cookie.CookieProperties;
 import com.jobhuntly.backend.service.AuthService;
-import com.jobhuntly.backend.service.impl.SessionServiceImpl;
+import com.jobhuntly.backend.service.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final AuthService authService;
     private final AuthCookieService authCookieService;
-    private final SessionServiceImpl sessionService;
+    private final SessionService sessionService;
     private final CookieProperties cookieProps;
 
     @Operation(summary = "Register a new account")
@@ -96,12 +96,12 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-//    @PostMapping("/logout-all")
-//    public ResponseEntity<Void> logoutAll(HttpServletRequest req, HttpServletResponse res) {
-//        sessionService.revokeAll(currentUserId);
-//        authCookieService.clearAuthCookies(req, res);
-//        return ResponseEntity.noContent().build();
-//    }
+    @PostMapping("/logout-all")
+    public ResponseEntity<Void> logoutAll(HttpServletRequest req, HttpServletResponse res) {
+        sessionService.revokeAll(currentUserId);
+        authCookieService.clearAuthCookies(req, res);
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(summary = "Get current user profile")
     @SecurityRequirement(name = "cookieAuth")
