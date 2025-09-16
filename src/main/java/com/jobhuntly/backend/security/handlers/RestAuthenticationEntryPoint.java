@@ -1,23 +1,24 @@
 package com.jobhuntly.backend.security.handlers;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NoArgsConstructor;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
 
 import java.io.IOException;
 
 @NoArgsConstructor
-public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class RestAuthenticationEntryPoint implements org.springframework.security.web.AuthenticationEntryPoint {
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-        response.getWriter().write("""
-                {"type":"about:blank","title":"Unauthorized","status":401,"detail":"Authentication required","instance":"%s"}
-                """.formatted(request.getRequestURI()));
+    public void commence(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            org.springframework.security.core.AuthenticationException authException
+    ) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+        response.setContentType("application/json");
+        String body = String.format("""
+      {"type":"about:blank","title":"Unauthorized","status":401,"detail":"Authentication required","instance":"%s"}
+      """, request.getRequestURI());
+        response.getWriter().write(body);
     }
 }
