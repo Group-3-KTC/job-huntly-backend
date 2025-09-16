@@ -54,7 +54,7 @@ security:
     allow-credentials: true
   jwt:
     secret: ${JWT_SECRET_KEY}
-    access-ttl: PT15M
+    access-ttl: PT60M
     refresh-ttl: P7D
     issuer: jobhuntly
   cookie:

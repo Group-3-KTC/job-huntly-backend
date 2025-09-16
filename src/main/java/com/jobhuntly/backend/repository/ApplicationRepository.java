@@ -33,7 +33,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
 	boolean existsByUser_IdAndJob_Id(Long userId, Integer jobId);
 
-	Optional<Application> findByUser_IdAndJob_Id(Long userId, Integer jobId);
+	Optional<Application> findByUser_IdAndJob_Id(Long userId, Long jobId);
 
 	// Khóa ghi để tránh race condition khi user re-apply cùng lúc nhiều request
 	@Lock(LockModeType.PESSIMISTIC_WRITE)

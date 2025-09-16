@@ -26,7 +26,7 @@ public class VnPayController {
     /**
      * Tạo URL thanh toán VNPay (redirect)
      * - amountVnd: optional (null -> lấy giá từ package)
-     * - bankCode, locale: optional
+     * - bankCode: NCB, locale: optional
      */
     @PostMapping(value = "/checkout", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CheckoutResponse> checkout(
