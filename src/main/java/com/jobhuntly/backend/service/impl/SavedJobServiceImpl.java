@@ -18,8 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -82,6 +81,12 @@ public class SavedJobServiceImpl implements SavedJobService {
     @Override
     public boolean exists(Long userId, Long jobId) {
         return savedJobRepository.findByUserIdAndJobId(userId, jobId).isPresent();
+    }
+
+    @Override
+    public Set<Long> findSavedJobIds(Long userId, Collection<Long> jobIds) {
+        if (userId == null || jobIds == null || jobIds.isEmpty()) return Set.of();
+        return new HashSet<>(savedJobRepository.findSavedJobIdsIn(userId, jobIds));
     }
 
     private SavedJobResponse buildResponse(SavedJob saved, Long jobId) {

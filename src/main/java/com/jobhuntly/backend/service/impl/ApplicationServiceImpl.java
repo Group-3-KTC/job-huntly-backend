@@ -20,14 +20,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -281,4 +284,10 @@ public class ApplicationServiceImpl implements ApplicationService {
 		}
 		return applicationMapper.toResponse(saved);
 	}
+
+    @Override
+    public Set<Long> findAppliedJobIds(Long userId, Collection<Long> jobIds) {
+        if (userId == null || jobIds == null || jobIds.isEmpty()) return Set.of();
+        return new HashSet<>(applicationRepository.findAppliedJobIdsIn(userId, jobIds));
+    }
 }

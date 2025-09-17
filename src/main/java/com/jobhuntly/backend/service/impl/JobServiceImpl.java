@@ -1,17 +1,18 @@
 package com.jobhuntly.backend.service.impl;
 
 import com.jobhuntly.backend.dto.request.JobFilterRequest;
-import com.jobhuntly.backend.dto.request.JobRequest;
 import com.jobhuntly.backend.dto.request.JobPatchRequest;
+import com.jobhuntly.backend.dto.request.JobRequest;
+import com.jobhuntly.backend.dto.response.JobItemWithStatus;
 import com.jobhuntly.backend.dto.response.JobResponse;
 import com.jobhuntly.backend.entity.*;
 import com.jobhuntly.backend.mapper.JobMapper;
 import com.jobhuntly.backend.repository.*;
+import com.jobhuntly.backend.service.ApplicationService;
 import com.jobhuntly.backend.service.JobService;
+import com.jobhuntly.backend.service.SavedJobService;
 import lombok.AllArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -19,8 +20,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.cache.interceptor.KeyGenerator;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,6 +39,8 @@ public class JobServiceImpl implements JobService {
     private final LevelRepository levelRepository;
     private final WorkTypeRepository workTypeRepository;
     private final NotificationService notificationService;
+    private final SavedJobService savedJobService;
+    private final ApplicationService applicationService;
 
 
     @Override
@@ -54,13 +55,11 @@ public class JobServiceImpl implements JobService {
             throw new IllegalArgumentException("Company not found with id=" + companyId);
         }
 
-        // 2) dùng reference để không SELECT toàn bộ company
         Company companyRef = companyRepository.getReferenceById(companyId);
 
         Job job = jobMapper.toEntity(request);
         job.setCompany(companyRef);
 
-        // Nếu list null: bỏ qua
         if (request.getCategoryNames() != null) {
             Set<Category> categories = loadExistingByNames(
                     sanitizeAndDedupNames(request.getCategoryNames()),
@@ -107,7 +106,7 @@ public class JobServiceImpl implements JobService {
                 else throw new IllegalArgumentException("No valid wards found");
             }
         }
-        // ÉP NULL min/max khi type != 0
+
         enforceSalaryPolicy(job, request);
 
         Job saved = jobRepository.save(job);
@@ -155,7 +154,6 @@ public class JobServiceImpl implements JobService {
         if (request.getSalaryMin() != null) job.setSalaryMin(request.getSalaryMin());
         if (request.getSalaryMax() != null) job.setSalaryMax(request.getSalaryMax());
 
-        // company change (optional)
         if (request.getCompanyId() != null) {
             Long cid = request.getCompanyId();
             Company ref = companyRepository.findById(cid)
@@ -163,7 +161,6 @@ public class JobServiceImpl implements JobService {
             job.setCompany(ref);
         }
 
-        // associations by names
         if (request.getCategoryNames() != null) {
             Set<Category> categories = loadExistingByNames(
                     sanitizeAndDedupNames(request.getCategoryNames()),
@@ -204,7 +201,6 @@ public class JobServiceImpl implements JobService {
             job.setWards(wards);
         }
 
-        // enforce salary rules after potential type change
         JobRequest shim = JobRequest.builder()
                 .salaryType(request.getSalaryType())
                 .salaryMin(request.getSalaryMin())
@@ -229,6 +225,72 @@ public class JobServiceImpl implements JobService {
         return jobRepository.findAll(pageable)
                 .map(jobMapper::toResponseLite);
     }
+
+    @Override
+    public Page<JobItemWithStatus> listWithStatus(Pageable pageable, Long userId) {
+        Page<Job> jobPage = jobRepository.findAll(pageable);
+        if (jobPage.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        List<JobResponse> jobs = jobPage.getContent()
+                .stream().map(jobMapper::toResponse).toList();
+
+        List<Long> ids = jobs.stream().map(JobResponse::getId).toList();
+
+        // chưa logged in = skip
+        Set<Long> savedIds   = (userId == null) ? Set.of() : savedJobService.findSavedJobIds(userId, ids);
+        Set<Long> appliedIds = (userId == null) ? Set.of() : applicationService.findAppliedJobIds(userId, ids);
+
+        List<JobItemWithStatus> items = jobs.stream()
+                .map(j -> new JobItemWithStatus(
+                        j,
+                        savedIds.contains(j.getId()),
+                        appliedIds.contains(j.getId())
+                ))
+                .toList();
+
+        return new PageImpl<>(items, pageable, jobPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<JobItemWithStatus> searchLiteWithStatus(
+            JobFilterRequest request,
+            Pageable pageable,
+            Long userId
+    ) {
+        Page<JobResponse> page = this.searchLite(request, pageable);
+        if (page.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<JobResponse> jobs = page.getContent();
+        List<Long> jobIds = jobs.stream()
+                .map(JobResponse::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        final Set<Long> savedIds =
+                (userId == null || jobIds.isEmpty())
+                        ? Collections.emptySet()
+                        : savedJobService.findSavedJobIds(userId, jobIds);
+
+        final Set<Long> appliedIds =
+                (userId == null || jobIds.isEmpty())
+                        ? Collections.emptySet()
+                        : applicationService.findAppliedJobIds(userId, jobIds);
+
+        List<JobItemWithStatus> items = jobs.stream()
+                .map(j -> new JobItemWithStatus(
+                        j,
+                        savedIds.contains(j.getId()),
+                        appliedIds.contains(j.getId())
+                ))
+                .toList();
+
+        return new PageImpl<>(items, pageable, page.getTotalElements());
+    }
+
 
     @Override
     public Page<JobResponse> listByCompany(Long companyId, Pageable pageable) {
@@ -257,7 +319,7 @@ public class JobServiceImpl implements JobService {
     @Override
     public Page<JobResponse> searchByCompany(Long companyId, JobFilterRequest request, Pageable pageable) {
         Specification<Job> companySpec = (root, query, cb) -> cb.equal(root.get("company").get("id"), companyId);
-        Specification<Job> spec = Specification.where(companySpec).and(JobSpecifications.build(request));
+        Specification<Job> spec = Specification.allOf(companySpec, JobSpecifications.build(request));
 
         Page<Job> page = jobRepository.findAll(spec, pageable);
         List<Long> ids = page.getContent().stream().map(Job::getId).toList();
