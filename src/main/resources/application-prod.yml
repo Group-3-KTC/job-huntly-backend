@@ -130,6 +130,10 @@ mail:
             enable: true
             required: true
 
+app:
+  frontend:
+    base-url: ${FRONTEND_HOST:https://jobhuntly.io.vn}
+    vip-path: /recruiter/companyVip
 
 springdoc:
   api-docs:
