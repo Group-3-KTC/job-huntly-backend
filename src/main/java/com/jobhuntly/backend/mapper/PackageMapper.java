@@ -3,14 +3,14 @@ package com.jobhuntly.backend.mapper;
 import com.jobhuntly.backend.dto.request.PackageRequest;
 import com.jobhuntly.backend.dto.response.PackageResponse;
 import com.jobhuntly.backend.entity.PackageEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface PackageMapper {
     PackageResponse toResponse(PackageEntity entity);
-    @Mapping(target = "packageId", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    PackageEntity toEntity(PackageRequest request);
+    @BeanMapping(ignoreByDefault = false)
+    PackageEntity toEntity(PackageRequest req);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntity(@MappingTarget PackageEntity target, PackageRequest req);
 }

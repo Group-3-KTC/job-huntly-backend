@@ -21,6 +21,7 @@ public final class CacheConstant {
     public static final String DICT_SKILLS        = "dict:skillsByCategoryName";
     public static final String DICT_LOCATIONS_CITY = "dict:cities";     // cities
     public static final String DICT_LOCATIONS_WARDS = "dict:wardsByCity";   // key: cityId
+    public static final String DICT_PACKAGES = "dict:packagesForVip";
 
     // ===== User / Profile =====
     public static final String USER_BY_ID         = "user:byId";          // key = userId
