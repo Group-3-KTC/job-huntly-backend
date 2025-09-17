@@ -1,8 +1,10 @@
 package com.jobhuntly.backend.controller;
 
+import com.jobhuntly.backend.dto.auth.AppPrincipal;
 import com.jobhuntly.backend.dto.request.JobFilterRequest;
-import com.jobhuntly.backend.dto.request.JobRequest;
 import com.jobhuntly.backend.dto.request.JobPatchRequest;
+import com.jobhuntly.backend.dto.request.JobRequest;
+import com.jobhuntly.backend.dto.response.JobItemWithStatus;
 import com.jobhuntly.backend.dto.response.JobResponse;
 import com.jobhuntly.backend.service.JobService;
 import jakarta.validation.Valid;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin("*")
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${backend.prefix}/job")
 public class JobController {
     private final JobService jobService;
+
 
     @PostMapping("/create")
     public ResponseEntity<JobResponse> create(@Valid @RequestBody JobRequest request) {
@@ -80,4 +84,24 @@ public class JobController {
     ) {
         return jobService.searchByCompany(companyId, request, pageable);
     }
+
+    @GetMapping("/all-with-status")
+    public ResponseEntity<Page<JobItemWithStatus>> listWithStatus(
+            @AuthenticationPrincipal AppPrincipal me,
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Long uid = (me == null) ? null : me.id();
+        return ResponseEntity.ok(jobService.listWithStatus(pageable, uid));
+    }
+
+    @PostMapping("/search-lite-with-status")
+    public ResponseEntity<Page<JobItemWithStatus>> searchLiteWithStatus(
+            @AuthenticationPrincipal AppPrincipal me,
+            @RequestBody JobFilterRequest request,
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Long uid = (me == null) ? null : me.id();
+        return ResponseEntity.ok(jobService.searchLiteWithStatus(request, pageable, uid));
+    }
+
 }

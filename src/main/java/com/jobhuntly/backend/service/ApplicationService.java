@@ -7,6 +7,9 @@ import com.jobhuntly.backend.dto.response.ApplyStatusResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collection;
+import java.util.Set;
+
 public interface ApplicationService {
     ApplicationResponse create(Long userId, ApplicationRequest req);
 
@@ -23,4 +26,5 @@ public interface ApplicationService {
     ApplyStatusResponse hasApplied(Long userId, Long jobId);
 
     ApplicationResponse updateStatusByStaff(Long userId, Long applicationId, String status);
+    Set<Long> findAppliedJobIds(Long userId, Collection<Long> jobIds);
 }

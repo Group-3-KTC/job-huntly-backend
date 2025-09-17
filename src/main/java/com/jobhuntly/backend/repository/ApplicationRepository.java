@@ -1,7 +1,6 @@
 package com.jobhuntly.backend.repository;
 
 import com.jobhuntly.backend.entity.Application;
-import com.jobhuntly.backend.dto.response.AnalyticsTrendPoint;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,4 +55,12 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 	List<Object[]> countDailyByCompany(@Param("companyId") Long companyId,
 										 @Param("fromDate") LocalDate from,
 										 @Param("toDate") LocalDate to);
+
+    @Query(value = """
+      select job_id 
+      from applications 
+      where user_id = :uid and job_id in (:ids)
+      """, nativeQuery = true)
+    List<Long> findAppliedJobIdsIn(@Param("uid") Long userId, @Param("ids") Collection<Long> jobIds);
+
 }
