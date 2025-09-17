@@ -10,6 +10,7 @@ import com.jobhuntly.backend.service.JobService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -43,9 +44,15 @@ public class JobController {
 
     @GetMapping("/all")
     public ResponseEntity<Page<JobResponse>> list(
-            @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC)
-            Pageable pageable) {
-        return ResponseEntity.ok(jobService.list(pageable));
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Order.desc("company.isProCompany"), Sort.Order.desc("id"))
+        );
+
+        return ResponseEntity.ok(jobService.list(sortedPageable));
     }
 
     @GetMapping("/company/{companyId}")
@@ -58,9 +65,15 @@ public class JobController {
     @PostMapping("/search-lite")
     public Page<JobResponse> searchLite(
             @RequestBody JobFilterRequest request,
-            @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 10) Pageable pageable
     ) {
-        return jobService.searchLite(request, pageable);
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Order.desc("company.isProCompany"), Sort.Order.desc("id"))
+        );
+
+        return jobService.searchLite(request, sortedPageable);
     }
 
     @PostMapping("/company/{companyId}/search")

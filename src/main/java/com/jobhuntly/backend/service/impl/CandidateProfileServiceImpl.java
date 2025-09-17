@@ -51,8 +51,8 @@ public class CandidateProfileServiceImpl implements CandidateProfileService {
 
         if (request.getAvatar() != null && !request.getAvatar().isEmpty()) {
             try {
-                String avatarUrl = cloudinaryService.uploadFile(request.getAvatar());
-                profile.setAvatar(avatarUrl); 
+                String avatarUrl = cloudinaryService.uploadUserAvatar(userId, request.getAvatar()).secureUrl();
+                profile.setAvatar(avatarUrl);
             } catch (Exception e) {
                 throw new IllegalStateException("Upload avatar thất bại.", e);
             }

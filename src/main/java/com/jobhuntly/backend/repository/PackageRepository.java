@@ -7,4 +7,7 @@ import java.util.Optional;
 
 public interface PackageRepository extends JpaRepository<PackageEntity, Long> {
     Optional<PackageEntity> findByCodeAndIsActiveTrue(String code);
+
+    boolean existsByCodeIgnoreCase(String code);
+    boolean existsByCodeIgnoreCaseAndPackageIdNot(String code, Long packageId);
 }

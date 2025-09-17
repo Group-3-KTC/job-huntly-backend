@@ -56,8 +56,9 @@ public class RedisConfig {
         perCache.put(DICT_LEVELS,        base.entryTtl(Duration.ofHours(12)));
         perCache.put(DICT_WORK_TYPES,    base.entryTtl(Duration.ofHours(12)));
         perCache.put(DICT_SKILLS,        base.entryTtl(Duration.ofHours(6)));
-        perCache.put(DICT_LOCATIONS_CITY, base.entryTtl(Duration.ofHours(1)));
+        perCache.put(DICT_LOCATIONS_CITY, base.entryTtl(Duration.ofHours(24)));
         perCache.put(DICT_LOCATIONS_WARDS, base.entryTtl(Duration.ofHours(24)));
+        perCache.put(DICT_PACKAGES, base.entryTtl(Duration.ofHours(24)));
 
         perCache.put(SAVED_JOBS,        base.entryTtl(Duration.ofMinutes(2)));
         perCache.put(APPLICATIONS_LIST, base.entryTtl(Duration.ofMinutes(2)));
