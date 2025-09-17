@@ -126,6 +126,11 @@ mail:
             enable: true
             required: true
 
+app:
+  frontend:
+    base-url: ${FRONTEND_HOST:http://localhost:3000}
+    vip-path: /recruiter/companyVip
+
 springdoc:
   api-docs:
     path: /v3/api-docs

@@ -166,8 +166,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 					app.getEmail(),
 					app.getStatus(),
 					app.getPhoneNumber(),
+                    app.getCandidateName(),
 					app.getDescription(),
-					app.getCandidateName(),
 					app.getCreatedAt(),
 					downloadUrl
 			);
