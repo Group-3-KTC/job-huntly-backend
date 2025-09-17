@@ -49,7 +49,7 @@ public class CloudinaryService {
     // ===================== USER AVATAR (1-1, overwrite) =====================
     public CloudAsset uploadUserAvatar(Long userId, MultipartFile file) throws IOException {
         validateImage(file);
-        String publicId = "users/" + userId + "/avatar";
+        String publicId = userId + "/avatar";
 
         Map<?, ?> res = cloudinary.uploader().upload(
                 file.getBytes(),
@@ -58,7 +58,7 @@ public class CloudinaryService {
                         "resource_type", "image",
                         "overwrite", true,
                         "invalidate", true,
-                        "folder", "users/" + userId
+                        "folder", "users/"
                 )
         );
         return toAsset(res);
