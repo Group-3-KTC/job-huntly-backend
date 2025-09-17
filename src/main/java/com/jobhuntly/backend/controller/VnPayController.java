@@ -6,14 +6,18 @@ import com.jobhuntly.backend.dto.response.PaymentResponseByCompany;
 import com.jobhuntly.backend.service.impl.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +30,7 @@ public class VnPayController {
     /**
      * Tạo URL thanh toán VNPay (redirect)
      * - amountVnd: optional (null -> lấy giá từ package)
-     * - bankCode, locale: optional
+     * - bankCode: NCB, locale: optional
      */
     @PostMapping(value = "/checkout", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CheckoutResponse> checkout(
@@ -43,18 +47,58 @@ public class VnPayController {
         return ResponseEntity.ok(res);
     }
 
-    /**
-     * VNPay Return URL (user browser quay về)
-     * VNPay sẽ gọi dạng GET: /return?vnp_Amount=...&vnp_ResponseCode=...&vnp_TxnRef=...&...
-     *
-     * Lưu ý: nếu bạn muốn redirect về FE thay vì trả JSON ở đây:
-     *  - Query trạng thái qua service
-     *  - Sau đó 302 về FE: /payment-result?code=...&txnRef=...
-     */
-    @GetMapping(value = "/return", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CallbackResponse> vnpReturn(@RequestParam Map<String, String> queryParams) {
+    @GetMapping("/return")
+    public ResponseEntity<Void> vnpReturn(@RequestParam Map<String, String> queryParams,
+                                          HttpServletRequest request) {
         CallbackResponse res = paymentService.handleVnpayCallback(queryParams, "RETURN");
-        return ResponseEntity.ok(res);
+
+        String txnRef       = queryParams.get("vnp_TxnRef");
+        String payStatus    = res.isSuccess() ? "success" : "fail";
+        String payCode      = res.getMessage();
+
+        String redirectUrl = UriComponentsBuilder
+                .fromHttpUrl(resolveFrontendBaseUrl(request))
+                .path(resolveVipPath())
+                .queryParam("pay_status", payStatus)
+                .queryParam("pay_code",   payCode)
+                .queryParam("txnRef",     txnRef)
+                .build()
+                .toUriString();
+
+        return ResponseEntity.status(HttpStatus.FOUND)  // 302
+                .location(URI.create(redirectUrl))
+                .build();
+    }
+
+    @Value("${app.frontend.base-url:}")
+    private String configuredFrontendBaseUrl;
+
+    @Value("${app.frontend.vip-path:/recruiter/companyVip}")
+    private String vipPath;
+
+    /** Ưu tiên cấu hình; nếu trống thì thử Origin/Referer; cuối cùng fallback localhost */
+    private String resolveFrontendBaseUrl(HttpServletRequest req) {
+        if (configuredFrontendBaseUrl != null && !configuredFrontendBaseUrl.isBlank()) {
+            return configuredFrontendBaseUrl;
+        }
+        String origin = req.getHeader("Origin");
+        if (origin != null && !origin.isBlank()) return origin;
+
+        String referer = req.getHeader("Referer");
+        if (referer != null && !referer.isBlank()) {
+            try {
+                URI u = URI.create(referer);
+                String scheme = (u.getScheme() != null) ? u.getScheme() : "https";
+                String host   = u.getHost();
+                String port   = (u.getPort() > 0) ? (":" + u.getPort()) : "";
+                return scheme + "://" + host + port;
+            } catch (Exception ignore) {}
+        }
+        return "http://localhost:3000";
+    }
+
+    private String resolveVipPath() {
+        return (vipPath != null && !vipPath.isBlank()) ? vipPath : "/recruiter/companyVip";
     }
 
     /**

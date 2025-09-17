@@ -186,9 +186,25 @@ public class CloudinaryService {
 
     // ===================== APPLICATION CV (1-1, overwrite) =====================
     public CloudAsset uploadApplicationCv(Integer applicationId, MultipartFile file) throws IOException {
+        // 1. Kiểm tra rỗng
         validateCommon(file);
+
+        // 2. Giới hạn dung lượng (5 MB)
+        long maxSize = 5 * 1024 * 1024; // 5 MB
+        if (file.getSize() > maxSize) {
+            throw new IllegalArgumentException("File vượt quá giới hạn 5MB.");
+        }
+
+        // 3. Kiểm tra định dạng (chỉ PDF)
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.equalsIgnoreCase("application/pdf")) {
+            throw new IllegalArgumentException("Chỉ được phép upload file PDF.");
+        }
+
+        // 4. Tạo publicId cho Cloudinary
         String publicId = "applications/%d/cv.pdf".formatted(applicationId);
 
+        // 5. Upload lên Cloudinary
         Map<?, ?> res = cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap(
@@ -200,8 +216,9 @@ public class CloudinaryService {
                         "access_mode", "public"
                 )
         );
-        String secureUrl = (String) res.get("secure_url");
 
+        // 6. Lấy thông tin trả về
+        String secureUrl   = (String) res.get("secure_url");
         String resourceType = (String) res.get("resource_type");
         String format       = (String) res.get("format");
         Long bytes          = (res.get("bytes") instanceof Number n) ? n.longValue() : null;

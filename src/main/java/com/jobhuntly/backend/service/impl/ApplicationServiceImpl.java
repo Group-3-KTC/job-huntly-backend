@@ -3,6 +3,7 @@ package com.jobhuntly.backend.service.impl;
 import com.jobhuntly.backend.dto.request.ApplicationRequest;
 import com.jobhuntly.backend.dto.response.ApplicationByUserResponse;
 import com.jobhuntly.backend.dto.response.ApplicationResponse;
+import com.jobhuntly.backend.dto.response.ApplyStatusResponse;
 import com.jobhuntly.backend.entity.Application;
 import com.jobhuntly.backend.entity.Job;
 import com.jobhuntly.backend.entity.User;
@@ -33,8 +34,8 @@ import java.util.Objects;
 @Transactional
 public class ApplicationServiceImpl implements ApplicationService {
 
-	private static final int MAX_ATTEMPTS = 4;                 // gồm cả lần apply đầu tiên
-	private static final Duration COOLDOWN = Duration.ofMinutes(10); // chống spam
+	private static final int MAX_ATTEMPTS = 2;                 // gồm cả lần apply đầu tiên
+	private static final Duration COOLDOWN = Duration.ofMinutes(30); // chống spam
 
 	private final ApplicationRepository applicationRepository;
 	private final UserRepository userRepository;
@@ -239,15 +240,22 @@ public class ApplicationServiceImpl implements ApplicationService {
 	}
 
 	@Override
-	public ApplicationResponse getDetail(Long userId, Integer jobId) {
+	public ApplicationResponse getDetail(Long userId, Long jobId) {
 		Application app = applicationRepository.findByUser_IdAndJob_Id(userId, jobId)
 				.orElseThrow(() -> new EntityNotFoundException("Không tìm thấy hồ sơ ứng tuyển."));
 		return applicationMapper.toResponse(app);
 	}
 
 	@Override
-	public boolean hasApplied(Long userId, Long jobId) {
-		return applicationRepository.existsByUser_IdAndJob_Id(userId, jobId);
+	public ApplyStatusResponse hasApplied(Long userId, Long jobId) {
+		return applicationRepository.findByUser_IdAndJob_Id(userId, jobId)
+				.map(app -> new ApplyStatusResponse(
+						true,
+						app.getAttemptCount(),
+						app.getLastUserActionAt()
+				))
+				.orElse(new ApplyStatusResponse(false, null, null));
+
 	}
 
 	@Override

@@ -71,4 +71,20 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     List<Company> findByIdIn(Collection<Long> ids);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Transactional
+    @Query("""
+            UPDATE Company c
+            SET 
+            c.vipUntil = :newVipUntil,
+            c.isProCompany = CASE 
+                WHEN c.vipUntil IS NULL OR c.vipUntil < :now THEN TRUE
+                ELSE c.isProCompany
+            END
+            WHERE c.id = :companyId
+            """)
+    int upsertVipAndFlag(@Param("companyId") Long companyId,
+                         @Param("newVipUntil") OffsetDateTime newVipUntil,
+                         @Param("now") OffsetDateTime now);
+
 }
