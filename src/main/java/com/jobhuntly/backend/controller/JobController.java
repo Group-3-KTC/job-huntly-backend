@@ -88,20 +88,40 @@ public class JobController {
     @GetMapping("/all-with-status")
     public ResponseEntity<Page<JobItemWithStatus>> listWithStatus(
             @AuthenticationPrincipal AppPrincipal me,
-            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 10) Pageable pageable
     ) {
         Long uid = (me == null) ? null : me.id();
-        return ResponseEntity.ok(jobService.listWithStatus(pageable, uid));
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(
+                        Sort.Order.desc("company.isProCompany"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        return ResponseEntity.ok(jobService.listWithStatus(sortedPageable, uid));
     }
 
     @PostMapping("/search-lite-with-status")
     public ResponseEntity<Page<JobItemWithStatus>> searchLiteWithStatus(
             @AuthenticationPrincipal AppPrincipal me,
             @RequestBody JobFilterRequest request,
-            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 10) Pageable pageable
     ) {
         Long uid = (me == null) ? null : me.id();
-        return ResponseEntity.ok(jobService.searchLiteWithStatus(request, pageable, uid));
+
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(
+                        Sort.Order.desc("company.isProCompany"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        return ResponseEntity.ok(jobService.searchLiteWithStatus(request, sortedPageable, uid));
     }
 
 }
