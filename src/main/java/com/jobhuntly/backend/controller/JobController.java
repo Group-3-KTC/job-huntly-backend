@@ -49,7 +49,7 @@ public class JobController {
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
-                Sort.by(Sort.Order.desc("company.isProCompany"), Sort.Order.desc("id"))
+                Sort.by(Sort.Order.desc("company.proCompany"), Sort.Order.desc("id"))
         );
 
         return ResponseEntity.ok(jobService.list(sortedPageable));
@@ -70,7 +70,7 @@ public class JobController {
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
-                Sort.by(Sort.Order.desc("company.isProCompany"), Sort.Order.desc("id"))
+                Sort.by(Sort.Order.desc("company.proCompany"), Sort.Order.desc("id"))
         );
 
         return jobService.searchLite(request, sortedPageable);
@@ -96,7 +96,7 @@ public class JobController {
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 Sort.by(
-                        Sort.Order.desc("company.isProCompany"),
+                        Sort.Order.desc("company.proCompany"),
                         Sort.Order.desc("id")
                 )
         );
@@ -116,7 +116,7 @@ public class JobController {
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 Sort.by(
-                        Sort.Order.desc("company.isProCompany"),
+                        Sort.Order.desc("company.proCompany"),
                         Sort.Order.desc("id")
                 )
         );

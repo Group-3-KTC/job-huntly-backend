@@ -26,7 +26,7 @@ public interface JobMapper {
     @Mapping(source = "id",          target = "id")
     @Mapping(source = "companyName", target = "name")
     @Mapping(source = "avatar",      target = "avatar")
-    @Mapping(source = "isProCompany",   target = "isProCompany")
+    @Mapping(source = "proCompany",   target = "isProCompany")
     JobResponse.CompanyBrief toCompanyBrief(Company company);
 
 
