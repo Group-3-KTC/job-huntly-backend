@@ -767,6 +767,28 @@ CREATE TABLE IF NOT EXISTS `ticket_messages` (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
+CREATE TABLE IF NOT EXISTS `ticket_message_attachments` (
+  `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+  `ticket_message_id` BIGINT NOT NULL,
+  `filename` VARCHAR(512),
+  `content_type` VARCHAR(255),
+  `size_bytes` BIGINT,
+  `content_id` VARCHAR(512),
+  `inline` TINYINT(1) NOT NULL DEFAULT 0,
+  `storage_provider` VARCHAR(50) NOT NULL DEFAULT 'CLOUDINARY',
+  `storage_public_id` VARCHAR(512),
+  `storage_url` VARCHAR(1000),
+  `created_at` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+
+  CONSTRAINT `fk_tma_msg`
+    FOREIGN KEY (`ticket_message_id`) REFERENCES `ticket_messages`(`id`)
+    ON DELETE CASCADE,
+
+  KEY `ix_tma_msg` (`ticket_message_id`),
+  KEY `ix_tma_cid` (`content_id`),
+  KEY `ix_tma_inline` (`inline`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 ALTER TABLE users
     ADD COLUMN auth_provider VARCHAR(20) NULL AFTER google_id,
     ADD COLUMN password_set TINYINT(1) DEFAULT 0 AFTER auth_provider;
