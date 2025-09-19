@@ -54,7 +54,7 @@ public class Company {
     private String status; // "active", "inactive", "pending"
 
     @Column(name = "is_pro_company")
-    private Boolean isProCompany;
+    private Boolean proCompany;
 
     @Column(name = "followers_count")
     private Integer followersCount;

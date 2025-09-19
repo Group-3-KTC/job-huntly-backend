@@ -121,7 +121,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         // Set default values
         entity.setStatus("active");
-        entity.setIsProCompany(false);
+        entity.setProCompany(false);
         entity.setIsVip(false);
         entity.setFollowersCount(0);
         entity.setJobsCount(0L);
