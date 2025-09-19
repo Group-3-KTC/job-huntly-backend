@@ -77,7 +77,7 @@ public class JobResponse {
 
         private String avatar;
 
-        private boolean isProCompany;
+        private Boolean isProCompany;
     }
 
     @Data
