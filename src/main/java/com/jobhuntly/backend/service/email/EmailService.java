@@ -1,14 +1,18 @@
 package com.jobhuntly.backend.service.email;
 
+import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.Nullable;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class EmailService implements EmailSender {
@@ -33,13 +37,79 @@ public class EmailService implements EmailSender {
             helper.setFrom("noreply@jobhuntly.io.vn", "JobHuntly Support");
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(content, true); // true = gửi HTML
+            helper.setText(content, true);
 
             mailSender.send(mimeMessage);
         } catch (Exception e) {
             throw new IllegalStateException("Can't send the email", e);
         }
     }
+
+    @Override
+    public SendResult send(OutgoingEmail mail) {
+        Objects.requireNonNull(mail, "OutgoingEmail must not be null");
+        if (mail.to() == null || mail.to().isBlank()) {
+            throw new IllegalArgumentException("OutgoingEmail.to is required");
+        }
+        if (mail.subject() == null || mail.subject().isBlank()) {
+            throw new IllegalArgumentException("OutgoingEmail.subject is required");
+        }
+
+        try {
+            MimeMessage msg = gmailMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    msg,
+                    true,
+                    StandardCharsets.UTF_8.name()
+            );
+
+            if (mail.from() != null) {
+                helper.setFrom(mail.from());
+            } else {
+                 helper.setFrom(new InternetAddress("contact.jobhuntly@gmail.com", "JobHuntly Support", StandardCharsets.UTF_8.name()));
+            }
+
+            helper.setTo(mail.to());
+            helper.setSubject(mail.subject());
+
+            String html = mail.html();
+            String text = mail.text();
+
+            if (html != null && !html.isBlank()) {
+                helper.setText(text != null ? text : "", html);
+            } else {
+                helper.setText(text != null ? text : "", false);
+            }
+
+            if (mail.inReplyTo() != null && !mail.inReplyTo().isBlank()) {
+                msg.setHeader("In-Reply-To", ensureAngle(mail.inReplyTo()));
+            }
+            if (mail.references() != null && !mail.references().isBlank()) {
+                msg.setHeader("References", ensureAngle(mail.references()));
+            }
+
+            // Gửi
+            gmailMailSender.send(msg);
+
+            String messageId = msg.getMessageID();
+            if (messageId == null || messageId.isBlank()) {
+                String domain = "gmail.com";
+                messageId = "<" + java.util.UUID.randomUUID() + "@" + domain + ">";
+            }
+            return new SendResult(messageId);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to send email", e);
+        }
+    }
+
+    private String ensureAngle(String v) {
+        String s = v.trim();
+        if (!s.startsWith("<")) s = "<" + s;
+        if (!s.endsWith(">")) s = s + ">";
+        return s;
+    }
+
+
 
     public String sendWithThreading(
             String to,
@@ -79,7 +149,7 @@ public class EmailService implements EmailSender {
                 mime.addHeader("References", references);
             }
 
-            mime.saveChanges(); // ensure Message-ID generated
+            mime.saveChanges();
             String messageId = mime.getMessageID();
 
             gmailMailSender.send(mime);

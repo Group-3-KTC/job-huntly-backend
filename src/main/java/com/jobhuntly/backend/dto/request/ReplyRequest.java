@@ -11,4 +11,6 @@ public class ReplyRequest {
     private List<String> to;
     private String subjectOverride;
     private String replyToMessageId;
+    private String message;
+
 }

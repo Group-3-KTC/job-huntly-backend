@@ -19,13 +19,14 @@ public class UserPrincipal implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         com.jobhuntly.backend.entity.User u = userRepo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         String roleName = "ROLE_" + u.getRole().getRoleName().toUpperCase();
         return org.springframework.security.core.userdetails.User
                 .withUsername(u.getEmail())
                 .password(u.getPasswordHash())
                 .authorities(List.of(new SimpleGrantedAuthority(roleName)))
                 .accountLocked(false)
-                .disabled(Boolean.FALSE.equals(u.getIsActive())) // block nếu chưa active
+                .disabled(Boolean.FALSE.equals(u.getIsActive()))
                 .build();
     }
 }

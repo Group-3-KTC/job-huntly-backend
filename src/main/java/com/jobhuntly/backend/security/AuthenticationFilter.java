@@ -46,7 +46,7 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // Bỏ qua preflight và các route public
+        // skip preflight và các route public
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) return true;
 
         String p = request.getServletPath();
@@ -55,10 +55,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         // auth/me ko đc bỏ qua mà phải filter
         if (p.startsWith(base + "/auth/me")) return false;
 
-        // Bỏ qua các endpoint auth (login/register/refresh/activate...)
+        // skip các endpoint auth (login/register/refresh/activate...)
         if (p.startsWith(base + "/auth")) return true;
 
-        // Bỏ qua swagger, docs, static files
+        // skip swagger, docs, static files
         if (PATH_MATCHER.match("/swagger-ui/**", p)) return true;
         if (PATH_MATCHER.match("/v3/api-docs/**", p)) return true;
         if (PATH_MATCHER.match("/actuator/**", p)) return true;
@@ -79,7 +79,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         String at = extractAccessToken(req);
         boolean authenticated = false;
 
-        // 1) Thử authenticate bằng AT (giữ logic hiện tại của bạn)
         if (at != null && !at.isBlank()) {
             try {
                 Claims c = jwtUtil.parseAndValidate(at);
@@ -164,8 +163,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void setAuthFromUser(HttpServletRequest req, User user) {
-        String role = user.getRole().toString();
-        String authority = (role != null && role.startsWith("ROLE_")) ? role : "ROLE_" + role;
+        String roleName = (user.getRole() != null && user.getRole().getRoleName() != null)
+                ? user.getRole().getRoleName().toUpperCase()
+                : "USER";
+        String authority = "ROLE_" + roleName;
         AppPrincipal principal = new AppPrincipal(user.getId(), user.getEmail());
         UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken(
@@ -173,5 +174,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
         auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
+
 
 }

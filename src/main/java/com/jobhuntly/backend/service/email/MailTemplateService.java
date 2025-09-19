@@ -1,9 +1,12 @@
 package com.jobhuntly.backend.service.email;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+
+import java.time.Year;
 
 @Service
 @RequiredArgsConstructor
@@ -33,5 +36,32 @@ public class MailTemplateService {
         context.setVariable("logoUrl", "https://res.cloudinary.com/dfbqhd5ht/image/upload/v1757058535/logo-title-white_yjzvvr.png");
 
         return templateEngine.process("reset-password-email", context);
+    }
+
+    public String renderGenericReply(String appName,
+                                     String logoUrl,
+                                     String supportEmail,
+                                     String customerName,
+                                     String heading,
+                                     String plainMessage,
+                                     String ctaUrl,
+                                     String ctaLabel,
+                                     String preheader) {
+        Context ctx = new Context();
+        ctx.setVariable("appName", appName);
+        ctx.setVariable("logoUrl", logoUrl);
+        ctx.setVariable("supportEmail", supportEmail);
+        ctx.setVariable("customerName", customerName);
+        ctx.setVariable("heading", heading);
+        ctx.setVariable("ctaUrl", ctaUrl);
+        ctx.setVariable("ctaLabel", ctaLabel);
+        ctx.setVariable("preheader", preheader);
+        ctx.setVariable("year", Year.now().getValue());
+
+        String safeHtml = StringEscapeUtils.escapeHtml4(plainMessage)
+                .replace("\n", "<br/>");
+        ctx.setVariable("messageHtml", safeHtml);
+
+        return templateEngine.process("generic-reply.html", ctx);
     }
 }
