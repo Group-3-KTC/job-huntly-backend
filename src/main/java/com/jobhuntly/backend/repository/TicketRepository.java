@@ -27,4 +27,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     );
 
     Optional<Ticket> findByThreadId(String threadId);
+
+    Optional<Ticket> findFirstByCustomerEmailAndSubjectOrderByCreatedAtDesc(String customerEmail, String subject);
 }

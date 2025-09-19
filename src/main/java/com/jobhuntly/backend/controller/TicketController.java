@@ -4,10 +4,13 @@ import com.jobhuntly.backend.dto.request.ReplyRequest;
 import com.jobhuntly.backend.dto.response.InboxItemDto;
 import com.jobhuntly.backend.dto.response.MessageDto;
 import com.jobhuntly.backend.dto.response.ReplyResultDto;
+import com.jobhuntly.backend.entity.Ticket;
 import com.jobhuntly.backend.entity.TicketMessage;
 import com.jobhuntly.backend.repository.TicketMessageRepository;
 import com.jobhuntly.backend.service.email.MailInboxService;
+import com.jobhuntly.backend.service.email.MailPollingService;
 import com.jobhuntly.backend.service.email.ReplyService;
+import com.jobhuntly.backend.service.email.TicketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,10 +18,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("${backend.prefix}/tickets")
@@ -27,8 +34,9 @@ import java.net.URI;
 public class TicketController {
 
     private final MailInboxService mailInboxService;
-    private final TicketMessageRepository ticketMessageRepository;
     private final ReplyService replyService;
+    private final MailPollingService mailPollingService;
+    private final TicketService ticketService;
 
     // GET /api/v1/tickets?status=OPEN&customerEmail=abc@gmail.com&q=hello&page=0&size=20&sort=createdAt,DESC
     @GetMapping
@@ -51,9 +59,7 @@ public class TicketController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int size
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "sentAt"));
-        Page<TicketMessage> data = ticketMessageRepository.findByTicket_IdOrderBySentAtAsc(ticketId, pageable);
-        return data.map(MessageDto::from);
+        return mailInboxService.listMessages(ticketId, page, size);
     }
 
     //    GET /api/v1/tickets/{id}/messages?page=0&size=100
@@ -82,5 +88,23 @@ public class TicketController {
             return Sort.unsorted();
         }
     }
+
+    @RequestMapping(value = "/poll-now", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS})
+    public ResponseEntity<Map<String, Object>> pollNow() {
+        log.info("Polling now");
+        int processed = mailPollingService.pollNow();
+        return ResponseEntity.ok(Map.of("processed", processed));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestBody StatusUpdateRequest req) {
+        Ticket t = ticketService.updateStatus(id, req.status());
+        return ResponseEntity.ok(Map.of(
+                "id", t.getId(),
+                "status", t.getStatus().name()
+        ));
+    }
+
+    public record StatusUpdateRequest(String status) {}
 }
 

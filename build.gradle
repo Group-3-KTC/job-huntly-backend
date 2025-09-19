@@ -75,6 +75,12 @@ dependencies {
     //WebSocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework:spring-messaging'
+
+    // tika
+    implementation 'org.apache.tika:tika-core:2.9.2'
+
+    // jsoup
+    implementation 'org.jsoup:jsoup:1.17.2'
 }
 
 tasks.named('test') {

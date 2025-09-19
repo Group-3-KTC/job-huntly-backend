@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -313,20 +314,15 @@ public class CloudinaryService {
         Matcher m = p.matcher(url);
         return m.find() ? m.group(1) : null;
     }
-    
-    /**
-     * Validation chuyên biệt cho hình ảnh company
-     */
+
     private void validateCompanyImage(MultipartFile file, String type) throws IOException {
         validateImage(file);
-        
-        // Kiểm tra kích thước file (tối đa 5MB cho company images)
+
         long maxSize = 5L * 1024 * 1024; // 5MB
         if (file.getSize() > maxSize) {
             throw new IOException("Company " + type + " image must not exceed 5MB");
         }
-        
-        // Kiểm tra định dạng file
+
         String contentType = file.getContentType();
         if (contentType == null || 
             (!contentType.equals("image/jpeg") && 
@@ -335,20 +331,85 @@ public class CloudinaryService {
              !contentType.equals("image/webp"))) {
             throw new IOException("Company " + type + " must be JPEG, JPG, PNG, or WebP format");
         }
-        
-        // Kiểm tra tên file
+
         String filename = file.getOriginalFilename();
         if (filename == null || filename.trim().isEmpty()) {
             throw new IOException("Invalid file name");
         }
-        
-        // Kiểm tra kích thước tối thiểu (avatar: 100x100, cover: 600x200)
+
         if ("avatar".equals(type)) {
-            // Avatar nên có tỷ lệ vuông hoặc gần vuông
-            // Cloudinary sẽ tự động resize về 300x300
         } else if ("cover".equals(type)) {
-            // Cover image nên có tỷ lệ 3:1 hoặc tương tự
-            // Cloudinary sẽ tự động resize về 1200x400
         }
     }
+
+    public UploadResult uploadBytes(byte[] data, String folder, String filename, String resourceType) {
+        try {
+            if (data == null || data.length == 0) {
+                throw new IllegalArgumentException("Empty data");
+            }
+
+            String rt = normalizeResourceType(resourceType);
+
+            String folderSafe = trimSlashesOrNull(folder);
+            String base = asciiPublicIdBase(filename);
+            String suffix = java.util.UUID.randomUUID().toString().substring(0, 8);
+
+            String publicId = (folderSafe != null ? folderSafe + "/" : "") + base + "-" + suffix;
+
+            @SuppressWarnings({"rawtypes","unchecked"})
+            Map options = ObjectUtils.asMap(
+                    "public_id",        publicId,
+                    "resource_type",    rt,
+                    "overwrite",        false,
+                    "unique_filename",  false,
+                    "secure",           true
+            );
+
+            @SuppressWarnings("rawtypes")
+            Map res = cloudinary.uploader().upload(data, options);
+
+            String returnedPublicId = (String) res.get("public_id");
+            String secureUrl        = (String) res.get("secure_url");
+            return new UploadResult(returnedPublicId, secureUrl);
+
+        } catch (Exception e) {
+            throw new IllegalStateException("Cloudinary upload failed", e);
+        }
+    }
+
+    private static String normalizeResourceType(String rt) {
+        if (rt == null) return "raw";
+        rt = rt.trim().toLowerCase();
+        return switch (rt) {
+            case "image" -> "image";
+            case "video" -> "video";
+            case "raw"   -> "raw";
+            default      -> "raw";
+        };
+    }
+
+    private static String trimSlashesOrNull(String s) {
+        if (s == null) return null;
+        s = s.trim().replaceAll("^/+", "").replaceAll("/+$", "");
+        return s.isEmpty() ? null : s;
+    }
+
+    private static String asciiPublicIdBase(String filename) {
+        String base = (filename != null && !filename.isBlank()) ? filename : "file";
+        base = base.replaceAll("[\\\\/]+", "_");
+        int dot = base.lastIndexOf('.');
+        if (dot > 0) base = base.substring(0, dot);
+
+        base = java.text.Normalizer.normalize(base, java.text.Normalizer.Form.NFKD)
+                .replaceAll("\\p{M}+", "")
+                .replaceAll("[^A-Za-z0-9._-]+", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("(^_|_$)", "");
+
+        if (base.isBlank()) base = "file";
+        if (base.length() > 80) base = base.substring(0, 80);
+        return base;
+    }
+
+    public record UploadResult(String publicId, String secureUrl) {}
 }

@@ -28,10 +28,8 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Tuỳ chỉnh theo hệ thống của bạn
-    private static final String SUPPORT_EMAIL = "support@jobhuntly.com";
+    private static final String SUPPORT_EMAIL = "contact.jobhuntly@gmail.com";
 
-    /* ---------- Helpers ---------- */
 
     private ResponseEntity<ApiError> build(HttpStatus status, String message,
                                            HttpServletRequest req, String code,
@@ -50,7 +48,6 @@ public class GlobalExceptionHandler {
         try { return req.getRequestURI(); } catch (Exception e) { return ""; }
     }
 
-    /* ---------- Specific business exceptions ---------- */
     @ExceptionHandler(AccountBannedException.class)
     public ResponseEntity<ApiError> handleAccountBanned(AccountBannedException ex, HttpServletRequest req) {
         Map<String, Object> extra = new HashMap<>();
@@ -71,7 +68,6 @@ public class GlobalExceptionHandler {
             GoogleAccountNeedsPasswordException ex,
             HttpServletRequest req
     ) {
-        // Có thể đưa email vào extra để FE dùng sẵn
         var extra = new java.util.HashMap<String, Object>();
         if (ex.getEmail() != null) extra.put("email", ex.getEmail());
         extra.put("canSetPassword", true);
