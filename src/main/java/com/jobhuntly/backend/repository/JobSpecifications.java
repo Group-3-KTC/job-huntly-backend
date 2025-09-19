@@ -6,101 +6,89 @@ import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public final class JobSpecifications {
 
     private JobSpecifications() {}
-
     public static Specification<Job> build(JobFilterRequest r) {
         List<Specification<Job>> specs = new ArrayList<>();
 
-        // Keyword & Company
-        if (hasText(r.getKeyword()))     specs.add(titleContains(r.getKeyword()));
-        if (hasText(r.getCompanyName())) specs.add(companyNameEquals(r.getCompanyName()));
+        // Chuẩn hoá input 1 lần (hạn chế lower() lặp lại)
+        String keywordLc      = lc(r.getKeyword());
+        String companyNameLc  = lc(r.getCompanyName());
+        String cityNameLc     = lc(r.getCityName());
 
-        // City -> job có bất kỳ ward thuộc city đó
-        if (hasText(r.getCityName()))    specs.add(anyWardInCity(r.getCityName()));
+        Set<String> catsLc    = lcSet(r.getCategoryNames());
+        Set<String> skillsLc  = lcSet(r.getSkillNames());
+        Set<String> levelsLc  = lcSet(r.getLevelNames());
+        Set<String> wtypesLc  = lcSet(r.getWorkTypeNames());
+        Set<String> wardsLc   = lcSet(r.getWardNames());
+
+        // Keyword & Company
+        if (hasText(keywordLc))     specs.add(titleContainsLc(keywordLc));
+        if (hasText(companyNameLc)) specs.add(companyNameEqualsLc(companyNameLc));
+
+        // City: job có ít nhất một ward thuộc city
+        if (hasText(cityNameLc))    specs.add(anyWardInCityExists(cityNameLc));
 
         // Salary & Posted date
-        if (r.getSalaryMin() != null)    specs.add(salaryMinAtLeast(r.getSalaryMin()));
-        if (r.getSalaryMax() != null)    specs.add(salaryMaxAtMost(r.getSalaryMax()));
+        if (r.getSalaryMin() != null) specs.add(salaryMinAtLeast(r.getSalaryMin()));
+        if (r.getSalaryMax() != null) specs.add(salaryMaxAtMost(r.getSalaryMax()));
         if (r.getPostedFrom() != null || r.getPostedTo() != null)
             specs.add(postedBetween(r.getPostedFrom(), r.getPostedTo()));
 
         // Status
-        if (hasText(r.getStatus()))      specs.add(statusEqualsIgnoreCase(r.getStatus()));
+        if (hasText(r.getStatus())) specs.add(statusEqualsLc(lc(r.getStatus())));
 
-        // Only active (chưa hết hạn)
+        // Only active
         if (Boolean.TRUE.equals(r.getOnlyActive())) specs.add(notExpired());
 
-        // ManyToMany theo name
-        if (notEmpty(r.getCategoryNames()))
-            specs.add(mtmByName("categories", "name", r.getCategoryNames(), r.isMatchAllCategories()));
-        if (notEmpty(r.getSkillNames()))
-            specs.add(mtmByName("skills", "name", r.getSkillNames(), r.isMatchAllSkills()));
-        if (notEmpty(r.getLevelNames()))
-            specs.add(mtmByName("levels", "name", r.getLevelNames(), r.isMatchAllLevels()));
-        if (notEmpty(r.getWorkTypeNames()))
-            specs.add(mtmByName("workTypes", "name", r.getWorkTypeNames(), r.isMatchAllWorkTypes()));
-        if (notEmpty(r.getWardNames()))
-            specs.add(mtmByName("wards", "name", r.getWardNames(), r.isMatchAllWards()));
+        // Many-to-many by name (ANY/ALL) dùng EXISTS—không dùng DISTINCT
+        if (!catsLc.isEmpty())   specs.add(mtmByNameExists("categories", "name",   catsLc,  r.isMatchAllCategories()));
+        if (!skillsLc.isEmpty()) specs.add(mtmByNameExists("skills",     "name",   skillsLc,r.isMatchAllSkills()));
+        if (!levelsLc.isEmpty()) specs.add(mtmByNameExists("levels",     "name",   levelsLc,r.isMatchAllLevels()));
+        if (!wtypesLc.isEmpty()) specs.add(mtmByNameExists("workTypes",  "name",   wtypesLc,r.isMatchAllWorkTypes()));
+        if (!wardsLc.isEmpty())  specs.add(mtmByNameExists("wards",      "name",   wardsLc, r.isMatchAllWards()));
 
-        // AND tất cả điều kiện
-        return Specification.allOf(specs);
+        // AND tất cả điều kiện (không dùng Specification.where(null) — đã deprecated)
+        return specs.isEmpty() ? null : Specification.allOf(specs);
+    }
+    private static Specification<Job> titleContainsLc(String keywordLc) {
+        return (root, cq, cb) -> cb.like(cb.lower(root.get("title")), "%" + keywordLc + "%");
     }
 
-    // --- job có ward thuộc cityName (ignore-case) ---
-    public static Specification<Job> anyWardInCity(String cityName) {
-        return (root, cq, cb) -> {
-            Join<Object, Object> wardJoin = root.join("wards", JoinType.LEFT);
-            Join<Object, Object> cityJoin = wardJoin.join("city", JoinType.LEFT);
-            cq.distinct(true);
-            return cb.equal(cb.lower(cityJoin.get("name")), cityName.toLowerCase());
-        };
+    private static Specification<Job> companyNameEqualsLc(String companyNameLc) {
+        return (root, cq, cb) -> cb.equal(cb.lower(root.get("company").get("companyName")), companyNameLc);
     }
 
-    // --- primitives ---
-    private static boolean hasText(String s) { return s != null && !s.isBlank(); }
-    private static boolean notEmpty(Set<?> s) { return s != null && !s.isEmpty(); }
-
-    public static Specification<Job> titleContains(String keyword) {
-        return (root, cq, cb) -> cb.like(cb.lower(root.get("title")), "%" + keyword.toLowerCase() + "%");
+    private static Specification<Job> statusEqualsLc(String statusLc) {
+        return (root, cq, cb) -> cb.equal(cb.lower(root.get("status")), statusLc);
     }
 
-    public static Specification<Job> companyNameEquals(String name) {
-        // Đổi "name" nếu field Company khác
-        return (root, cq, cb) -> cb.equal(cb.lower(root.get("company").get("name")), name.toLowerCase());
-    }
-
-    public static Specification<Job> statusEqualsIgnoreCase(String status) {
-        return (root, cq, cb) -> cb.equal(cb.lower(root.get("status")), status.toLowerCase());
-    }
-
-    public static Specification<Job> notExpired() {
+    private static Specification<Job> notExpired() {
         return (root, cq, cb) -> cb.or(
                 cb.isNull(root.get("expiredDate")),
                 cb.greaterThanOrEqualTo(root.get("expiredDate"), LocalDate.now())
         );
     }
 
-    public static Specification<Job> salaryMinAtLeast(Long min) {
+    private static Specification<Job> salaryMinAtLeast(Long min) {
         return (root, cq, cb) -> cb.or(
                 cb.isNull(root.get("salaryMin")),
                 cb.greaterThanOrEqualTo(root.get("salaryMin"), min)
         );
     }
 
-    public static Specification<Job> salaryMaxAtMost(Long max) {
+    private static Specification<Job> salaryMaxAtMost(Long max) {
         return (root, cq, cb) -> cb.or(
                 cb.isNull(root.get("salaryMax")),
                 cb.lessThanOrEqualTo(root.get("salaryMax"), max)
         );
     }
 
-    public static Specification<Job> postedBetween(LocalDate from, LocalDate to) {
+    private static Specification<Job> postedBetween(LocalDate from, LocalDate to) {
         return (root, cq, cb) -> {
             if (from != null && to != null) return cb.between(root.get("datePost"), from, to);
             if (from != null)               return cb.greaterThanOrEqualTo(root.get("datePost"), from);
@@ -108,37 +96,67 @@ public final class JobSpecifications {
             return cb.conjunction();
         };
     }
+    private static Specification<Job> anyWardInCityExists(String cityNameLc) {
+        return (root, cq, cb) -> {
+            Subquery<Long> sq = cq.subquery(Long.class);
+            Root<Job> j2 = sq.from(Job.class);
+            Join<Object, Object> w = j2.join("wards"); // INNER JOIN
+            Join<Object, Object> c = w.join("city");   // INNER JOIN
 
-    // --- ManyToMany theo name: ANY/ALL ---
-    private static Specification<Job> mtmByName(String attr, String nameField, Set<String> names, boolean matchAll) {
-        // Phòng thủ: nếu rỗng, trả về "true" predicate
-        if (names == null || names.isEmpty()) {
-            return (root, cq, cb) -> cb.conjunction();
-        }
+            sq.select(j2.get("id"))
+                    .where(
+                            cb.equal(j2.get("id"), root.get("id")),
+                            cb.equal(cb.lower(c.get("name")), cityNameLc)
+                    );
+            return cb.exists(sq);
+        };
+    }
+
+    private static Specification<Job> mtmByNameExists(String attr, String nameField, Set<String> namesLc, boolean matchAll) {
+        if (namesLc == null || namesLc.isEmpty()) return (root, cq, cb) -> cb.conjunction();
 
         if (!matchAll) {
-            // ANY
-            return (root, cq, cb) -> {
-                Join<Object, Object> j = root.join(attr, JoinType.LEFT);
-                cq.distinct(true);
-                CriteriaBuilder.In<String> in = cb.in(cb.lower(j.get(nameField)));
-                names.stream().map(String::toLowerCase).forEach(in::value);
-                return in;
-            };
-        } else {
-            // ALL: đếm số tên khớp == size(names)
             return (root, cq, cb) -> {
                 Subquery<Long> sq = cq.subquery(Long.class);
                 Root<Job> j2 = sq.from(Job.class);
-                Join<Object, Object> join = j2.join(attr, JoinType.LEFT);
-
-                sq.select(cb.countDistinct(cb.lower(join.get(nameField))))
+                Join<Object, Object> jn = j2.join(attr); // INNER JOIN
+                Expression<String> nameExpr = cb.lower(jn.get(nameField));
+                sq.select(j2.get("id"))
                         .where(
                                 cb.equal(j2.get("id"), root.get("id")),
-                                cb.lower(join.get(nameField)).in(names.stream().map(String::toLowerCase).toList())
+                                nameExpr.in(namesLc)
                         );
-                return cb.equal(sq, (long) names.size());
+                return cb.exists(sq);
             };
+        } else {
+            List<Specification<Job>> perName = namesLc.stream()
+                    .map(n -> (Specification<Job>) (root, cq, cb) -> {
+                        Subquery<Long> sq = cq.subquery(Long.class);
+                        Root<Job> j2 = sq.from(Job.class);
+                        Join<Object, Object> jn = j2.join(attr);
+
+                        sq.select(j2.get("id"))
+                                .where(
+                                        cb.equal(j2.get("id"), root.get("id")),
+                                        cb.equal(cb.lower(jn.get(nameField)), n)
+                                );
+                        return cb.exists(sq);
+                    })
+                    .toList();
+
+            return Specification.allOf(perName);
         }
+    }
+    private static boolean hasText(String s) { return s != null && !s.isBlank(); }
+
+    private static String lc(String s) { return (s == null) ? null : s.toLowerCase(Locale.ROOT).trim(); }
+
+    private static Set<String> lcSet(Set<String> in) {
+        if (in == null || in.isEmpty()) return Collections.emptySet();
+        return in.stream()
+                .filter(Objects::nonNull)
+                .map(str -> str.toLowerCase(Locale.ROOT).trim())
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }
