@@ -46,6 +46,7 @@ public class Payment {
 
     @Lob private String metadataJson;
 
+    @Column(name = "paid_at")
     private OffsetDateTime paidAt;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
