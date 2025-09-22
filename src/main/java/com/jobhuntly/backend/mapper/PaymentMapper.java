@@ -13,6 +13,7 @@ public interface PaymentMapper {
     @Mapping(target = "id", source = "paymentId")
     @Mapping(target = "companyId", source = "companyId")
     @Mapping(target = "provider", source = "provider") // provider là String
+    @Mapping(target = "paidAt", source = "paidAt")
     @Mapping(target = "status",   expression = "java(payment.getStatus() != null ? payment.getStatus().name() : null)")
     PaymentResponseByCompany toList(Payment payment);
 }

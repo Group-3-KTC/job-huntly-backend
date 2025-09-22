@@ -12,6 +12,7 @@ public record PaymentResponseByCompany(
         String txnRef,
         String providerTxn,
         String orderInfo,
+        OffsetDateTime paidAt,
         OffsetDateTime createdAt
 ) {
 }
