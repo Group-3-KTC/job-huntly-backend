@@ -119,6 +119,11 @@ jobs:
             GMAIL_IMAP_USERNAME=${{secrets.GMAIL_IMAP_USERNAME}}
             GMAIL_IMAP_PASS=${{secrets.GMAIL_IMAP_PASS}}
             
+            # --- Google Calendar ---
+            GCAL_SA_JSON_B64=${{ secrets.GCAL_SA_JSON_B64 }}
+            GCAL_CALENDAR_ID=${{ secrets.GCAL_CALENDAR_ID }}
+            GCAL_IMPERSONATE=${{ secrets.GCAL_IMPERSONATE }}
+
             EOF
             chmod 600 ~/job-huntly-backend/.env
 

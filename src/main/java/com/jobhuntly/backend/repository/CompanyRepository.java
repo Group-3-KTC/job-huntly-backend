@@ -87,4 +87,7 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
                          @Param("newVipUntil") OffsetDateTime newVipUntil,
                          @Param("now") OffsetDateTime now);
 
+    // lấy owner (userId của recruiter sở hữu company) để check quyền
+    @Query("select c.user.id from Company c where c.id = :companyId")
+    Optional<Long> findOwnerUserIdById(@Param("companyId") Long companyId);
 }

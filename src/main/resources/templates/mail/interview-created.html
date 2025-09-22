@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <div th:replace="mail/_layout :: wrap(~{::content})">
+        <div th:fragment="content">
+            <h1 class="text" style="margin:0 0 8px;font:700 20px 'Segoe UI',Arial;color:#111827" th:text="${title}">
+                Interview Scheduled
+            </h1>
+
+            <p class="text" style="margin:0 0 12px;font:14px/1.6 'Segoe UI',Arial;color:#374151">
+                Scheduled at: <strong th:text="${scheduledAt}">2025-09-25 14:00</strong>
+                · Duration: <strong th:text="${durationMinutes}">60</strong> minutes
+            </p>
+
+            <p class="muted" style="margin:0 0 16px;font:13px/1.6 'Segoe UI',Arial;color:#4b5563">
+                Your Google Calendar invite has been sent. You can join via the button below.
+            </p>
+
+            <div style="margin-top:16px;">
+                <a th:href="${meetingUrl}" target="_blank"
+                    style="display:inline-block;background:#4880FF;color:#fff;text-decoration:none;font:700 14px 'Segoe UI',Arial;padding:12px 20px;border-radius:8px;"
+                    th:text="${ctaLabel}">Join with Google Meet</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
