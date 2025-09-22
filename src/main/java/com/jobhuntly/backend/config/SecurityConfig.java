@@ -81,6 +81,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/save-job/**").authenticated()
                                 .requestMatchers("/api/v1/follows/**").authenticated()
                                 .requestMatchers("/api/v1/dev/ping-noti").authenticated()
+                                .requestMatchers("/api/v1/interviews/**").authenticated()
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                                 .requestMatchers(
                                         "/swagger-ui/**",

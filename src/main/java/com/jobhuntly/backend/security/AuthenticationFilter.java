@@ -84,9 +84,26 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                 Claims c = jwtUtil.parseAndValidate(at);
                 if (jwtUtil.isAccess(c)) {
                     String email = c.getSubject();
-                    String role = String.valueOf(c.get(JwtUtil.CLAIM_ROLE));
+                    // String role = String.valueOf(c.get(JwtUtil.CLAIM_ROLE));
+                    Object roleClaim = c.get(JwtUtil.CLAIM_ROLE); 
+                    String roleName = null;
                     Long userId = jwtUtil.userIdFromClaims(c);
-                    String authority = (role != null && role.startsWith("ROLE_")) ? role : "ROLE_" + role;
+                    // String authority = (role != null && role.startsWith("ROLE_")) ? role : "ROLE_" + role;
+                    if (roleClaim instanceof java.util.Map<?, ?> m) {
+                        Object rn = m.get("roleName");
+                        if (rn != null)
+                            roleName = rn.toString();
+                    } else if (roleClaim != null) {
+                        roleName = roleClaim.toString();
+                    }
+
+                    if (roleName == null || roleName.isBlank()) {
+                        log.debug("No role found in token");
+                        chain.doFilter(req, res);
+                        return;
+                    }
+
+                    String authority = "ROLE_" + roleName.toUpperCase();
                     AppPrincipal principal = new AppPrincipal(userId, email);
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority(authority)));

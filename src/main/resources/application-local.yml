@@ -138,3 +138,11 @@ springdoc:
     path: /swagger-ui
     operationsSorter: method
     tagsSorter: alpha
+
+gcal:
+  sa:
+    credentials:
+      path: ${GCAL_SA_CREDENTIALS_PATH:}   
+      b64:  ${GCAL_SA_JSON_B64:}           
+  calendarId: ${GCAL_CALENDAR_ID}
+  impersonate: ${GCAL_IMPERSONATE:}           

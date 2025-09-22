@@ -56,4 +56,9 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
     @Transactional
     @Query("update Job j set j.status = 'inactive' where j.expiredDate < CURRENT_DATE and lower(j.status) <> 'inactive'")
     int markExpiredJobsInactive();
+
+
+    // lấy companyId từ jobId (dùng để verify job thuộc company khi tạo interview)
+    @Query("select j.company.id from Job j where j.id = :jobId")
+    Optional<Long> findCompanyIdByJobId(@Param("jobId") Long jobId);
 }

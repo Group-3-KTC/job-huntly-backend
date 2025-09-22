@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title th:text="${appName} ?: 'JobHuntly'">JobHuntly</title>
+    <style>
+        @media only screen and (max-width:600px) {
+            .container {
+                width: 100% !important;
+            }
+
+            .p-24 {
+                padding: 16px !important;
+            }
+
+            .h-24 {
+                height: 16px !important;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .bg-body {
+                background: #0f172a !important;
+            }
+
+            .bg-card {
+                background: #111827 !important;
+            }
+
+            .text {
+                color: #e5e7eb !important;
+            }
+
+            .muted {
+                color: #9ca3af !important;
+            }
+        }
+    </style>
+</head>
+
+<body style="margin:0;padding:0;background:#f4f5f7" class="bg-body">
+    <div th:fragment="wrap(content)">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+                <td align="center" style="padding:24px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container"
+                        style="width:600px;max-width:600px;background:#ffffff;border-radius:10px;overflow:hidden;"
+                        bgcolor="#ffffff">
+                        <!-- Header -->
+                        <tr>
+                            <td style="background:#4880FF;padding:18px 24px;" bgcolor="#0f172a" align="left">
+                                <table role="presentation" width="100%">
+                                    <tr>
+                                        <td align="left">
+                                            <img th:src="${logoUrl}" alt="Logo" height="40"
+                                                style="display:block;border:0;outline:none;text-decoration:none;" />
+                                        </td>
+                                        <td align="right" style="font:14px/1.2 'Segoe UI',Arial;color:#fff;">
+                                            <span th:text="${appName} ?: 'JobHuntly'">JobHuntly</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="height:24px;" class="h-24">&nbsp;</td>
+                        </tr>
+
+                        <!-- Body inject -->
+                        <tr>
+                            <td class="p-24" style="padding:24px;" th:insert="${content}"></td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style="padding:16px 24px;background:#f9fafb" class="bg-card">
+                                <p style="margin:0 0 6px;font:12px/1.6 'Segoe UI',Arial;color:#6b7280" class="muted">
+                                    Need help? Contact
+                                    <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}"
+                                        style="color:#2563eb;text-decoration:underline;">support@jobhuntly.com</a>
+                                </p>
+                                <p style="margin:0;font:12px/1.6 'Segoe UI',Arial;color:#9ca3af" class="muted">
+                                    © <span th:text="${year}">2025</span> <span
+                                        th:text="${appName} ?: 'JobHuntly'">JobHuntly</span>. All rights reserved.
+                                </p>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>

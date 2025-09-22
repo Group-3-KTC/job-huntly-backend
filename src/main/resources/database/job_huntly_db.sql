@@ -901,3 +901,41 @@ ALTER TABLE users
      INDEX idx_company (company_id),
      INDEX idx_job (job_id)
  );
+
+-- calendar_events interviews table
+CREATE TABLE IF NOT EXISTS interviews (
+  interview_id      INT AUTO_INCREMENT PRIMARY KEY,
+  job_id            INT NOT NULL,
+  company_id        INT NOT NULL,              -- recruiter: công ty tạo lịch
+  candidate_id      INT NOT NULL,              -- user ứng viên
+  scheduled_at      DATETIME NOT NULL,
+  duration_minutes  INT NOT NULL DEFAULT 60,
+  status            ENUM('PENDING','ACCEPTED','DECLINED','COMPLETED','CANCELLED') DEFAULT 'PENDING',
+  meeting_url       VARCHAR(500) NULL,
+  gcal_event_id     VARCHAR(128) NULL,
+  reminder_sent     TINYINT(1) NOT NULL DEFAULT 0,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  -- FK khớp cấu trúc hiện tại
+  CONSTRAINT fk_interviews_job
+    FOREIGN KEY (job_id) REFERENCES jobs(job_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  CONSTRAINT fk_interviews_company
+    FOREIGN KEY (company_id) REFERENCES companies(company_id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+
+  CONSTRAINT fk_interviews_candidate
+    FOREIGN KEY (candidate_id) REFERENCES users(user_id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+
+  -- Index phục vụ truy vấn phổ biến
+  INDEX idx_interviews_scheduled_at (scheduled_at),
+  INDEX idx_interviews_company      (company_id),
+  INDEX idx_interviews_candidate    (candidate_id),
+  INDEX idx_interviews_job          (job_id),
+
+  -- Tránh tạo trùng event nếu cần
+  UNIQUE KEY uq_interviews_gcal_event (gcal_event_id)
+);
