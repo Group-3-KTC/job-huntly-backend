@@ -23,7 +23,7 @@ public class CompanyDto {
     private Integer foundedYear;
     private Integer quantityEmployee;
     private String status;
-    private Boolean isProCompany;
+    private Boolean proCompany;
     private Integer followersCount;
     private Long jobsCount;
     private String facebookUrl;
