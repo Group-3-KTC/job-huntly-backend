@@ -74,20 +74,25 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("""
-    UPDATE Company c
-    SET
-      c.vipUntil = :newVipUntil,
-      c.proCompany = CASE
-          WHEN (c.vipUntil IS NULL OR c.vipUntil < :now) THEN TRUE
-          ELSE c.proCompany
-      END
-    WHERE c.id = :companyId
-    """)
+                UPDATE Company c
+                SET c.vipUntil = :newVipUntil,
+                    c.proCompany = TRUE
+                WHERE c.id = :companyId
+                """)
     int upsertVipAndFlag(@Param("companyId") Long companyId,
-                         @Param("newVipUntil") OffsetDateTime newVipUntil,
-                         @Param("now") OffsetDateTime now);
+                         @Param("newVipUntil") OffsetDateTime newVipUntil);
 
     // lấy owner (userId của recruiter sở hữu company) để check quyền
     @Query("select c.user.id from Company c where c.id = :companyId")
     Optional<Long> findOwnerUserIdById(@Param("companyId") Long companyId);
+
+
+    @Modifying
+    @Transactional
+    @Query("""
+        UPDATE Company c
+        SET c.proCompany = FALSE
+        WHERE c.vipUntil < :now
+        """)
+    int expireVip(@Param("now") OffsetDateTime now);
 }

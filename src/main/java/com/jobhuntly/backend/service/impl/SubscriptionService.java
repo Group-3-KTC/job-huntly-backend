@@ -49,7 +49,7 @@ public class SubscriptionService {
 
         var saved = subRepo.save(sub);
 
-        companyRepo.upsertVipAndFlag(companyId, saved.getEndAt(), now);
+        companyRepo.upsertVipAndFlag(companyId, saved.getEndAt());
 
         return subscriptionMapper.toResponse(saved);
     }
