@@ -6,3 +6,8 @@ spring:
 app:
   redis:
     enabled: ${APP_REDIS_ENABLED:true}
+
+gemini:
+  apiKey: ${GEMINI_API_KEY}
+  model: gemini-2.5-flash
+  endpoint: https://generativelanguage.googleapis.com/v1beta/models/
