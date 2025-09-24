@@ -14,7 +14,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 import java.net.URI;
 import java.util.*;
@@ -29,18 +33,22 @@ public class AiMatchServiceImpl implements AiMatchService {
     private final ApplicationRepository applicationRepository;
     private final RestTemplate rt = new RestTemplate();
     private final ObjectMapper mapper = new ObjectMapper();
+    private final Cache matchCache;
+    private final Cache bypassCache;
 
     @Value("${gemini.apiKey}")
     private String apiKey;
     @Value("${gemini.model}")
     private String model;
     @Value("${gemini.endpoint}")
-    private String endpoint; // ví dụ: https://generativelanguage.googleapis.com/v1beta/models/
+    private String endpoint;
 
-    public AiMatchServiceImpl(JobService jobService, ProfileService profileService, ApplicationRepository applicationRepository) {
+    public AiMatchServiceImpl(JobService jobService, ProfileService profileService, ApplicationRepository applicationRepository, CacheManager cacheManager) {
         this.jobService = jobService;
         this.profileService = profileService;
         this.applicationRepository = applicationRepository;
+        this.matchCache = cacheManager.getCache(com.jobhuntly.backend.constant.CacheConstant.AI_MATCH);
+        this.bypassCache = cacheManager.getCache(com.jobhuntly.backend.constant.CacheConstant.AI_MATCH_BYPASS);
     }
 
     @Override
@@ -55,22 +63,30 @@ public class AiMatchServiceImpl implements AiMatchService {
             resumeText = buildResumeTextFromProfile(p);
         }
 
+        // Tính cache key và kiểm tra cache trước
+        String hash = resumePdfBytes != null ? sha256(resumePdfBytes) : sha256(safeTrim(resumeText));
+        String cKey = cacheKey(userId, jobId, hash);
+        MatchResponse cached = getFromCache(cKey);
+        if (cached != null) return cached;
+        // Kiểm tra bypass-once
+        boolean bypass = consumeBypass(cKey);
+
         // 3) Gọi Gemini
         try {
             if (resumePdfBytes != null && !useFileApi) {
-                return callGeminiInlinePdf(resumePdfBytes, jd);
+                return bypass ? callGeminiInlinePdf(resumePdfBytes, jd) : putAndReturn(cKey, callGeminiInlinePdf(resumePdfBytes, jd));
             }
             if (resumePdfBytes != null && useFileApi) {
-                return callGeminiWithFileApi(resumePdfBytes, "application/pdf", "cv.pdf", jd);
+                return bypass ? callGeminiWithFileApi(resumePdfBytes, "application/pdf", "cv.pdf", jd) : putAndReturn(cKey, callGeminiWithFileApi(resumePdfBytes, "application/pdf", "cv.pdf", jd));
             }
-            return callGeminiWithText(resumeText, jd);
-        } catch (HttpClientErrorException e) {
+            return bypass ? callGeminiWithText(resumeText, jd) : putAndReturn(cKey, callGeminiWithText(resumeText, jd));
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
             if (resumePdfBytes != null && e.getStatusCode().value() == 413) {
-                return callGeminiWithFileApi(resumePdfBytes, "application/pdf", "cv.pdf", jd);
+                return bypass ? callGeminiWithFileApi(resumePdfBytes, "application/pdf", "cv.pdf", jd) : putAndReturn(cKey, callGeminiWithFileApi(resumePdfBytes, "application/pdf", "cv.pdf", jd));
             }
-            return new MatchResponse(0, List.of("AI lỗi: " + e.getStatusCode()));
+            return new MatchResponse(0, List.of("AI error: " + e.getStatusCode()));
         } catch (Exception ex) {
-            return new MatchResponse(0, List.of("Lỗi nội bộ khi gọi AI"));
+            return new MatchResponse(0, List.of("Internal error when calling AI"));
         }
     }
 
@@ -78,18 +94,23 @@ public class AiMatchServiceImpl implements AiMatchService {
     @Override
     public MatchResponse matchByUploadedFile(Long userId, Long jobId, byte[] pdfBytes, boolean useFileApi) {
         String jd = buildJobDescription(jobId);
+        String hash = sha256(pdfBytes);
+        String cKey = cacheKey(userId, jobId, hash);
+        MatchResponse cached = getFromCache(cKey);
+        if (cached != null) return cached;
+        boolean bypass = consumeBypass(cKey);
         try {
             if (!useFileApi) {
-                return callGeminiInlinePdf(pdfBytes, jd);
+                return bypass ? callGeminiInlinePdf(pdfBytes, jd) : putAndReturn(cKey, callGeminiInlinePdf(pdfBytes, jd));
             }
-            return callGeminiWithFileApi(pdfBytes, "application/pdf", "cv.pdf", jd);
-        } catch (HttpClientErrorException e) {
+            return bypass ? callGeminiWithFileApi(pdfBytes, "application/pdf", "cv.pdf", jd) : putAndReturn(cKey, callGeminiWithFileApi(pdfBytes, "application/pdf", "cv.pdf", jd));
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
             if (e.getStatusCode().value() == 413) {
-                return callGeminiWithFileApi(pdfBytes, "application/pdf", "cv.pdf", jd);
+                return bypass ? callGeminiWithFileApi(pdfBytes, "application/pdf", "cv.pdf", jd) : putAndReturn(cKey, callGeminiWithFileApi(pdfBytes, "application/pdf", "cv.pdf", jd));
             }
-            return new MatchResponse(0, List.of("AI lỗi: " + e.getStatusCode()));
+            return new MatchResponse(0, List.of("AI error: " + e.getStatusCode()));
         } catch (Exception ex) {
-            return new MatchResponse(0, List.of("Lỗi nội bộ khi gọi AI"));
+            return new MatchResponse(0, List.of("Internal error when calling AI"));
         }
     }
 
@@ -104,7 +125,12 @@ public class AiMatchServiceImpl implements AiMatchService {
                                 Map.of("inline_data", Map.of("mime_type", "application/pdf", "data", b64)),
                                 Map.of("text", buildPrompt(jd))
                         )
-                ))
+                )),
+                "generationConfig", Map.of(
+                        "temperature", 0,
+                        "topK", 1,
+                        "topP", 0.1
+                )
         );
         return postAndParse(url, body);
     }
@@ -119,7 +145,12 @@ public class AiMatchServiceImpl implements AiMatchService {
                                 Map.of("text", "CV:\n" + safeTrim(resume)),
                                 Map.of("text", buildPrompt(jd))
                         )
-                ))
+                )),
+                "generationConfig", Map.of(
+                        "temperature", 0,
+                        "topK", 1,
+                        "topP", 0.1
+                )
         );
         return postAndParse(url, body);
     }
@@ -153,7 +184,7 @@ public class AiMatchServiceImpl implements AiMatchService {
             }
         }
 
-        // 2) Generate
+        // 2) Generate (retry một vài lần vì file có thể đang PROCESSING)
         String base = normalizeEndpoint(endpoint);
         String genUrl = base + "/" + model + ":generateContent?key=" + apiKey;
         Map<String, Object> body = Map.of(
@@ -163,9 +194,30 @@ public class AiMatchServiceImpl implements AiMatchService {
                                 Map.of("file_data", Map.of("file_uri", fileUri, "mime_type", mime)),
                                 Map.of("text", buildPrompt(jd))
                         )
-                ))
+                )),
+                "generationConfig", Map.of(
+                        "temperature", 0,
+                        "topK", 1,
+                        "topP", 0.1
+                )
         );
-        return postAndParse(genUrl, body);
+
+        int attempts = 0;
+        while (true) {
+            attempts++;
+            try {
+                return postAndParse(genUrl, body);
+            } catch (RestClientResponseException ex) {
+                int status = ex.getRawStatusCode();
+                String msg = ex.getResponseBodyAsString();
+                boolean maybeProcessing = status == 404 || status == 400 || status == 409;
+                if (maybeProcessing && attempts < 3) {
+                    try { Thread.sleep(1500L * attempts); } catch (InterruptedException ignored) {}
+                    continue;
+                }
+                throw ex;
+            }
+        }
     }
 
     private MatchResponse postAndParse(String url, Map<String, Object> body) {
@@ -173,16 +225,16 @@ public class AiMatchServiceImpl implements AiMatchService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         ResponseEntity<String> resp = rt.postForEntity(url, new HttpEntity<>(body, headers), String.class);
         if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
-            return new MatchResponse(0, List.of("AI không phản hồi"));
+            return new MatchResponse(0, List.of("AI did not respond"));
         }
         return parseGeminiResponse(resp.getBody());
     }
 
     private String buildPrompt(String jd) {
         return """
-                Bạn là hệ thống ATS. So sánh CV và JD sau. 
-                Chỉ trả về JSON hợp lệ duy nhất: {"score": <int 0..100>, "reasons": ["...","..."]}
-                
+                You are an ATS system. Compare CV and JD below.
+                Only return valid JSON: {"score": <int 0..100>, "reasons": ["...","..."]}
+
                 JD:
                 %s
                 """.formatted(safeTrim(jd));
@@ -208,15 +260,15 @@ public class AiMatchServiceImpl implements AiMatchService {
             String cleaned = stripCodeFences(raw).trim();
             String jsonCandidate = extractJsonObject(cleaned);
             if (jsonCandidate == null || jsonCandidate.isBlank()) {
-                return new MatchResponse(0, List.of("Không parse được phản hồi AI"));
+                return new MatchResponse(0, List.of("AI did not respond"));
             }
             JsonNode json = mapper.readTree(jsonCandidate);
             int score = Math.max(0, Math.min(100, json.path("score").asInt(0)));
             List<String> reasons = new ArrayList<>();
             if (json.path("reasons").isArray()) json.path("reasons").forEach(n -> reasons.add(n.asText()));
-            return new MatchResponse(score, reasons.isEmpty() ? List.of("Không có lý do cụ thể.") : reasons);
+            return new MatchResponse(score, reasons.isEmpty() ? List.of("No specific reason") : reasons);
         } catch (Exception e) {
-            return new MatchResponse(0, List.of("Không parse được phản hồi AI"));
+            return new MatchResponse(0, List.of("AI did not respond"));
         }
     }
 
@@ -224,7 +276,7 @@ public class AiMatchServiceImpl implements AiMatchService {
         if (s == null) return "";
         String trimmed = s.trim();
         if (trimmed.startsWith("```")) {
-            // loại bỏ dòng mở ```... và dòng đóng ```
+            // remove ```... and ```
             trimmed = trimmed.replaceAll("^```[a-zA-Z0-9_-]*\\n", "");
             int idx = trimmed.lastIndexOf("```");
             if (idx >= 0) trimmed = trimmed.substring(0, idx);
@@ -411,5 +463,57 @@ public class AiMatchServiceImpl implements AiMatchService {
 
     private String safeTrim(String s) {
         return s == null ? "" : s.trim();
+    }
+
+    private String sha256(byte[] bytes) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = md.digest(bytes);
+            return Base64.getEncoder().encodeToString(hashBytes);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String sha256(String text) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = md.digest((text == null ? "" : text).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hashBytes);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String cacheKey(Long userId, Long jobId, String resumeHash) {
+        return userId + ":" + jobId + ":" + resumeHash;
+    }
+
+    private MatchResponse getFromCache(String key) {
+        if (matchCache == null) return null;
+        Cache.ValueWrapper w = matchCache.get(key);
+        if (w == null) return null;
+        Object v = w.get();
+        if (v instanceof MatchResponse m) return m;
+        return null;
+    }
+
+    private boolean consumeBypass(String key) {
+        if (bypassCache == null) return false;
+        // Kiểm tra bypass all
+        Cache.ValueWrapper all = bypassCache.get("__ALL__");
+        if (all != null) {
+            bypassCache.evict("__ALL__");
+            return true;
+        }
+        Cache.ValueWrapper w = bypassCache.get(key);
+        if (w == null) return false;
+        bypassCache.evict(key);
+        return true;
+    }
+
+    private MatchResponse putAndReturn(String key, MatchResponse value) {
+        if (matchCache != null && value != null) matchCache.put(key, value);
+        return value;
     }
 }

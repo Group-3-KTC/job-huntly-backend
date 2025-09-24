@@ -31,6 +31,9 @@ public final class CacheConstant {
     // ===== Saved jobs / Applications =====
     public static final String SAVED_JOBS         = "savedjobs:list";     // key = userId,page,size
     public static final String APPLICATIONS_LIST  = "applications:list";  // key = userId,page,size
-    public static final String APPLICATION_DETAIL = "application:detail"; // key = appId
+    public static final String APPLICATION_DETAIL = "application:detail";
 
+    // ===== AI =====
+    public static final String AI_MATCH           = "ai:match";            // key = userId:jobId:resumeHash
+    public static final String AI_MATCH_BYPASS    = "ai:match:bypass";     // key = userId:jobId:resumeHash (marker skip 1 lần)
 }
