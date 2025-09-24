@@ -41,7 +41,14 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional(readOnly = true)
     public List<CompanyDto> getAllCompanies() {
-        return companyMapper.toDtoList(companyRepository.findAll());
+        List<CompanyDto> dtos = companyMapper.toDtoList(companyRepository.findAll());
+        
+        // Tính lại jobsCount từ database thực tế
+        for (CompanyDto dto : dtos) {
+            dto.setJobsCount(jobRepository.countJobsByCompanyId(dto.getId()));
+        }
+        
+        return dtos;
     }
 
     @Override
@@ -308,7 +315,7 @@ public class CompanyServiceImpl implements CompanyService {
     public Page<CompanyDto> getAllCompaniesWithPagination(int page, int size, String[] sort) {
         Pageable pageable = createPageableFromParams(page, size, sort);
         Page<Company> companyPage = companyRepository.findAll(pageable);
-        return companyPage.map(companyMapper::toDto);
+        return companyPage.map(this::mapCompanyToDtoWithJobsCount);
     }
 
     @Override
@@ -322,7 +329,7 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         Page<Company> companiesPage = companyRepository.findByCategoryIdsIncludingParents(categoryIds, pageable);
-        return companiesPage.map(companyMapper::toDto);
+        return companiesPage.map(this::mapCompanyToDtoWithJobsCount);
     }
 
     @Override
@@ -331,7 +338,7 @@ public class CompanyServiceImpl implements CompanyService {
         Pageable pageable = PageRequest.of(page, size, sortable);
 
         Page<Company> companiesPage = companyRepository.findByLocation(location, pageable);
-        return companiesPage.map(companyMapper::toDto);
+        return companiesPage.map(this::mapCompanyToDtoWithJobsCount);
     }
 
     @Override
@@ -340,7 +347,7 @@ public class CompanyServiceImpl implements CompanyService {
         Pageable pageable = PageRequest.of(page, size, sortable);
 
         Page<Company> companiesPage = companyRepository.findAllByCompanyNameIgnoreCase(name, pageable);
-        return companiesPage.map(companyMapper::toDto);
+        return companiesPage.map(this::mapCompanyToDtoWithJobsCount);
     }
 
     @Override
@@ -350,7 +357,7 @@ public class CompanyServiceImpl implements CompanyService {
 
         boolean categoryIdsEmpty = categoryIds == null || categoryIds.isEmpty();
         Page<Company> companiesPage = companyRepository.searchCompanies(name, categoryIds, categoryIdsEmpty, pageable);
-        return companiesPage.map(companyMapper::toDto);
+        return companiesPage.map(this::mapCompanyToDtoWithJobsCount);
     }
 
     // Phương thức tiện ích để tạo Pageable từ các tham số
@@ -388,5 +395,20 @@ public class CompanyServiceImpl implements CompanyService {
             sortable = Sort.by(direction, sortField);
         }
         return sortable;
+    }
+
+    // Phương thức tiện ích để map Company thành CompanyDto với jobsCount được tính từ database thực tế
+    private CompanyDto mapCompanyToDtoWithJobsCount(Company company) {
+        CompanyDto dto = companyMapper.toDto(company);
+        dto.setJobsCount(jobRepository.countJobsByCompanyId(company.getId()));
+        
+        // Trả về categoryIds
+        if (company.getCategories() != null) {
+            dto.setCategoryIds(company.getCategories().stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toSet()));
+        }
+        
+        return dto;
     }
 }
