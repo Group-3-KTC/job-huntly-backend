@@ -73,11 +73,67 @@ public class MailServiceImpl implements MailService {
 
                 // content
                 "title", title,
-                "meetingUrl", i.getMeetingUrl(),
+                "meetingUrl", ctaHref,
                 "scheduledAt", i.getScheduledAt() != null ? i.getScheduledAt().format(TIME_FMT) : "",
                 "durationMinutes", i.getDurationMinutes(),
                 "ctaHref", ctaHref,
                 "ctaLabel", ctaLabel);
+    }
+
+    @Override
+    public void sendInterviewCreatedTo(String toEmail, Interview i, String portalUrl) throws Exception {
+        var model = baseModel(i, "Interview Scheduled", "Join the Meeting", portalUrl);
+        String tpl = "mail/interview-created";
+
+        Context ctx = new Context(Locale.getDefault());
+        model.forEach(ctx::setVariable);
+        String html = templateEngine.process(tpl, ctx);
+
+        byte[] ics = buildIcsForRecipient(i, fromEmail, toEmail, portalUrl);
+        sendWithIcs(toEmail, "[Interview] New interview scheduled", html, ics);
+    }
+
+    private byte[] buildIcsForRecipient(Interview i, String organizerEmail, String attendeeEmail, String joinUrl) {
+        String uid = "jh-" + i.getInterviewId() + "@jobhuntly";
+        ZoneId tz = ZoneId.systemDefault();
+        ZonedDateTime start = i.getScheduledAt().atZone(tz);
+        ZonedDateTime end = start.plusMinutes(i.getDurationMinutes() == null ? 60 : i.getDurationMinutes());
+        DateTimeFormatter utc = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneId.of("UTC"));
+
+        String desc = joinUrl == null ? "" : joinUrl;
+        String loc = joinUrl == null ? "" : joinUrl;
+
+        String ics = String.join("\r\n",
+                "BEGIN:VCALENDAR",
+                "PRODID:-//JobHuntly//Interview//EN",
+                "VERSION:2.0",
+                "CALSCALE:GREGORIAN",
+                "METHOD:REQUEST",
+                "BEGIN:VEVENT",
+                "UID:" + uid,
+                "DTSTAMP:" + utc.format(Instant.now()),
+                "DTSTART:" + utc.format(start.toInstant()),
+                "DTEND:" + utc.format(end.toInstant()),
+                "SUMMARY:Interview",
+                "DESCRIPTION:" + escapeText(desc),
+                "LOCATION:" + escapeText(loc),
+                "ORGANIZER:MAILTO:" + organizerEmail,
+                "ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:MAILTO:" + attendeeEmail,
+                "STATUS:CONFIRMED",
+                "END:VEVENT",
+                "END:VCALENDAR",
+                "");
+        return ics.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private String escapeText(String s) {
+        if (s == null)
+            return "";
+        return s.replace("\\", "\\\\")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n")
+                .replace(",", "\\,")
+                .replace(";", "\\;");
     }
 
     @Override

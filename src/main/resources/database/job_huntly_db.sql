@@ -939,3 +939,6 @@ CREATE TABLE IF NOT EXISTS interviews (
   -- Tránh tạo trùng event nếu cần
   UNIQUE KEY uq_interviews_gcal_event (gcal_event_id)
 );
+
+ALTER TABLE interviews
+  ADD COLUMN meeting_room VARCHAR(255) NULL;

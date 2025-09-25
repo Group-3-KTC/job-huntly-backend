@@ -56,6 +56,9 @@ public class Interview {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 
+    @Column(name = "meeting_room")
+    private String meetingRoom;
+
     @PrePersist
     void _pre() {
         if (createdAt == null)

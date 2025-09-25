@@ -9,4 +9,6 @@ public interface MailService {
     void sendInterviewReminder(String recruiterEmail, String candidateEmail, Interview i);
 
     void sendInterviewStatusChangedToRecruiter(String recruiterEmail, Interview i, String newStatus);
+    
+    void sendInterviewCreatedTo(String toEmail, Interview i, String portalUrl) throws Exception;
 }
