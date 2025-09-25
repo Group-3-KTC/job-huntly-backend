@@ -2,6 +2,7 @@ package com.jobhuntly.backend.service.impl;
 
 import com.jobhuntly.backend.dto.request.CreateInterviewRequest;
 import com.jobhuntly.backend.dto.response.CandidateInterviewResponse;
+import com.jobhuntly.backend.dto.response.InterviewMetaDto;
 import com.jobhuntly.backend.dto.response.RecruiterInterviewResponse;
 import com.jobhuntly.backend.entity.Interview;
 import com.jobhuntly.backend.entity.Job;
@@ -29,6 +30,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -83,7 +85,8 @@ public class InterviewServiceImpl implements InterviewService {
                 job.getTitle(),
                 candidate.getId(),
                 candidate.getFullName(),
-                candidate.getEmail());
+                candidate.getEmail(),
+                iv.getMeetingRoom());
     }
 
     /** DTO cho candidate view (không còn application) */
@@ -97,7 +100,8 @@ public class InterviewServiceImpl implements InterviewService {
                 job.getId(),
                 job.getTitle(),
                 job.getCompany().getId(),
-                job.getCompany().getCompanyName());
+                job.getCompany().getCompanyName(), 
+                iv.getMeetingRoom());
     }
 
     @Transactional
@@ -154,10 +158,10 @@ public class InterviewServiceImpl implements InterviewService {
         iv.setStatus(Interview.Status.PENDING);
         interviewRepository.save(iv);
 
-        // 2) URL Jitsi ổn định theo interviewId
-        String vcUrlFixed = "https://meet.jit.si/jobhuntly-" + iv.getInterviewId();
+        // 2) Sinh room Jitsi ổn định theo UUID (khó đoán)
+        String room = "jobhuntly-" + UUID.randomUUID().toString();
+        String vcUrlFixed = "https://meet.jit.si/" + room;
 
-        // 3) Tạo event Calendar (không attendees khi dùng SA không DWD)
         ZonedDateTime startAt = when.atZone(ZoneId.systemDefault());
         var created = calendarService.createInterviewEventWithFixedUrl(
                 "Interview: Job#" + jobId,
@@ -166,9 +170,20 @@ public class InterviewServiceImpl implements InterviewService {
                 startAt, dur,
                 vcUrlFixed);
 
-        // 4) Cập nhật meetingUrl + gcalEventId
-        iv.setMeetingUrl(created.meetingUrl());
+        String candidatePortal = "https://jobhuntly.io.vn/interviews/" + iv.getInterviewId() + "/join";
+        String recruiterPortal = "https://jobhuntly.io.vn/recruiter/applicants/interviews/" + iv.getInterviewId()
+                + "/join";
+
+        // Local (uncomment these when testing on localhost:3000)
+        // String candidatePortal = "http://localhost:3000/interviews/" +
+        // iv.getInterviewId() + "/join";
+        // String recruiterPortal =
+        // "http://localhost:3000/recruiter/applicants/interviews/" +
+        // iv.getInterviewId() + "/join";
+        
+        iv.setMeetingRoom(room);
         iv.setGcalEventId(created.eventId());
+        iv.setMeetingUrl(candidatePortal);
         interviewRepository.save(iv);
 
         // 5) Queue reminder + auto-complete
@@ -178,9 +193,14 @@ public class InterviewServiceImpl implements InterviewService {
 
         // 6) Email mời (kèm .ics) cho recruiter & candidate
         try {
-            mailService.sendInterviewCreated(recruiterEmail, candidateEmail, iv);
+            mailService.sendInterviewCreatedTo(recruiterEmail, iv, recruiterPortal);
         } catch (Exception ex) {
-            log.warn("sendInterviewCreated failed", ex);
+            log.warn("sendInterviewCreatedTo recruiter failed: {}", ex.getMessage(), ex);
+        }
+        try {
+            mailService.sendInterviewCreatedTo(candidateEmail, iv, candidatePortal);
+        } catch (Exception ex) {
+            log.warn("sendInterviewCreatedTo candidate failed: {}", ex.getMessage(), ex);
         }
 
         Job job = jobRepository.findById(jobId).orElseThrow();
@@ -288,6 +308,50 @@ public class InterviewServiceImpl implements InterviewService {
             User candidate = userRepository.findById(iv.getCandidateId()).orElseThrow();
             return toRecruiterView(iv, job, candidate);
         }
+    }
+
+     @Transactional(readOnly = true)
+    @Override
+    public InterviewMetaDto getMeta(Long interviewId) {
+        Interview iv = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Interview not found"));
+
+        // permission checks: recruiter (owner), candidate (self), admin (full)
+        Long meId = SecurityUtils.getCurrentUserId();
+        var me = userRepository.findById(meId).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        String role = me.getRole() != null ? me.getRole().getRoleName() : null;
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
+        boolean isRecruiter = "RECRUITER".equalsIgnoreCase(role);
+        boolean isCandidate = "CANDIDATE".equalsIgnoreCase(role);
+
+        if (isRecruiter) {
+            Long ownerId = companyRepository.findOwnerUserIdById(iv.getCompanyId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
+            if (!Objects.equals(ownerId, meId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not owner of this company");
+            }
+        } else if (isCandidate) {
+            if (!Objects.equals(meId, iv.getCandidateId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot view other candidate's interview");
+            }
+        } else if (!isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden");
+        }
+
+        Job job = jobRepository.findById(iv.getJobId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job not found"));
+
+        return new InterviewMetaDto(
+                iv.getInterviewId(),
+                job.getId(),
+                job.getTitle(),
+                job.getCompany().getId(),
+                job.getCompany().getCompanyName(),
+                iv.getScheduledAt(),
+                iv.getDurationMinutes(),
+                iv.getMeetingRoom(),
+                iv.getMeetingUrl(),
+                iv.getStatus() != null ? iv.getStatus().name() : null
+        );
     }
 
     @Transactional
