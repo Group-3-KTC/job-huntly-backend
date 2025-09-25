@@ -124,6 +124,9 @@ jobs:
             GCAL_CALENDAR_ID=${{ secrets.GCAL_CALENDAR_ID }}
             GCAL_IMPERSONATE=${{ secrets.GCAL_IMPERSONATE }}
 
+            # --- AI Genimi ---
+            GEMINI_API_KEY = ${{ secrets.GEMINI_API_KEY }}
+
             EOF
             chmod 600 ~/job-huntly-backend/.env
 
