@@ -14,5 +14,6 @@ public record RecruiterInterviewResponse(
 
         Long candidateId,
         String candidateName,
-        String candidateEmail) {
+        String candidateEmail,
+        String meetingRoom) {
 }
