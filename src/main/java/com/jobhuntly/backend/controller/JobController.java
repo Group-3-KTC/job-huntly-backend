@@ -44,15 +44,9 @@ public class JobController {
 
     @GetMapping("/all")
     public ResponseEntity<Page<JobResponse>> list(
-            @PageableDefault(size = 10) Pageable pageable) {
-
-        Pageable sortedPageable = PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                Sort.by(Sort.Order.desc("company.proCompany"), Sort.Order.desc("id"))
-        );
-
-        return ResponseEntity.ok(jobService.list(sortedPageable));
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(jobService.list(pageable));
     }
 
     @GetMapping("/company/{companyId}")
@@ -65,15 +59,9 @@ public class JobController {
     @PostMapping("/search-lite")
     public Page<JobResponse> searchLite(
             @RequestBody JobFilterRequest request,
-            @PageableDefault(size = 10) Pageable pageable
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Pageable sortedPageable = PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                Sort.by(Sort.Order.desc("company.proCompany"), Sort.Order.desc("id"))
-        );
-
-        return jobService.searchLite(request, sortedPageable);
+        return jobService.searchLite(request, pageable);
     }
 
     @PostMapping("/company/{companyId}/search")
@@ -88,40 +76,20 @@ public class JobController {
     @GetMapping("/all-with-status")
     public ResponseEntity<Page<JobItemWithStatus>> listWithStatus(
             @AuthenticationPrincipal AppPrincipal me,
-            @PageableDefault(size = 10) Pageable pageable
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long uid = (me == null) ? null : me.id();
-
-        Pageable sortedPageable = PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                Sort.by(
-                        Sort.Order.desc("company.proCompany"),
-                        Sort.Order.desc("id")
-                )
-        );
-
-        return ResponseEntity.ok(jobService.listWithStatus(sortedPageable, uid));
+        return ResponseEntity.ok(jobService.listWithStatus(pageable, uid));
     }
 
     @PostMapping("/search-lite-with-status")
     public ResponseEntity<Page<JobItemWithStatus>> searchLiteWithStatus(
             @AuthenticationPrincipal AppPrincipal me,
             @RequestBody JobFilterRequest request,
-            @PageableDefault(size = 10) Pageable pageable
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long uid = (me == null) ? null : me.id();
-
-        Pageable sortedPageable = PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                Sort.by(
-                        Sort.Order.desc("company.proCompany"),
-                        Sort.Order.desc("id")
-                )
-        );
-
-        return ResponseEntity.ok(jobService.searchLiteWithStatus(request, sortedPageable, uid));
+        return ResponseEntity.ok(jobService.searchLiteWithStatus(request, pageable, uid));
     }
 
 }
