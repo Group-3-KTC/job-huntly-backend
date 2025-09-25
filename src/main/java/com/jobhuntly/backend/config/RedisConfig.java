@@ -63,6 +63,11 @@ public class RedisConfig {
         perCache.put(SAVED_JOBS,        base.entryTtl(Duration.ofMinutes(2)));
         perCache.put(APPLICATIONS_LIST, base.entryTtl(Duration.ofMinutes(2)));
 
+        // AI match cache 24h
+        perCache.put(AI_MATCH, base.entryTtl(Duration.ofHours(24)));
+        // Marker bypass 1 lần, TTL ngắn
+        perCache.put(AI_MATCH_BYPASS, base.entryTtl(Duration.ofMinutes(2)));
+
         return RedisCacheManager.builder(cf)
                 .cacheDefaults(base)
                 .withInitialCacheConfigurations(perCache)

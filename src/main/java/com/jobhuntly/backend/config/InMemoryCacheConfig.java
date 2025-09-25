@@ -28,7 +28,9 @@ public class InMemoryCacheConfig {
                 DICT_LOCATIONS_CITY,
                 DICT_LOCATIONS_WARDS,
                 SAVED_JOBS,
-                APPLICATIONS_LIST
+                APPLICATIONS_LIST,
+                AI_MATCH,
+                AI_MATCH_BYPASS
         );
     }
 }
