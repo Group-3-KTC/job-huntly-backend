@@ -29,7 +29,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .addInterceptors(wsHandshakeAuthInterceptor)
                 .setAllowedOriginPatterns(
                         "http://localhost:3000",
-                        "http://18.142.226.139:3000",
+                        "http://54.151.168.90:3000",
                         "http://47.129.60.85:3000",
                         "http://localhost:5173",
                         "http://jobhuntly.io.vn",
@@ -47,7 +47,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 .addInterceptors(wsHandshakeAuthInterceptor)
                 .setAllowedOriginPatterns(
                         "http://localhost:3000",
-                        "http://18.142.226.139:3000",
+                        "http://54.151.168.90:3000",
                         "http://47.129.60.85:3000",
                         "http://localhost:5173",
                         "http://jobhuntly.io.vn",
