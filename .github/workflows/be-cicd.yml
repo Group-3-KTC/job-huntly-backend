@@ -127,6 +127,11 @@ jobs:
             # --- AI Genimi ---
             GEMINI_API_KEY = ${{ secrets.GEMINI_API_KEY }}
 
+            # --- JAAS Key ---
+            JAAS_APP_ID=${{ secrets.JAAS_APP_ID }}
+            JAAS_KID=${{ secrets.JAAS_KID }}
+            JAAS_PRIVATE_KEY_PEM_B64=${{ secrets.JAAS_PRIVATE_KEY_PEM_B64 }}
+
             EOF
             chmod 600 ~/job-huntly-backend/.env
 

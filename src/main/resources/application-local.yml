@@ -146,3 +146,8 @@ gcal:
       b64:  ${GCAL_SA_JSON_B64:}           
   calendarId: ${GCAL_CALENDAR_ID}
   impersonate: ${GCAL_IMPERSONATE:}           
+
+jaas:
+  appId: ${JAAS_APP_ID}
+  kid: ${JAAS_KID}
+  privateKeyPemB64: ${JAAS_PRIVATE_KEY_PEM_B64}

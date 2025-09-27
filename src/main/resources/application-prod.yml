@@ -150,3 +150,8 @@ gcal:
       path: ${GCAL_SA_CREDENTIALS_PATH:}   
   calendarId: ${GCAL_CALENDAR_ID}
   impersonate: ${GCAL_IMPERSONATE:}
+
+jaas:
+  appId: ${JAAS_APP_ID}
+  kid: ${JAAS_KID}
+  privateKeyPemB64: ${JAAS_PRIVATE_KEY_PEM_B64}

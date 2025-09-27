@@ -87,6 +87,9 @@ dependencies {
     // google calendae
     implementation "com.google.apis:google-api-services-calendar:v3-rev20250404-2.0.0"
     implementation 'com.google.auth:google-auth-library-oauth2-http:1.23.0'
+
+    // Nimbus JOSE JWT
+    implementation "com.nimbusds:nimbus-jose-jwt:9.37.3"
 }
 
 tasks.named('test') {
