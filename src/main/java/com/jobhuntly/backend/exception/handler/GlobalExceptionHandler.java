@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final String SUPPORT_EMAIL = "contact.jobhuntly@gmail.com";
+    private static final String SUPPORT_EMAIL = "help.jobhuntly@gmail.com";
 
 
     private ResponseEntity<ApiError> build(HttpStatus status, String message,

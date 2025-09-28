@@ -66,7 +66,7 @@ public class EmailService implements EmailSender {
             if (mail.from() != null) {
                 helper.setFrom(mail.from());
             } else {
-                 helper.setFrom(new InternetAddress("contact.jobhuntly@gmail.com", "JobHuntly Support", StandardCharsets.UTF_8.name()));
+                 helper.setFrom(new InternetAddress("help.jobhuntly@gmail.com", "JobHuntly Support", StandardCharsets.UTF_8.name()));
             }
 
             helper.setTo(mail.to());
@@ -127,7 +127,7 @@ public class EmailService implements EmailSender {
                     .createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mime, false, "utf-8");
 
-            String effFromEmail = StringUtils.hasText(fromEmail) ? fromEmail : "contact.jobhuntly@gmail.com";
+            String effFromEmail = StringUtils.hasText(fromEmail) ? fromEmail : "help.jobhuntly@gmail.com";
             String effFromName  = StringUtils.hasText(fromName)  ? fromName  : "JobHuntly Support";
 
             helper.setFrom(effFromEmail, effFromName);

@@ -21,7 +21,7 @@ public class MailTemplateService {
         context.setVariable("title", "Set your password");
         context.setVariable("buttonText", "Set password");
 
-        context.setVariable("supportEmail", "contact.jobhuntly@gmail.com");
+        context.setVariable("supportEmail", "help.jobhuntly@gmail.com");
         context.setVariable("logoUrl", "https://res.cloudinary.com/dfbqhd5ht/image/upload/v1757058535/logo-title-white_yjzvvr.png");
 
         return templateEngine.process("set-password-email", context);
@@ -32,7 +32,7 @@ public class MailTemplateService {
         context.setVariable("appName", "JobHuntly");
         context.setVariable("resetLink", resetLink);
         context.setVariable("ttlText", ttlText);
-        context.setVariable("supportEmail", "contact.jobhuntly@gmail.com");
+        context.setVariable("supportEmail", "help.jobhuntly@gmail.com");
         context.setVariable("logoUrl", "https://res.cloudinary.com/dfbqhd5ht/image/upload/v1757058535/logo-title-white_yjzvvr.png");
 
         return templateEngine.process("reset-password-email", context);

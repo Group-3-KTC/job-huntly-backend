@@ -35,7 +35,7 @@ public class MailServiceImpl implements MailService {
     @Value("${app.name:JobHuntly}")
     private String appName;
 
-    @Value("${mail.support:contact.jobhuntly@gmail.com}")
+    @Value("${mail.support:help.jobhuntly@gmail.com}")
     private String supportEmail;
 
     @Value("${mail.logo:https://res.cloudinary.com/dfbqhd5ht/image/upload/v1757058535/logo-title-white_yjzvvr.png}")

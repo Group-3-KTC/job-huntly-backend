@@ -57,14 +57,14 @@ public class InterviewServiceImpl implements InterviewService {
 
         String role = me.getRole() != null ? me.getRole().getRoleName() : null;
         if ("RECRUITER".equalsIgnoreCase(role)) {
-            return Optional.ofNullable(me.getEmail()).orElse("contact.jobhuntly@gmail.com");
+            return Optional.ofNullable(me.getEmail()).orElse("help.jobhuntly@gmail.com");
         }
 
         Long ownerId = companyRepository.findOwnerUserIdById(companyId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
         return userRepository.findById(ownerId)
-                .map(u -> Optional.ofNullable(u.getEmail()).orElse("contact.jobhuntly@gmail.com"))
-                .orElse("contact.jobhuntly@gmail.com");
+                .map(u -> Optional.ofNullable(u.getEmail()).orElse("help.jobhuntly@gmail.com"))
+                .orElse("help.jobhuntly@gmail.com");
     }
 
     private String resolveCandidateEmail(Long candidateUserId) {

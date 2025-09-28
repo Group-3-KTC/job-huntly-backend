@@ -398,7 +398,7 @@ public class AuthServiceImpl implements AuthService {
         context.setVariable("ttlText", ttlText);
         context.setVariable("appName", "JobHuntly");
         context.setVariable("year", java.time.Year.now().toString());
-        context.setVariable("supportEmail", "contact.jobhuntly@gmail.com");
+        context.setVariable("supportEmail", "help.jobhuntly@gmail.com");
         context.setVariable("logoUrl", "https://res.cloudinary.com/dfbqhd5ht/image/upload/v1757058535/logo-title-white_yjzvvr.png");
 
         String htmlContent = templateEngine.process("activation-email", context);
