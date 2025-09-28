@@ -33,7 +33,6 @@ public class AiMatchController {
         return ResponseEntity.ok(resp);
     }
 
-    // MỚI: upload CV trực tiếp (multipart)
     @PostMapping(value = "/match/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MatchResponse> matchUpload(
             @RequestParam("jobId") Long jobId,

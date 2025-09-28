@@ -40,7 +40,7 @@ public class ReplyService {
     @Value("${app.brand.logo-url:https://res.cloudinary.com/dfbqhd5ht/image/upload/v1757058535/logo-title-white_yjzvvr.png}")
     private String logoUrl;
 
-    @Value("${mail.from.address:contact.jobhuntly@gmail.com}")
+    @Value("${mail.from.address:help.jobhuntly@gmail.com}")
     private String supportEmail;
 
     @Transactional
